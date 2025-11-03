@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// MVP Phase 1 - Core Tables
+
+model User {
+  id                     String                @id @default(uuid())
+  email                  String                @unique
+  emailVerified          Boolean               @default(false)
+  verificationCode       String?
+  verificationCodeExpiry DateTime?
+  name                   String
+  age                    Int
+  ageGroup               String                // Under-13, 13-15, 16-18, 19-21, 22-25, 26+
+  gender                 String                // Male, Female, Other
+  location               String
+  profilePictureUrl      String?
+  hasCompletedOnboarding Boolean               @default(false)
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+
+  // Relations
+  submissions            ChallengeSubmission[]
+  stats                  PlayerStats[]
+  challengeStatuses      UserChallengeStatus[]
+  kingsOfVenues          Venue[]               @relation("VenueKing")
+
+  @@index([email])
+}
+
+model Venue {
+  id                String      @id @default(uuid())
+  name              String
+  venueType         String      // court, field, track, trail, slope
+  sportType         String      // basketball, soccer, running, cycling, skiing
+  address           String?
+  latitude          Float
+  longitude         Float
+  city              String
+  country           String
+  activePlayerCount Int         @default(0)
+  currentKingId     String?
+  currentKing       User?       @relation("VenueKing", fields: [currentKingId], references: [id])
+  description       String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  challenges        Challenge[]
+
+  @@index([latitude, longitude])
+  @@index([sportType])
+  @@index([city])
+}
+
+model Challenge {
+  id            String   @id @default(uuid())
+  venueId       String
+  venue         Venue    @relation(fields: [venueId], references: [id])
+  name          String
+  description   String
+  instructions  String
+  challengeType String   // free_throws, penalty_kicks, sprint, etc
+  parameters    Json     // {requiredShots: 10, timeLimit: 60}
+  xpReward      Int
+  difficulty    String   // easy, medium, hard
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  submissions       ChallengeSubmission[]
+  userStatuses      UserChallengeStatus[]
+
+  @@index([venueId])
+}
+
+model ChallengeSubmission {
+  id                 String    @id @default(uuid())
+  challengeId        String
+  challenge          Challenge @relation(fields: [challengeId], references: [id])
+  userId             String
+  user               User      @relation(fields: [userId], references: [id])
+  videoUrl           String
+  performanceData    Json      // {shotsMade: 8, shotsAttempted: 10, timeTaken: 45}
+  verificationStatus String    @default("pending") // pending, verified, rejected
+  verifiedAt         DateTime?
+  xpEarned           Int       @default(0)
+  createdAt          DateTime  @default(now())
+
+  // Relations
+  bestForStatus      UserChallengeStatus[] @relation("BestSubmission")
+
+  @@index([userId])
+  @@index([challengeId])
+  @@index([verificationStatus])
+}
+
+model PlayerStats {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  totalXp         Int      @default(0)
+  currentRank     Int      @default(0)
+  totalChallenges Int      @default(0)
+  sportType       String   // basketball, soccer, running, etc
+  venueStatsJson  Json     @default("{}") // {venueId1: {rank: 1, xp: 500}}
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, sportType])
+  @@index([userId])
+  @@index([totalXp(sort: Desc)])
+  @@index([sportType])
+}
+
+model UserChallengeStatus {
+  id               String               @id @default(uuid())
+  userId           String
+  user             User                 @relation(fields: [userId], references: [id])
+  challengeId      String
+  challenge        Challenge            @relation(fields: [challengeId], references: [id])
+  status           String               @default("not_started") // not_started, in_progress, completed
+  startedAt        DateTime?
+  completedAt      DateTime?
+  attempts         Int                  @default(0)
+  bestSubmissionId String?              @unique
+  bestSubmission   ChallengeSubmission? @relation("BestSubmission", fields: [bestSubmissionId], references: [id])
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@unique([userId, challengeId])
+  @@index([userId, status])
+}
