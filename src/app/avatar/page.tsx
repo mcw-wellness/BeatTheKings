@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useApp } from '@/context/AppContext';
+import type { SportType } from '@/types';
 
 export default function AvatarPage() {
   const router = useRouter();
@@ -14,9 +14,9 @@ export default function AvatarPage() {
   const [hairColor, setHairColor] = useState('black');
   const [hairStyle, setHairStyle] = useState('short');
   const [jerseyNumber, setJerseyNumber] = useState('23');
-  const [torso, setTorso] = useState('jersey-blue');
-  const [legs, setLegs] = useState('shorts-black');
-  const [feet, setFeet] = useState('sneakers-white');
+  const torso = 'jersey-blue';
+  const legs = 'shorts-black';
+  const feet = 'sneakers-white';
 
   const hairColors = ['black', 'brown', 'blonde', 'red', 'white'];
   const hairStyles = ['short', 'fade', 'long', 'ponytail', 'bald'];
@@ -65,7 +65,7 @@ export default function AvatarPage() {
               </label>
               <select
                 value={selectedSport}
-                onChange={(e) => setSelectedSport(e.target.value as any)}
+                onChange={(e) => setSelectedSport(e.target.value as SportType)}
                 className="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none"
               >
                 <option value="basketball">🏀 Basketball</option>
