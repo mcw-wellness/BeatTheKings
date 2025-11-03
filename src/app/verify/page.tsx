@@ -6,35 +6,33 @@ import { Logo } from '@/components/Logo';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useApp } from '@/context/AppContext';
-import { isValidEmail } from '@/lib/utils';
 
-export default function Home() {
+export default function VerifyPage() {
   const router = useRouter();
-  const { setUserEmail } = useApp();
-  const [email, setEmail] = useState('');
+  const { user } = useApp();
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email) {
-      setError('Please enter your email');
+    if (!code) {
+      setError('Please enter the verification code');
       return;
     }
 
-    if (!isValidEmail(email)) {
-      setError('Please enter a valid email address');
+    if (code.length !== 6) {
+      setError('Verification code must be 6 digits');
       return;
     }
 
     setError('');
     setIsLoading(true);
 
-    // Mock: Store email and navigate
+    // Mock: Accept any 6-digit code
     setTimeout(() => {
-      setUserEmail(email);
-      router.push('/verify');
+      router.push('/register');
     }, 800);
   };
 
@@ -48,38 +46,49 @@ export default function Home() {
 
         {/* Headline */}
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-gray-900 animate-fade-in">
-            Rule the Game
+          <h1 className="text-2xl font-bold text-gray-900">
+            Check Your Email
           </h1>
           <p className="text-gray-600">
-            Join the ultimate sports competition platform
+            We sent a verification code to<br />
+            <span className="font-medium">{user.email}</span>
           </p>
         </div>
 
-        {/* Email Form */}
+        {/* Code Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            placeholder="000000"
+            value={code}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+              setCode(value);
+            }}
             error={error}
             disabled={isLoading}
+            maxLength={6}
+            className="text-center text-2xl tracking-widest font-mono"
           />
 
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading}
+            disabled={isLoading || code.length !== 6}
           >
-            {isLoading ? 'Sending...' : 'GO'}
+            {isLoading ? 'Verifying...' : 'Verify'}
           </Button>
         </form>
 
-        {/* Info */}
-        <p className="text-center text-sm text-gray-500">
-          We'll send you a verification code to get started
-        </p>
+        {/* Resend */}
+        <div className="text-center">
+          <button
+            className="text-sm text-blue-600 hover:underline"
+            onClick={() => alert('Code resent! (Mock)')}
+          >
+            Didn't receive the code? Resend
+          </button>
+        </div>
       </div>
     </main>
   );
