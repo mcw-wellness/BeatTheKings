@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import type { User, Avatar, PlayerStats, SportType } from '@/types';
 import { calculateAgeGroup } from '@/lib/utils';
 import { mockUser, mockPlayerStats, mockAvatars } from '@/lib/mockData';
@@ -39,6 +39,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [selectedSport, setSelectedSport] = useState<SportType>('basketball');
 
+  // Load state from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedAvatar = localStorage.getItem('avatar_data');
+      const savedUser = localStorage.getItem('user_data');
+
+      console.log('AppContext - Loading from localStorage:');
+      console.log('savedAvatar:', savedAvatar);
+      console.log('savedUser:', savedUser);
+
+      if (savedAvatar) {
+        try {
+          const parsedAvatar = JSON.parse(savedAvatar);
+          console.log('Parsed avatar:', parsedAvatar);
+          setAvatar(parsedAvatar);
+        } catch (e) {
+          console.error('Failed to parse avatar data', e);
+        }
+      }
+
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          console.log('Parsed user:', parsedUser);
+          setUser(prev => ({ ...prev, ...parsedUser }));
+        } catch (e) {
+          console.error('Failed to parse user data', e);
+        }
+      }
+    }
+  }, []);
+
   const updateUser = useCallback((data: Partial<User>) => {
     setUser(prev => ({ ...prev, ...data }));
   }, []);
@@ -72,6 +104,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const createAvatar = useCallback(
     (hairColor: string, hairStyle: string, jerseyNumber: number, items: any) => {
+      const now = new Date().toISOString();
       const newAvatar: Avatar = {
         id: 'avatar-current',
         userId: user.id || 'user-1',
@@ -79,13 +112,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
         hairStyle,
         jerseyNumber,
         equippedItems: items,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: now as any,
+        updatedAt: now as any,
       };
+
+      console.log('Creating avatar:', newAvatar);
       setAvatar(newAvatar);
 
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('avatar_data', JSON.stringify(newAvatar));
+        console.log('Saved to localStorage - avatar_data');
+      }
+
       // Initialize stats when avatar is created
-      setStats({
+      const newStats = {
         id: 'stats-current',
         userId: user.id || 'user-1',
         totalXp: 0,
@@ -93,8 +134,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         totalChallenges: 0,
         sportType: selectedSport,
         venueStatsJson: {},
-        updatedAt: new Date(),
-      });
+        updatedAt: now as any,
+      };
+      setStats(newStats);
     },
     [user.id, selectedSport]
   );
@@ -112,10 +154,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const completeOnboarding = useCallback(() => {
+    const updatedUser = {
+      hasCompletedOnboarding: true,
+    };
+    console.log('Completing onboarding, setting hasCompletedOnboarding to true');
     setUser(prev => ({
       ...prev,
-      hasCompletedOnboarding: true,
+      ...updatedUser,
     }));
+
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      const currentUser = localStorage.getItem('user_data');
+      const userData = currentUser ? JSON.parse(currentUser) : {};
+      const finalUserData = { ...userData, ...updatedUser };
+      localStorage.setItem('user_data', JSON.stringify(finalUserData));
+      console.log('Saved to localStorage - user_data:', finalUserData);
+    }
   }, []);
 
   const hasAvatar = avatar !== null;
