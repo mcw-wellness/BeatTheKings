@@ -21,6 +21,7 @@ This directory contains all project documentation for Beat the Kings.
 
 ### Architecture Decisions
 - [GEOGRAPHIC_HIERARCHY_OPTIONS.md](GEOGRAPHIC_HIERARCHY_OPTIONS.md) - Location system design options
+- [AVATAR_AI_GENERATION.md](AVATAR_AI_GENERATION.md) - AI-generated avatar system spec
 
 ## Database Documentation
 
