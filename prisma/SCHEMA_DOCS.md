@@ -1,10 +1,25 @@
 # Schema Documentation
 
-**Last Updated:** 2025-12-18
+**Last Updated:** 2025-12-19
 **Status:** Active Development
 **Principles:** KISS, YAGNI, TDD
 
 > This document contains all database schema documentation including ER diagrams, field descriptions, and design decisions.
+
+---
+
+## Database Connection
+
+| Property | Value |
+|----------|-------|
+| Provider | Azure PostgreSQL |
+| Host | `www-site-db-server.postgres.database.azure.com` |
+| Port | `5432` |
+| Database | `beatthekings` |
+| User | `beatthekings_user` |
+| SSL | Required (`?sslmode=require`) |
+
+Password stored in `.env` (not committed).
 
 ---
 
