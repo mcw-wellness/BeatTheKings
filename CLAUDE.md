@@ -141,6 +141,13 @@ All documentation files (`.md`) should be organized as follows:
   - Challenge participation
 - Visual indicators for locked features
 
+## GitHub
+
+Always use the `kaza` account for git operations:
+```bash
+gh auth switch --user kaza
+```
+
 ## Development Setup
 
 This is a greenfield Next.js project. Standard setup commands will be:
