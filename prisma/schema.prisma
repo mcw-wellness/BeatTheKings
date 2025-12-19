@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -11,133 +9,375 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// MVP Phase 1 - Core Tables
+// ===========================================
+// LOCATION TABLES
+// Hierarchy: Country → City → Venue (3 tiers)
+// Rankings: Venue → City → Country
+// ===========================================
+
+model Country {
+  id        String   @id @default(uuid())
+  name      String   // "Austria"
+  code      String   @unique // "AT" (ISO 3166-1 alpha-2)
+  createdAt DateTime @default(now())
+
+  cities City[]
+}
+
+model City {
+  id        String   @id @default(uuid())
+  name      String   // "Vienna"
+  countryId String
+  country   Country  @relation(fields: [countryId], references: [id])
+  createdAt DateTime @default(now())
+
+  venues Venue[]
+  users  User[]
+
+  @@unique([name, countryId])
+  @@index([countryId])
+}
+
+// ===========================================
+// USER TABLE
+// OAuth-based authentication (Google/Microsoft)
+// ===========================================
 
 model User {
-  id                     String                @id @default(uuid())
-  email                  String                @unique
-  emailVerified          Boolean               @default(false)
-  verificationCode       String?
-  verificationCodeExpiry DateTime?
-  name                   String
-  age                    Int
-  ageGroup               String                // Under-13, 13-15, 16-18, 19-21, 22-25, 26+
-  gender                 String                // Male, Female, Other
-  location               String
-  profilePictureUrl      String?
-  hasCompletedOnboarding Boolean               @default(false)
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt
+  id    String @id @default(uuid())
+  email String @unique // From OAuth provider
+
+  // Profile (filled during avatar creation)
+  name        String?
+  dateOfBirth DateTime? @db.Date
+  ageGroup    String? // "Under-18", "18-30", "31+"
+  gender      String? // "Male", "Female", "Other"
+
+  // Location
+  cityId String?
+  city   City?   @relation(fields: [cityId], references: [id])
+
+  // Status
+  hasCreatedAvatar Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  submissions            ChallengeSubmission[]
-  stats                  PlayerStats[]
-  challengeStatuses      UserChallengeStatus[]
-  kingsOfVenues          Venue[]               @relation("VenueKing")
+  avatar            Avatar?
+  unlockedItems     UserUnlockedItem[]
+  playerStats       PlayerStats[]
+  challengeAttempts ChallengeAttempt[]
+  matchesAsPlayer1  Match[]            @relation("Player1")
+  matchesAsPlayer2  Match[]            @relation("Player2")
+  matchesWon        Match[]            @relation("Winner")
+  activeSessions    ActivePlayer[]
 
   @@index([email])
+  @@index([ageGroup])
+  @@index([cityId])
+}
+
+// ===========================================
+// SPORT & VENUE TABLES
+// ===========================================
+
+model Sport {
+  id        String   @id @default(uuid())
+  name      String   @unique // "Basketball"
+  slug      String   @unique // "basketball"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  avatarItems      AvatarItem[]
+  avatarEquipments AvatarEquipment[]
+  challenges       Challenge[]
+  matches          Match[]
+  playerStats      PlayerStats[]
 }
 
 model Venue {
-  id                String      @id @default(uuid())
-  name              String
-  venueType         String      // court, field, track, trail, slope
-  sportType         String      // basketball, soccer, running, cycling, skiing
-  address           String?
-  latitude          Float
-  longitude         Float
-  city              String
-  country           String
-  activePlayerCount Int         @default(0)
-  currentKingId     String?
-  currentKing       User?       @relation("VenueKing", fields: [currentKingId], references: [id])
-  description       String?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id     String @id @default(uuid())
+  name   String // "Esterhazy Park"
+  cityId String
+  city   City   @relation(fields: [cityId], references: [id])
+
+  // Location
+  address   String?
+  district  String? // Optional text field: "6. Bezirk", "Downtown", etc.
+  latitude  Float? // For distance calculation and sorting by proximity
+  longitude Float? // For distance calculation and sorting by proximity
+
+  // Meta
+  description String?
+  imageUrl    String? // Venue photo displayed in UI
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
-  challenges        Challenge[]
+  challenges    Challenge[]
+  matches       Match[]
+  activePlayers ActivePlayer[]
 
   @@index([latitude, longitude])
-  @@index([sportType])
-  @@index([city])
+  @@index([cityId])
 }
+
+// ===========================================
+// AVATAR TABLES
+// ===========================================
+
+model AvatarItem {
+  id       String  @id @default(uuid())
+  name     String // "Red Jersey"
+  itemType String // "hair", "jersey", "shorts", "shoes", "accessory"
+  sportId  String? // null = universal (works for all sports)
+  sport    Sport?  @relation(fields: [sportId], references: [id])
+  imageUrl String
+
+  // Unlock requirements (all nullable - if all null, item is free/default)
+  requiredMatches    Int?
+  requiredChallenges Int?
+  requiredInvites    Int?
+  requiredXp         Int?
+  rpCost             Int? // Can buy with RP as alternative
+
+  isDefault Boolean  @default(false) // Starter items
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Relations
+  unlockedBy          UserUnlockedItem[]
+  equippedAsJersey    AvatarEquipment[]  @relation("JerseyItem")
+  equippedAsShorts    AvatarEquipment[]  @relation("ShortsItem")
+  equippedAsShoes     AvatarEquipment[]  @relation("ShoesItem")
+  equippedAsAccessory AvatarEquipment[]  @relation("AccessoryItem")
+
+  @@index([sportId])
+  @@index([itemType])
+}
+
+model Avatar {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Base appearance (not sport-specific)
+  skinTone  String?
+  hairStyle String?
+  hairColor String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  equipments AvatarEquipment[]
+}
+
+model UserUnlockedItem {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  itemId      String
+  item        AvatarItem @relation(fields: [itemId], references: [id])
+  unlockedAt  DateTime   @default(now())
+  unlockedVia String // "achievement", "purchase", "default"
+
+  @@unique([userId, itemId])
+  @@index([userId])
+}
+
+model AvatarEquipment {
+  id       String @id @default(uuid())
+  avatarId String
+  avatar   Avatar @relation(fields: [avatarId], references: [id])
+  sportId  String
+  sport    Sport  @relation(fields: [sportId], references: [id])
+
+  // Equipped items per slot
+  jerseyItemId    String?
+  jerseyItem      AvatarItem? @relation("JerseyItem", fields: [jerseyItemId], references: [id])
+  shortsItemId    String?
+  shortsItem      AvatarItem? @relation("ShortsItem", fields: [shortsItemId], references: [id])
+  shoesItemId     String?
+  shoesItem       AvatarItem? @relation("ShoesItem", fields: [shoesItemId], references: [id])
+  accessoryItemId String?
+  accessoryItem   AvatarItem? @relation("AccessoryItem", fields: [accessoryItemId], references: [id])
+
+  jerseyNumber Int? // Player's number on jersey
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([avatarId, sportId])
+}
+
+// ===========================================
+// CHALLENGE TABLES
+// ===========================================
 
 model Challenge {
-  id            String   @id @default(uuid())
-  venueId       String
-  venue         Venue    @relation(fields: [venueId], references: [id])
-  name          String
+  id      String @id @default(uuid())
+  venueId String
+  venue   Venue  @relation(fields: [venueId], references: [id])
+  sportId String
+  sport   Sport  @relation(fields: [sportId], references: [id])
+
+  name          String // "3-Point Shot"
   description   String
   instructions  String
-  challengeType String   // free_throws, penalty_kicks, sprint, etc
-  parameters    Json     // {requiredShots: 10, timeLimit: 60}
-  xpReward      Int
-  difficulty    String   // easy, medium, hard
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  challengeType String // "three_point", "free_throw", "around_the_world", "penalty_kick"
+
+  xpReward   Int
+  rpReward   Int    @default(0)
+  difficulty String // "easy", "medium", "hard"
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  submissions       ChallengeSubmission[]
-  userStatuses      UserChallengeStatus[]
+  attempts ChallengeAttempt[]
 
   @@index([venueId])
+  @@index([sportId])
+  @@index([venueId, sportId])
 }
 
-model ChallengeSubmission {
-  id                 String    @id @default(uuid())
-  challengeId        String
-  challenge          Challenge @relation(fields: [challengeId], references: [id])
-  userId             String
-  user               User      @relation(fields: [userId], references: [id])
-  videoUrl           String
-  performanceData    Json      // {shotsMade: 8, shotsAttempted: 10, timeTaken: 45}
-  verificationStatus String    @default("pending") // pending, verified, rejected
-  verifiedAt         DateTime?
-  xpEarned           Int       @default(0)
-  createdAt          DateTime  @default(now())
+model ChallengeAttempt {
+  id          String    @id @default(uuid())
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
 
-  // Relations
-  bestForStatus      UserChallengeStatus[] @relation("BestSubmission")
+  // Results (entered via Start/Stop buttons)
+  scoreValue Int // Shots made, goals scored, etc.
+  maxValue   Int // Shots attempted, total tries
+
+  // Optional video
+  videoUrl String?
+
+  xpEarned    Int      @default(0)
+  rpEarned    Int      @default(0)
+  completedAt DateTime @default(now())
 
   @@index([userId])
   @@index([challengeId])
-  @@index([verificationStatus])
+  @@index([userId, challengeId])
 }
+
+// ===========================================
+// MATCH TABLE (1v1)
+// ===========================================
+
+model Match {
+  id      String @id @default(uuid())
+  venueId String
+  venue   Venue  @relation(fields: [venueId], references: [id])
+  sportId String
+  sport   Sport  @relation(fields: [sportId], references: [id])
+
+  // Players
+  player1Id String
+  player1   User   @relation("Player1", fields: [player1Id], references: [id])
+  player2Id String
+  player2   User   @relation("Player2", fields: [player2Id], references: [id])
+
+  // Result
+  player1Score Int?
+  player2Score Int?
+  winnerId     String?
+  winner       User?   @relation("Winner", fields: [winnerId], references: [id])
+
+  // Status: "pending", "in_progress", "completed", "disputed", "cancelled"
+  status String @default("pending")
+
+  // Verification - both must agree for result to count
+  player1Agreed Boolean @default(false)
+  player2Agreed Boolean @default(false)
+
+  videoUrl String?
+
+  // XP/RP awarded
+  winnerXp Int @default(0)
+  winnerRp Int @default(0)
+  loserXp  Int @default(0) // Participation XP
+
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([player1Id])
+  @@index([player2Id])
+  @@index([venueId])
+  @@index([status])
+}
+
+// ===========================================
+// PLAYER STATS TABLE
+// ===========================================
 
 model PlayerStats {
-  id              String   @id @default(uuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  totalXp         Int      @default(0)
-  currentRank     Int      @default(0)
-  totalChallenges Int      @default(0)
-  sportType       String   // basketball, soccer, running, etc
-  venueStatsJson  Json     @default("{}") // {venueId1: {rank: 1, xp: 500}}
-  updatedAt       DateTime @updatedAt
+  id      String @id @default(uuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+  sportId String
+  sport   Sport  @relation(fields: [sportId], references: [id])
 
-  @@unique([userId, sportType])
+  // XP & RP (dual currency system)
+  totalXp     Int @default(0) // For rankings
+  totalRp     Int @default(0) // Lifetime earned
+  availableRp Int @default(0) // Spendable balance
+
+  // Match stats (for Trump Card: Wins/Losses)
+  matchesPlayed Int @default(0)
+  matchesWon    Int @default(0)
+  matchesLost   Int @default(0)
+  // winRate calculated: matchesWon / matchesPlayed
+
+  // Challenge stats
+  challengesCompleted Int @default(0)
+
+  // General scoring (for Trump Card: Total Points)
+  totalPointsScored Int @default(0)
+
+  // Basketball specific stats (for Trump Card detailed stats)
+  threePointMade      Int @default(0)
+  threePointAttempted Int @default(0)
+  freeThrowMade       Int @default(0)
+  freeThrowAttempted  Int @default(0)
+  // Accuracies calculated: made / attempted
+
+  // Invites tracking
+  usersInvited Int @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, sportId])
   @@index([userId])
-  @@index([totalXp(sort: Desc)])
-  @@index([sportType])
+  @@index([sportId, totalXp(sort: Desc)])
 }
 
-model UserChallengeStatus {
-  id               String               @id @default(uuid())
-  userId           String
-  user             User                 @relation(fields: [userId], references: [id])
-  challengeId      String
-  challenge        Challenge            @relation(fields: [challengeId], references: [id])
-  status           String               @default("not_started") // not_started, in_progress, completed
-  startedAt        DateTime?
-  completedAt      DateTime?
-  attempts         Int                  @default(0)
-  bestSubmissionId String?              @unique
-  bestSubmission   ChallengeSubmission? @relation("BestSubmission", fields: [bestSubmissionId], references: [id])
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
+// ===========================================
+// ACTIVE PLAYER TRACKING
+// ===========================================
 
-  @@unique([userId, challengeId])
-  @@index([userId, status])
+model ActivePlayer {
+  id      String @id @default(uuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+  venueId String
+  venue   Venue  @relation(fields: [venueId], references: [id])
+
+  // Last known position
+  latitude   Float
+  longitude  Float
+  lastSeenAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, venueId])
+  @@index([venueId])
+  @@index([lastSeenAt])
 }
