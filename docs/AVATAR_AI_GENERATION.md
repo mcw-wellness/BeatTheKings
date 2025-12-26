@@ -227,9 +227,10 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function generateAvatar(prefs: AvatarPreferences): Promise<string> {
-  // Use Gemini 2.0 Flash (cheaper) or Pro (higher quality)
+  // Use Gemini for image generation (500 images/day free)
+  // Model: gemini-2.0-flash-exp-image-generation or gemini-2.5-flash-image-preview
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-exp', // TODO: evaluate flash vs pro
+    model: 'gemini-2.0-flash-exp-image-generation',
   })
 
   const prompt = buildAvatarPrompt(prefs)
@@ -408,14 +409,14 @@ model AvatarImage {
 
 ## Considerations
 
-### Model Selection (TBD)
+### Model Selection
 
-| Model                | Speed  | Quality | Cost   | Notes              |
-| -------------------- | ------ | ------- | ------ | ------------------ |
-| **Gemini 2.0 Flash** | Fast   | Good    | Lower  | Best for MVP       |
-| **Gemini 2.0 Pro**   | Slower | Higher  | Higher | Better consistency |
+| Model ID | Free Tier | Quality | Notes |
+| -------- | --------- | ------- | ----- |
+| `gemini-2.0-flash-exp-image-generation` | 500/day | Good | Best for MVP |
+| `imagen-3.0-generate-002` | 10-20/day | Higher | Better quality |
 
-**Recommendation:** Start with Flash, upgrade to Pro if quality is insufficient.
+**Recommendation:** Use `gemini-2.0-flash-exp-image-generation` for MVP (500 free images/day).
 
 ### Consistency Challenges
 

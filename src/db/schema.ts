@@ -215,6 +215,9 @@ export const avatars = pgTable('Avatar', {
   hairStyle: varchar('hairStyle', { length: 50 }),
   hairColor: varchar('hairColor', { length: 50 }),
 
+  // AI-generated avatar image URL (Azure Blob Storage)
+  imageUrl: varchar('imageUrl', { length: 500 }),
+
   createdAt: timestamp('createdAt').defaultNow().notNull(),
   updatedAt: timestamp('updatedAt').defaultNow().notNull(),
 })

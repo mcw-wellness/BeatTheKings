@@ -172,6 +172,7 @@ async function createTables(db: TestDatabase): Promise<void> {
       "skinTone" VARCHAR(50),
       "hairStyle" VARCHAR(50),
       "hairColor" VARCHAR(50),
+      "imageUrl" VARCHAR(500),
       "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
       "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL
     )
