@@ -196,6 +196,27 @@ src/
 - Use skeleton loaders for content
 - Disable buttons during submission
 
+**Mobile App Design (CRITICAL):**
+
+This is a **mobile web application**. Design decisions must prioritize mobile UX:
+
+- **NO modals/popups** - Use full-screen pages instead of modal overlays
+- **NO hover states** - Mobile has no hover; use tap/active states
+- **Navigate to new pages** - Instead of opening modals, navigate to dedicated pages (e.g., `/player/[id]` instead of a Trump Card modal)
+- **Bottom navigation friendly** - Keep important actions within thumb reach
+- **Swipe gestures** - Consider swipe for navigation where appropriate
+- **Large touch targets** - Minimum 44x44px for all interactive elements
+- **Avoid complex dropdowns** - Use full-screen pickers or dedicated selection pages
+
+```typescript
+// BAD - Modal popup
+const [isModalOpen, setIsModalOpen] = useState(false)
+<Modal isOpen={isModalOpen}>...</Modal>
+
+// GOOD - Navigate to page
+router.push(`/player/${playerId}`)
+```
+
 ### TypeScript Rules
 
 - **Strict mode enabled** - No `any` types unless absolutely necessary

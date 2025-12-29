@@ -87,7 +87,13 @@ export function AvatarPreview({
           <g>
             <ellipse cx="150" cy="30" rx="42" ry="25" fill={hairHex} />
             {[105, 125, 145, 165, 185].map((x) => (
-              <path key={x} d={`M ${x} 40 Q ${x - 3} 80 ${x} 110`} stroke={hairDark} strokeWidth="4" fill="none" />
+              <path
+                key={x}
+                d={`M ${x} 40 Q ${x - 3} 80 ${x} 110`}
+                stroke={hairDark}
+                strokeWidth="4"
+                fill="none"
+              />
             ))}
           </g>
         )
@@ -96,7 +102,13 @@ export function AvatarPreview({
           <g>
             <ellipse cx="150" cy="30" rx="42" ry="25" fill={hairHex} />
             {[100, 120, 140, 160, 180, 200].map((x, i) => (
-              <path key={x} d={`M ${x} 35 Q ${x + (i % 2 ? 5 : -5)} 70 ${x} 100`} stroke={hairHex} strokeWidth="6" fill="none" />
+              <path
+                key={x}
+                d={`M ${x} 35 Q ${x + (i % 2 ? 5 : -5)} 70 ${x} 100`}
+                stroke={hairHex}
+                strokeWidth="6"
+                fill="none"
+              />
             ))}
           </g>
         )
@@ -134,23 +146,99 @@ export function AvatarPreview({
       <circle cx="135" cy="59" r="3" fill="#000" />
       <circle cx="165" cy="59" r="3" fill="#000" />
       {/* Smile */}
-      <path d="M 135 78 Q 150 88 165 78" stroke="#000" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <path
+        d="M 135 78 Q 150 88 165 78"
+        stroke="#000"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+      />
       {/* Neck */}
-      <rect x="135" y="95" width="30" height="15" fill="url(#skinGrad)" stroke="#000" strokeWidth="1" />
+      <rect
+        x="135"
+        y="95"
+        width="30"
+        height="15"
+        fill="url(#skinGrad)"
+        stroke="#000"
+        strokeWidth="1"
+      />
       {/* Jersey */}
-      <rect x="100" y="108" width="100" height="85" fill="#4361EE" stroke="#000" strokeWidth="2" rx="5" />
-      <text x="150" y="160" fontSize="36" fontWeight="bold" fill="#FFF" textAnchor="middle" stroke="#000" strokeWidth="0.5">
+      <rect
+        x="100"
+        y="108"
+        width="100"
+        height="85"
+        fill="#4361EE"
+        stroke="#000"
+        strokeWidth="2"
+        rx="5"
+      />
+      <text
+        x="150"
+        y="160"
+        fontSize="36"
+        fontWeight="bold"
+        fill="#FFF"
+        textAnchor="middle"
+        stroke="#000"
+        strokeWidth="0.5"
+      >
         {jerseyNumber}
       </text>
       {/* Arms */}
-      <ellipse cx="85" cy="145" rx="16" ry="45" fill="url(#skinGrad)" stroke="#000" strokeWidth="1.5" />
-      <ellipse cx="215" cy="145" rx="16" ry="45" fill="url(#skinGrad)" stroke="#000" strokeWidth="1.5" />
+      <ellipse
+        cx="85"
+        cy="145"
+        rx="16"
+        ry="45"
+        fill="url(#skinGrad)"
+        stroke="#000"
+        strokeWidth="1.5"
+      />
+      <ellipse
+        cx="215"
+        cy="145"
+        rx="16"
+        ry="45"
+        fill="url(#skinGrad)"
+        stroke="#000"
+        strokeWidth="1.5"
+      />
       {/* Shorts */}
-      <path d="M 100 193 L 95 245 L 140 245 L 145 193 Z" fill="#3651DE" stroke="#000" strokeWidth="2" />
-      <path d="M 155 193 L 160 245 L 205 245 L 200 193 Z" fill="#3651DE" stroke="#000" strokeWidth="2" />
+      <path
+        d="M 100 193 L 95 245 L 140 245 L 145 193 Z"
+        fill="#3651DE"
+        stroke="#000"
+        strokeWidth="2"
+      />
+      <path
+        d="M 155 193 L 160 245 L 205 245 L 200 193 Z"
+        fill="#3651DE"
+        stroke="#000"
+        strokeWidth="2"
+      />
       {/* Legs */}
-      <rect x="100" y="245" width="28" height="80" fill="url(#skinGrad)" stroke="#000" strokeWidth="1.5" rx="8" />
-      <rect x="172" y="245" width="28" height="80" fill="url(#skinGrad)" stroke="#000" strokeWidth="1.5" rx="8" />
+      <rect
+        x="100"
+        y="245"
+        width="28"
+        height="80"
+        fill="url(#skinGrad)"
+        stroke="#000"
+        strokeWidth="1.5"
+        rx="8"
+      />
+      <rect
+        x="172"
+        y="245"
+        width="28"
+        height="80"
+        fill="url(#skinGrad)"
+        stroke="#000"
+        strokeWidth="1.5"
+        rx="8"
+      />
       {/* Shoes */}
       <ellipse cx="114" cy="340" rx="22" ry="25" fill="#1a1a1a" stroke="#000" strokeWidth="2" />
       <ellipse cx="186" cy="340" rx="22" ry="25" fill="#1a1a1a" stroke="#000" strokeWidth="2" />

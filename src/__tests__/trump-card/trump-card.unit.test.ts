@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  calculateXpProgress,
-  calculateWinRate,
-  calculateAccuracy,
-} from '@/lib/trump-card'
+import { calculateXpProgress, calculateWinRate, calculateAccuracy } from '@/lib/trump-card'
 
 describe('Trump Card Unit Tests', () => {
   describe('calculateXpProgress', () => {

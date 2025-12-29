@@ -13,24 +13,32 @@ export interface AvatarPromptInput {
 
 /**
  * Base style for all avatar generations
+ * Matches the Trump Card design - cartoon sports card style
  */
 const BASE_STYLE = `
-Cartoon sports avatar illustration, mobile game card style,
-vibrant colors, clean vector-like art, full body standing pose,
-stadium background, similar to NBA 2K or FIFA mobile card art style,
-high quality, detailed, white background
+High quality cartoon sports avatar illustration in mobile game trading card style,
+vibrant warm golden lighting, clean vector-like art with smooth gradients,
+full body standing pose in basketball arena/stadium background with crowd,
+similar to NBA 2K mobile card art, detailed character design,
+golden frame aesthetic, warm amber tones in background
 `.trim()
 
 /**
  * Get outfit description based on sport
+ * Basketball: Warriors-style blue/gold, Soccer: Classic kit
  */
 function getOutfitDescription(sport: string): string {
   switch (sport) {
     case 'soccer':
-      return 'wearing red soccer jersey with number 10, white shorts, black cleats, foot on soccer ball, confident pose'
+      return `wearing red soccer jersey with gold trim and number 10,
+        white shorts with red stripe, black soccer cleats with gold accents,
+        one foot on soccer ball, confident athletic pose, arms crossed`
     case 'basketball':
     default:
-      return 'wearing blue basketball jersey with number 23, blue shorts, white high-top basketball shoes, holding basketball, confident pose'
+      return `wearing royal blue basketball jersey with gold/yellow trim and team logo,
+        matching blue shorts with gold stripe, white and blue high-top basketball shoes,
+        doing shaka hand gesture with one hand, spinning basketball on finger with other hand,
+        confident playful pose, wristbands on both wrists`
   }
 }
 
@@ -55,7 +63,8 @@ export function buildUserAvatarPrompt(input: AvatarPromptInput): string {
  * Build prompt for default avatars (used in setup script)
  */
 export function buildDefaultAvatarPrompt(gender: string, sport: string): string {
-  const character = `${gender} athlete with medium skin tone, athletic build, short black hair`
+  const facialHair = gender === 'male' ? ', well-groomed short beard' : ''
+  const character = `${gender} athlete with medium brown skin tone, athletic muscular build, short black hair${facialHair}, friendly confident expression`
   const outfit = getOutfitDescription(sport)
 
   return `${BASE_STYLE}. ${character}. ${outfit}.`

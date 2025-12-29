@@ -1,107 +1,104 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Logo } from '@/components/layout/Logo'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
-import { useApp } from '@/context/AppContext'
-import { mockMonthlyChallenge, mockVenues } from '@/lib/mockData'
-import { formatXP } from '@/lib/utils'
+import Image from 'next/image'
 
-interface RankingPlayer {
+interface RankedPlayer {
+  id: string
   rank: number
-  userId: string
-  name: string
-  ageGroup: string
-  totalXp: number
-  totalChallenges: number
-  location?: string
+  name: string | null
+  gender: string | null
+  xp: number
+  avatar: {
+    imageUrl: string | null
+    skinTone: string | null
+    hairStyle: string | null
+    hairColor: string | null
+  } | null
+  isKing: boolean
 }
 
-export default function RankingPage() {
-  const router = useRouter()
-  const { selectedSport, user } = useApp()
-  const [tab, setTab] = useState<'venue' | 'city' | 'country'>('venue')
-  const [selectedVenue, setSelectedVenue] = useState(mockVenues[0])
-  const [players, setPlayers] = useState<RankingPlayer[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+interface RankingsData {
+  level: string
+  sport: string
+  location: { id: string; name: string } | null
+  king: RankedPlayer | null
+  rankings: RankedPlayer[]
+  currentUser: RankedPlayer | null
+  totalPlayers: number
+}
 
-  const tabs = [
-    { id: 'venue', label: 'Venue' },
+type TabType = 'venue' | 'city' | 'country'
+
+export default function RankingPage(): JSX.Element {
+  const router = useRouter()
+  const [tab, setTab] = useState<TabType>('city')
+  const [data, setData] = useState<RankingsData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const tabs: { id: TabType; label: string }[] = [
+    { id: 'venue', label: 'Court' },
     { id: 'city', label: 'City' },
     { id: 'country', label: 'Country' },
   ]
 
-  const ageGroup = user?.ageGroup || '14-16'
-  const userCity = user?.location?.split(',')[0]?.trim() || 'Vienna'
-
-  // Fetch rankings when tab or selections change
-  useEffect(() => {
-    fetchRankings()
-  }, [tab, selectedSport, selectedVenue])
-
-  const fetchRankings = async () => {
+  const fetchRankings = useCallback(async (): Promise<void> => {
     setIsLoading(true)
-    try {
-      let url = ''
+    setError(null)
 
-      if (tab === 'country') {
-        url = `/api/rankings/country?sport=${selectedSport}`
-      } else if (tab === 'city') {
-        url = `/api/rankings/city/${encodeURIComponent(userCity)}?sport=${selectedSport}`
-      } else if (tab === 'venue') {
-        const response = await fetch(
-          `/api/rankings/venue/${selectedVenue.id}?sport=${selectedSport}`
-        )
-        const data = await response.json()
-        setPlayers(data.players || [])
-        setIsLoading(false)
-        return
+    try {
+      const response = await fetch(`/api/rankings?level=${tab}&limit=10`)
+
+      if (!response.ok) {
+        throw new Error('Failed to load rankings')
       }
 
-      const response = await fetch(url)
-      const data = await response.json()
-      setPlayers(data)
-    } catch (error) {
-      console.error('Failed to fetch rankings:', error)
-      setPlayers([])
+      const json = await response.json()
+      setData(json)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setIsLoading(false)
     }
+  }, [tab])
+
+  useEffect(() => {
+    fetchRankings()
+  }, [fetchRankings])
+
+  const openPlayerCard = (playerId: string): void => {
+    router.push(`/player/${playerId}`)
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="w-full max-w-4xl mx-auto p-4 md:p-8 space-y-4">
-        {/* Header with Logo */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-start gap-2">
-            <div className="w-12 h-12 flex-shrink-0">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Rankings</h1>
-              <p className="text-sm text-gray-500">Age Group: {ageGroup}</p>
-            </div>
+    <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      <div className="max-w-lg mx-auto p-4 space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/welcome')}
+              className="text-gray-400 hover:text-white"
+            >
+              ← Back
+            </button>
+            <h1 className="text-xl font-bold text-white">Rankings</h1>
           </div>
-          <button
-            onClick={() => router.push('/welcome')}
-            className="text-blue-600 text-sm font-medium flex-shrink-0 mt-1"
-          >
-            ← Back
-          </button>
+          <div className="flex gap-2">
+            <span className="text-2xl">🏀</span>
+          </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex bg-gray-800 rounded-xl p-1">
           {tabs.map((t) => (
             <button
               key={t.id}
-              onClick={() => setTab(t.id as any)}
-              className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                tab === t.id ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600'
+              onClick={() => setTab(t.id)}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                tab === t.id ? 'bg-yellow-500 text-gray-900' : 'text-gray-400 hover:text-white'
               }`}
             >
               {t.label}
@@ -109,115 +106,152 @@ export default function RankingPage() {
           ))}
         </div>
 
-        {/* Venue Selector */}
-        {tab === 'venue' && (
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">Select Venue</label>
-            <select
-              value={selectedVenue.id}
-              onChange={(e) => {
-                const venue = mockVenues.find((v) => v.id === e.target.value)
-                if (venue) setSelectedVenue(venue)
-              }}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 focus:outline-none bg-white text-sm"
-            >
-              {mockVenues
-                .filter((v) => v.sportType === selectedSport)
-                .map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name} - {v.city}
-                  </option>
-                ))}
-            </select>
-          </div>
+        {/* Location */}
+        {data?.location && (
+          <p className="text-gray-400 text-sm text-center">
+            {data.location.name} • {data.totalPlayers} players
+          </p>
         )}
 
-        {/* City Tab - Show user's city (no dropdown) */}
-        {tab === 'city' && (
-          <div>
-            <p className="text-sm text-gray-600">
-              Showing rankings for <span className="font-semibold">{userCity}</span>
-            </p>
+        {/* Content */}
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-yellow-500 border-t-transparent" />
           </div>
-        )}
+        ) : error ? (
+          <div className="text-center py-12 text-red-400">{error}</div>
+        ) : data ? (
+          <>
+            {/* King Section */}
+            {data.king && (
+              <div
+                onClick={() => openPlayerCard(data.king!.id)}
+                className="bg-gradient-to-r from-yellow-600/20 to-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-transform"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">👑</span>
+                  <span className="text-yellow-400 font-bold text-sm uppercase tracking-wide">
+                    King of the {tab === 'venue' ? 'Court' : tab === 'city' ? 'City' : 'Country'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center overflow-hidden border-2 border-yellow-500">
+                    <Image
+                      src={data.king.avatar?.imageUrl || ''}
+                      alt="Avatar"
+                      width={64}
+                      height={64}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-bold text-lg">{data.king.name || 'Player'}</p>
+                    <p className="text-yellow-400 text-sm">XP: {data.king.xp.toLocaleString()}</p>
+                  </div>
+                  <div className="text-3xl font-bold text-yellow-400">#1</div>
+                </div>
+              </div>
+            )}
 
-        {/* Country Tab - No selector needed */}
-
-        {/* Top 10 Rankings */}
-        <div>
-          <h2 className="text-base font-bold mb-3 text-gray-900">
-            {tab === 'venue' && `Top 10 - ${selectedVenue.name}`}
-            {tab === 'city' && `Top 10 - ${userCity}`}
-            {tab === 'country' && `Top 10 - Austria`}
-          </h2>
-
-          {isLoading ? (
-            <div className="text-center py-8 text-gray-500">Loading rankings...</div>
-          ) : players.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No rankings available</div>
-          ) : (
+            {/* Rankings List */}
             <div className="space-y-2">
-              {players.map((player, index) => (
-                <div
-                  key={player.userId}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center gap-2.5">
+              <h2 className="text-white font-semibold text-sm uppercase tracking-wide px-1">
+                Top Players
+              </h2>
+              {data.rankings.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No players ranked yet</p>
+              ) : (
+                data.rankings.map((player) => (
+                  <div
+                    key={player.id}
+                    onClick={() => openPlayerCard(player.id)}
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer active:scale-[0.98] transition-transform ${
+                      player.isKing
+                        ? 'bg-yellow-500/10 border border-yellow-500/30'
+                        : 'bg-gray-800/50 active:bg-gray-700'
+                    }`}
+                  >
+                    {/* Rank */}
                     <div
-                      className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold ${
-                        index === 0
-                          ? 'bg-yellow-400 text-white'
-                          : index === 1
-                            ? 'bg-gray-300 text-gray-700'
-                            : index === 2
-                              ? 'bg-orange-400 text-white'
-                              : 'bg-white text-gray-600 border border-gray-200'
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
+                        player.rank === 1
+                          ? 'bg-yellow-500 text-gray-900'
+                          : player.rank === 2
+                            ? 'bg-gray-400 text-gray-900'
+                            : player.rank === 3
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-gray-700 text-gray-300'
                       }`}
                     >
-                      #{player.rank}
+                      {player.rank}
                     </div>
-                    <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <svg
-                        className="w-5 h-5 text-gray-600"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                      </svg>
+
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                      <Image
+                        src={player.avatar?.imageUrl || ''}
+                        alt="Avatar"
+                        width={40}
+                        height={40}
+                        className="object-cover w-full h-full"
+                      />
                     </div>
-                    <div>
-                      <p className="font-bold text-sm text-gray-900">{player.name}</p>
-                      <p className="text-xs text-gray-500">Age Group: {player.ageGroup}</p>
+
+                    {/* Name */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium truncate">
+                        {player.name || 'Player'}
+                        {player.isKing && <span className="ml-2">👑</span>}
+                      </p>
                     </div>
+
+                    {/* XP */}
+                    <div className="text-right">
+                      <p className="text-yellow-400 font-bold">{player.xp.toLocaleString()}</p>
+                      <p className="text-gray-500 text-xs">XP</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Current User Rank (if not in top 10) */}
+            {data.currentUser && data.currentUser.rank > 10 && (
+              <>
+                <div className="border-t border-gray-700 my-4" />
+                <div className="text-gray-500 text-xs text-center mb-2">Your Rank</div>
+                <div
+                  onClick={() => openPlayerCard(data.currentUser!.id)}
+                  className="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl cursor-pointer active:scale-[0.98] transition-transform"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center font-bold text-sm text-white">
+                    {data.currentUser.rank}
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                    <Image
+                      src={data.currentUser.avatar?.imageUrl || ''}
+                      alt="Avatar"
+                      width={40}
+                      height={40}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium truncate">
+                      {data.currentUser.name || 'You'}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-sm text-blue-600">{formatXP(player.totalXp)}</p>
-                    <p className="text-xs text-gray-500">{player.totalChallenges} challenges</p>
+                    <p className="text-blue-400 font-bold">
+                      {data.currentUser.xp.toLocaleString()}
+                    </p>
+                    <p className="text-gray-500 text-xs">XP</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Monthly Challenge */}
-        <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-5 text-white">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">🏆</span>
-            <h2 className="text-base font-bold">{mockMonthlyChallenge.title}</h2>
-          </div>
-          <p className="text-xs mb-3 text-purple-50 leading-relaxed">
-            {mockMonthlyChallenge.description}
-          </p>
-          <div className="inline-block bg-purple-700 bg-opacity-60 text-white px-3 py-1 rounded-full text-xs font-medium mb-3">
-            Prize: {mockMonthlyChallenge.prizeDescription}
-          </div>
-          <div>
-            <button className="bg-white text-purple-600 px-5 py-2 rounded-lg text-xs font-bold hover:bg-purple-50 transition-colors">
-              Join & Compete
-            </button>
-          </div>
-        </div>
+              </>
+            )}
+          </>
+        ) : null}
       </div>
     </main>
   )

@@ -52,8 +52,8 @@ describe('Avatar Generator', () => {
         hairColor: 'brown',
       })
 
-      expect(prompt).toContain('Cartoon')
-      expect(prompt).toContain('mobile game card style')
+      expect(prompt.toLowerCase()).toContain('cartoon')
+      expect(prompt).toContain('card style')
       expect(prompt).toContain('stadium background')
     })
 

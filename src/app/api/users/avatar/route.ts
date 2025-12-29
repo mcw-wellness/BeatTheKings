@@ -92,20 +92,35 @@ export async function POST(request: Request): Promise<NextResponse> {
     // Get user's gender for AI generation
     const gender = await getUserGender(session.user.id)
 
-    // Try to generate AI avatar image (skip if Gemini not configured or fails)
+    // Check if a pre-generated preview image was provided
+    const previewImage = (body as { previewImage?: string }).previewImage
+
     let imageUrl: string | undefined
-    try {
-      const imageBuffer = await generateAvatarImage({
-        gender,
-        skinTone: validation.data.skinTone,
-        hairStyle: validation.data.hairStyle,
-        hairColor: validation.data.hairColor,
-      })
-      imageUrl = await uploadAvatar(session.user.id, imageBuffer)
-      logger.info({ userId: session.user.id, imageUrl }, 'AI avatar generated and uploaded')
-    } catch (error) {
-      // Log but continue without AI image - will use SVG fallback
-      logger.warn({ error }, 'AI avatar generation skipped, using SVG fallback')
+    if (previewImage && previewImage.startsWith('data:image/')) {
+      // Use the pre-generated preview image
+      try {
+        const base64Data = previewImage.replace(/^data:image\/\w+;base64,/, '')
+        const imageBuffer = Buffer.from(base64Data, 'base64')
+        imageUrl = await uploadAvatar(session.user.id, imageBuffer)
+        logger.info({ userId: session.user.id, imageUrl }, 'Preview avatar uploaded')
+      } catch (error) {
+        logger.warn({ error }, 'Failed to upload preview image')
+      }
+    } else {
+      // Try to generate AI avatar image (skip if Gemini not configured or fails)
+      try {
+        const imageBuffer = await generateAvatarImage({
+          gender,
+          skinTone: validation.data.skinTone,
+          hairStyle: validation.data.hairStyle,
+          hairColor: validation.data.hairColor,
+        })
+        imageUrl = await uploadAvatar(session.user.id, imageBuffer)
+        logger.info({ userId: session.user.id, imageUrl }, 'AI avatar generated and uploaded')
+      } catch (error) {
+        // Log but continue without AI image - will use SVG fallback
+        logger.warn({ error }, 'AI avatar generation skipped, using SVG fallback')
+      }
     }
 
     // Create avatar with optional image URL
@@ -191,20 +206,35 @@ export async function PUT(request: Request): Promise<NextResponse> {
     // Get user's gender for AI generation
     const gender = await getUserGender(session.user.id)
 
-    // Try to regenerate AI avatar image
+    // Check if a pre-generated preview image was provided
+    const previewImage = (body as { previewImage?: string }).previewImage
+
     let imageUrl: string | undefined
-    try {
-      const imageBuffer = await generateAvatarImage({
-        gender,
-        skinTone,
-        hairStyle,
-        hairColor,
-      })
-      imageUrl = await uploadAvatar(session.user.id, imageBuffer)
-      logger.info({ userId: session.user.id, imageUrl }, 'AI avatar regenerated and uploaded')
-    } catch (error) {
-      // Log but continue - keep existing image or use SVG fallback
-      logger.warn({ error }, 'AI avatar regeneration skipped')
+    if (previewImage && previewImage.startsWith('data:image/')) {
+      // Use the pre-generated preview image
+      try {
+        const base64Data = previewImage.replace(/^data:image\/\w+;base64,/, '')
+        const imageBuffer = Buffer.from(base64Data, 'base64')
+        imageUrl = await uploadAvatar(session.user.id, imageBuffer)
+        logger.info({ userId: session.user.id, imageUrl }, 'Preview avatar uploaded')
+      } catch (error) {
+        logger.warn({ error }, 'Failed to upload preview image')
+      }
+    } else {
+      // Try to regenerate AI avatar image
+      try {
+        const imageBuffer = await generateAvatarImage({
+          gender,
+          skinTone,
+          hairStyle,
+          hairColor,
+        })
+        imageUrl = await uploadAvatar(session.user.id, imageBuffer)
+        logger.info({ userId: session.user.id, imageUrl }, 'AI avatar regenerated and uploaded')
+      } catch (error) {
+        // Log but continue - keep existing image or use SVG fallback
+        logger.warn({ error }, 'AI avatar regeneration skipped')
+      }
     }
 
     // Update avatar with new values and optional image URL

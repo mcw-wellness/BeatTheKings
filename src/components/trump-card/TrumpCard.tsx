@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { AvatarPreview } from '@/components/avatar/AvatarPreview'
 
 interface TrumpCardData {
   player: {
     id: string
     name: string | null
+    gender: string | null
     avatar: {
       imageUrl: string | null
       skinTone: string | null
@@ -80,15 +80,13 @@ export function TrumpCard({ userId, isOpen, onClose }: TrumpCardProps): JSX.Elem
 
   if (!isOpen) return null
 
-  const isKing = data?.crowns.isKingOfCourt || data?.crowns.isKingOfCity || data?.crowns.isKingOfCountry
+  const isKing =
+    data?.crowns.isKingOfCourt || data?.crowns.isKingOfCity || data?.crowns.isKingOfCountry
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Card */}
       <div className="relative w-full max-w-md bg-gradient-to-b from-[#1a1a2e] to-[#16213e] rounded-2xl border-2 border-yellow-500/50 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
@@ -106,15 +104,15 @@ export function TrumpCard({ userId, isOpen, onClose }: TrumpCardProps): JSX.Elem
         ) : error ? (
           <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
             <p className="text-red-400">{error}</p>
-            <button onClick={onClose} className="mt-4 text-yellow-500 underline">Close</button>
+            <button onClick={onClose} className="mt-4 text-yellow-500 underline">
+              Close
+            </button>
           </div>
         ) : data ? (
           <div className="p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">
-                {data.player.name || 'Player'}
-              </h2>
+              <h2 className="text-xl font-bold text-white">{data.player.name || 'Player'}</h2>
               <div className="flex items-center gap-2">
                 {isKing && (
                   <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-1 rounded-full border border-yellow-500/50">
@@ -131,26 +129,14 @@ export function TrumpCard({ userId, isOpen, onClose }: TrumpCardProps): JSX.Elem
             {/* Main Content */}
             <div className="flex gap-4">
               {/* Avatar */}
-              <div className="flex-shrink-0 w-32 h-40 bg-gradient-to-b from-amber-900/30 to-amber-950/30 rounded-xl flex items-center justify-center overflow-hidden border border-yellow-500/30">
-                {data.player.avatar?.imageUrl ? (
-                  <Image
-                    src={data.player.avatar.imageUrl}
-                    alt="Avatar"
-                    width={120}
-                    height={150}
-                    className="object-contain"
-                  />
-                ) : data.player.avatar ? (
-                  <div className="scale-[0.35] origin-center">
-                    <AvatarPreview
-                      skinTone={data.player.avatar.skinTone || 'medium'}
-                      hairStyle={data.player.avatar.hairStyle || 'short'}
-                      hairColor={data.player.avatar.hairColor || 'black'}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-4xl">🏀</div>
-                )}
+              <div className="flex-shrink-0 w-32 h-40 bg-gradient-to-b from-amber-900/30 to-amber-950/30 rounded-xl flex items-center justify-center overflow-hidden border border-yellow-500/30 relative">
+                <Image
+                  src={data.player.avatar?.imageUrl || ''}
+                  alt="Avatar"
+                  width={120}
+                  height={150}
+                  className="object-contain"
+                />
                 {isKing && (
                   <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-2xl">👑</div>
                 )}
@@ -158,9 +144,19 @@ export function TrumpCard({ userId, isOpen, onClose }: TrumpCardProps): JSX.Elem
 
               {/* Stats Panel */}
               <div className="flex-1 space-y-2">
-                <StatRow icon="XP" label="XP" value={`${data.stats.xp}/${data.stats.xp + data.stats.xpToNextLevel}`} color="purple" />
+                <StatRow
+                  icon="XP"
+                  label="XP"
+                  value={`${data.stats.xp}/${data.stats.xp + data.stats.xpToNextLevel}`}
+                  color="purple"
+                />
                 <StatRow icon="🪙" label="RP" value={data.stats.rp.toString()} color="yellow" />
-                <StatRow icon="🏀" label="Total Points" value={data.stats.totalPoints.toString()} color="white" />
+                <StatRow
+                  icon="🏀"
+                  label="Total Points"
+                  value={data.stats.totalPoints.toString()}
+                  color="white"
+                />
                 <StatRow icon="📊" label="WinRate" value={`${data.stats.winRate}%`} color="green" />
               </div>
             </div>
@@ -174,9 +170,21 @@ export function TrumpCard({ userId, isOpen, onClose }: TrumpCardProps): JSX.Elem
 
               {/* Detailed Stats */}
               <div className="flex-1 bg-black/30 rounded-lg p-3 space-y-1">
-                <DetailRow icon="🏀" label="Marks" value={`${data.stats.matchesWon}/${data.stats.matchesPlayed}`} />
-                <DetailRow icon="🏀" label="Challenges" value={`${data.stats.challengesCompleted}/${data.stats.totalChallenges}`} />
-                <DetailRow icon="🏀" label="Total Points" value={data.stats.totalPoints.toString()} />
+                <DetailRow
+                  icon="🏀"
+                  label="Marks"
+                  value={`${data.stats.matchesWon}/${data.stats.matchesPlayed}`}
+                />
+                <DetailRow
+                  icon="🏀"
+                  label="Challenges"
+                  value={`${data.stats.challengesCompleted}/${data.stats.totalChallenges}`}
+                />
+                <DetailRow
+                  icon="🏀"
+                  label="Total Points"
+                  value={data.stats.totalPoints.toString()}
+                />
                 <DetailRow icon="🏀" label="WinRate" value={`${data.stats.winRate}%`} />
               </div>
             </div>
@@ -209,7 +217,17 @@ export function TrumpCard({ userId, isOpen, onClose }: TrumpCardProps): JSX.Elem
   )
 }
 
-function StatRow({ icon, label, value, color }: { icon: string; label: string; value: string; color: string }): JSX.Element {
+function StatRow({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: string
+  label: string
+  value: string
+  color: string
+}): JSX.Element {
   const colorClasses: Record<string, string> = {
     purple: 'bg-purple-500/20 text-purple-300',
     yellow: 'bg-yellow-500/20 text-yellow-300',
@@ -218,7 +236,9 @@ function StatRow({ icon, label, value, color }: { icon: string; label: string; v
   }
 
   return (
-    <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${colorClasses[color] || colorClasses.white}`}>
+    <div
+      className={`flex items-center justify-between px-3 py-2 rounded-lg ${colorClasses[color] || colorClasses.white}`}
+    >
       <div className="flex items-center gap-2">
         <span className="text-sm">{icon}</span>
         <span className="text-sm font-medium">{label}</span>
@@ -228,7 +248,15 @@ function StatRow({ icon, label, value, color }: { icon: string; label: string; v
   )
 }
 
-function DetailRow({ icon, label, value }: { icon: string; label: string; value: string }): JSX.Element {
+function DetailRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: string
+  label: string
+  value: string
+}): JSX.Element {
   return (
     <div className="flex items-center justify-between text-sm">
       <div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import {
   avatars,
   avatarItems,
@@ -421,7 +421,7 @@ export async function markAvatarCreated(db: Database, userId: string) {
  * Get user's unlocked items for a sport
  */
 export async function getUserUnlockedItems(db: Database, userId: string, sportId?: string) {
-  let query = db
+  const query = db
     .select({
       unlocked: userUnlockedItems,
       item: avatarItems,

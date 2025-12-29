@@ -3,8 +3,9 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import { Logo } from '@/components/layout/Logo'
-import { AvatarPreview } from '@/components/avatar/AvatarPreview'
+import { useAvatarUrl } from '@/lib/hooks/useAvatarUrl'
 import {
   SKIN_TONE_COLORS,
   HAIR_COLOR_HEX,
@@ -51,17 +52,103 @@ function AvatarPageContent(): JSX.Element {
   const [hairColor, setHairColor] = useState<HairColor>('black')
   const [jerseyNumber, setJerseyNumber] = useState(10)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [userGender, setUserGender] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null)
+  const [isNewPreview, setIsNewPreview] = useState(false)
+
+  // Fetch user's gender and existing avatar
+  useEffect(() => {
+    const fetchUserData = async (): Promise<void> => {
+      try {
+        // Fetch gender
+        const profileRes = await fetch('/api/users/profile')
+        if (profileRes.ok) {
+          const profileData = await profileRes.json()
+          setUserGender(profileData.gender)
+        }
+
+        // Fetch existing avatar if user has one
+        const avatarRes = await fetch('/api/users/avatar')
+        console.log('Avatar API response status:', avatarRes.status)
+
+        if (avatarRes.ok) {
+          const data = await avatarRes.json()
+          console.log('Avatar data:', data)
+          const avatar = data.avatar
+
+          if (avatar) {
+            if (avatar.skinTone) setSkinTone(avatar.skinTone)
+            if (avatar.hairStyle) setHairStyle(avatar.hairStyle)
+            if (avatar.hairColor) setHairColor(avatar.hairColor)
+
+            // If user has a saved avatar image, fetch SAS URL for it
+            console.log('Avatar imageUrl:', avatar.imageUrl)
+            if (avatar.imageUrl) {
+              console.log('Fetching SAS URL for user avatar...')
+              const sasRes = await fetch('/api/avatar/url?type=user&userId=me')
+              console.log('SAS URL response status:', sasRes.status)
+              const sasData = await sasRes.json()
+              console.log('SAS URL data:', sasData)
+              if (sasRes.ok && sasData.url) {
+                setSavedAvatarUrl(sasData.url)
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in fetchUserData:', error)
+        setUserGender('male')
+      }
+    }
+    fetchUserData()
+  }, [])
+
+  // Get default avatar URL with SAS token
+  const defaultAvatarUrl = useAvatarUrl({ type: 'default', gender: userGender })
+
+  // Priority: new preview > saved avatar > default
+  const displayAvatarUrl = previewImage || savedAvatarUrl || defaultAvatarUrl
 
   // Mock equipment items - will be fetched from API
   const [items] = useState<AvatarItem[]>([
     { id: '1', name: 'Blue Jersey', itemType: 'jersey', imageUrl: '', isLocked: false },
-    { id: '2', name: 'Red Jersey', itemType: 'jersey', imageUrl: '', isLocked: true, unlockRequirement: '10 Matches' },
-    { id: '3', name: 'Gold Jersey', itemType: 'jersey', imageUrl: '', isLocked: true, unlockRequirement: '25 Matches' },
+    {
+      id: '2',
+      name: 'Red Jersey',
+      itemType: 'jersey',
+      imageUrl: '',
+      isLocked: true,
+      unlockRequirement: '10 Matches',
+    },
+    {
+      id: '3',
+      name: 'Gold Jersey',
+      itemType: 'jersey',
+      imageUrl: '',
+      isLocked: true,
+      unlockRequirement: '25 Matches',
+    },
     { id: '4', name: 'Blue Shorts', itemType: 'shorts', imageUrl: '', isLocked: false },
-    { id: '5', name: 'Black Shorts', itemType: 'shorts', imageUrl: '', isLocked: true, unlockRequirement: '5 Challenges' },
+    {
+      id: '5',
+      name: 'Black Shorts',
+      itemType: 'shorts',
+      imageUrl: '',
+      isLocked: true,
+      unlockRequirement: '5 Challenges',
+    },
     { id: '6', name: 'Black Shoes', itemType: 'shoes', imageUrl: '', isLocked: false },
-    { id: '7', name: 'Red Shoes', itemType: 'shoes', imageUrl: '', isLocked: true, unlockRequirement: '3 Invites' },
+    {
+      id: '7',
+      name: 'Red Shoes',
+      itemType: 'shoes',
+      imageUrl: '',
+      isLocked: true,
+      unlockRequirement: '3 Invites',
+    },
   ])
 
   useEffect(() => {
@@ -70,34 +157,84 @@ function AvatarPageContent(): JSX.Element {
 
   if (status === 'loading') return <AvatarPageSkeleton />
 
+  const handleGeneratePreview = async (): Promise<void> => {
+    setError(null)
+    setIsGenerating(true)
+
+    try {
+      const res = await fetch('/api/avatar/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gender: userGender || 'male',
+          skinTone,
+          hairStyle,
+          hairColor,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to generate preview')
+      }
+
+      setPreviewImage(data.imageUrl)
+      setIsNewPreview(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate preview')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const handleSave = async (): Promise<void> => {
     setError(null)
     setIsSubmitting(true)
 
     try {
+      // Only include previewImage if it's a new preview (base64)
+      const payload = {
+        skinTone,
+        hairStyle,
+        hairColor,
+        ...(isNewPreview && previewImage && { previewImage }),
+      }
+
+      console.log('Saving avatar with payload:', {
+        ...payload,
+        previewImage: payload.previewImage ? '[base64 data]' : undefined,
+      })
+
       const res = await fetch('/api/users/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ skinTone, hairStyle, hairColor }),
+        body: JSON.stringify(payload),
       })
 
       let data = await res.json()
+      console.log('POST response:', res.status, data)
 
       if (res.status === 409) {
+        console.log('Avatar exists, trying PUT...')
         const updateRes = await fetch('/api/users/avatar', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ skinTone, hairStyle, hairColor }),
+          body: JSON.stringify(payload),
         })
         data = await updateRes.json()
+        console.log('PUT response:', updateRes.status, data)
         if (!updateRes.ok) throw new Error(data.error || 'Failed to update avatar')
       } else if (!res.ok) {
         throw new Error(data.error || 'Failed to create avatar')
       }
 
+      console.log('Save successful, redirecting...')
       router.push('/welcome')
     } catch (err) {
+      console.error('Save error:', err)
       setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
       setIsSubmitting(false)
     }
   }
@@ -105,7 +242,7 @@ function AvatarPageContent(): JSX.Element {
   const getItemsByType = (type: string): AvatarItem[] => items.filter((i) => i.itemType === type)
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 sm:p-6">
+    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 sm:p-6 pb-24">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-center mb-4">
@@ -128,16 +265,36 @@ function AvatarPageContent(): JSX.Element {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Avatar Preview */}
-          <div className="bg-white rounded-2xl shadow-lg p-4 flex flex-col items-center">
-            <AvatarPreview
-              skinTone={skinTone}
-              hairStyle={hairStyle}
-              hairColor={hairColor}
-              jerseyNumber={jerseyNumber}
-            />
-            {/* Jersey Number */}
-            <div className="mt-4 w-full max-w-[200px]">
-              <label className="block text-xs font-semibold text-gray-700 mb-1 text-center">
+          <div className="relative bg-white rounded-2xl shadow-lg overflow-hidden h-[300px] sm:h-[400px] lg:h-[500px]">
+            {isGenerating ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4" />
+                <p className="text-gray-600 font-medium">Generating your avatar...</p>
+                <p className="text-gray-400 text-sm">This may take a few seconds</p>
+              </div>
+            ) : displayAvatarUrl ? (
+              <Image
+                src={displayAvatarUrl}
+                alt="Your Avatar"
+                fill
+                className="object-cover"
+                priority
+                unoptimized
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center animate-pulse text-gray-400 bg-amber-50">
+                Loading...
+              </div>
+            )}
+            {/* Preview Badge - only show for newly generated previews */}
+            {isNewPreview && previewImage && !isGenerating && (
+              <div className="absolute top-4 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                Preview
+              </div>
+            )}
+            {/* Jersey Number Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
+              <label className="block text-xs font-semibold text-white/80 mb-1 text-center">
                 Jersey Number
               </label>
               <input
@@ -145,8 +302,11 @@ function AvatarPageContent(): JSX.Element {
                 min="0"
                 max="99"
                 value={jerseyNumber}
-                onChange={(e) => setJerseyNumber(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)))}
-                className="w-full text-center text-2xl font-bold py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                onChange={(e) =>
+                  setJerseyNumber(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)))
+                }
+                className="w-full max-w-[120px] mx-auto block text-center text-3xl font-bold py-2 bg-white/90 border-2 border-yellow-400 rounded-lg focus:border-yellow-500 focus:outline-none"
+                disabled={isGenerating}
               />
             </div>
           </div>
@@ -249,15 +409,29 @@ function AvatarPageContent(): JSX.Element {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Save Button */}
-        <button
-          onClick={handleSave}
-          disabled={isSubmitting}
-          className="w-full max-w-md mx-auto block mt-6 min-h-[48px] bg-[#4361EE] hover:bg-[#3651DE] disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 text-lg"
-        >
-          {isSubmitting ? 'Saving...' : 'Save & Continue'}
-        </button>
+      {/* Sticky Footer Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
+        <div className="flex gap-3 max-w-4xl mx-auto">
+          {/* Generate Preview Button */}
+          <button
+            onClick={handleGeneratePreview}
+            disabled={isGenerating || isSubmitting}
+            className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200"
+          >
+            {isGenerating ? 'Generating...' : previewImage ? 'Regenerate' : 'Generate Preview'}
+          </button>
+
+          {/* Save Button */}
+          <button
+            onClick={handleSave}
+            disabled={isSubmitting || isGenerating}
+            className="flex-1 min-h-[48px] bg-[#4361EE] hover:bg-[#3651DE] disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200"
+          >
+            {isSubmitting ? 'Saving...' : 'Save & Continue'}
+          </button>
+        </div>
       </div>
     </main>
   )

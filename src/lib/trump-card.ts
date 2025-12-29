@@ -3,9 +3,20 @@
  * Functions for fetching and calculating Trump Card data
  */
 
-import { eq, desc, and, sql } from 'drizzle-orm'
-import { users, avatars, playerStats, sports, venues } from '@/db/schema'
+import { eq, desc, and } from 'drizzle-orm'
+import { users, avatars, playerStats, sports } from '@/db/schema'
 import type { Database } from '@/db'
+import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage'
+
+/**
+ * Get avatar URL with SAS token
+ */
+function getAvatarSasUrl(userId: string, hasAvatar: boolean, gender: string | null): string {
+  if (hasAvatar) {
+    return getUserAvatarSasUrl(userId)
+  }
+  return getDefaultAvatarSasUrl(gender || 'male')
+}
 
 // ===========================================
 // TYPES
@@ -15,6 +26,7 @@ export interface TrumpCardData {
   player: {
     id: string
     name: string | null
+    gender: string | null
     avatar: {
       imageUrl: string | null
       skinTone: string | null
@@ -68,7 +80,6 @@ const TOTAL_CHALLENGES = 13
  * Calculate XP to next level
  */
 export function calculateXpProgress(totalXp: number): { current: number; toNext: number } {
-  const currentLevel = Math.floor(totalXp / XP_PER_LEVEL)
   const xpInCurrentLevel = totalXp % XP_PER_LEVEL
   return {
     current: xpInCurrentLevel,
@@ -143,6 +154,7 @@ export async function getTrumpCardData(
     .select({
       id: users.id,
       name: users.name,
+      gender: users.gender,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -175,7 +187,13 @@ export async function getTrumpCardData(
       player: {
         id: user.id,
         name: user.name,
-        avatar: avatar || null,
+        gender: user.gender,
+        avatar: {
+          imageUrl: getAvatarSasUrl(user.id, !!avatar?.imageUrl, user.gender),
+          skinTone: avatar?.skinTone || null,
+          hairStyle: avatar?.hairStyle || null,
+          hairColor: avatar?.hairColor || null,
+        },
       },
       stats: {
         rank: 0,
@@ -236,7 +254,13 @@ export async function getTrumpCardData(
     player: {
       id: user.id,
       name: user.name,
-      avatar: avatar || null,
+      gender: user.gender,
+      avatar: {
+        imageUrl: getAvatarSasUrl(user.id, !!avatar?.imageUrl, user.gender),
+        skinTone: avatar?.skinTone || null,
+        hairStyle: avatar?.hairStyle || null,
+        hairColor: avatar?.hairColor || null,
+      },
     },
     stats: {
       rank,
@@ -271,10 +295,6 @@ export async function getTrumpCardData(
  * Check if a user exists
  */
 export async function userExists(db: Database, userId: string): Promise<boolean> {
-  const [user] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1)
+  const [user] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1)
   return !!user
 }

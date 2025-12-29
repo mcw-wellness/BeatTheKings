@@ -36,7 +36,7 @@ describe('Avatar Prompts', () => {
 
       expect(prompt).toContain('basketball jersey')
       expect(prompt).toContain('basketball shoes')
-      expect(prompt).toContain('holding basketball')
+      expect(prompt).toContain('spinning basketball')
     })
 
     it('should include soccer outfit when sport is soccer', () => {
@@ -65,8 +65,8 @@ describe('Avatar Prompts', () => {
 
       const prompt = buildUserAvatarPrompt(input)
 
-      expect(prompt).toContain('Cartoon')
-      expect(prompt).toContain('mobile game card style')
+      expect(prompt.toLowerCase()).toContain('cartoon')
+      expect(prompt).toContain('card style')
       expect(prompt).toContain('full body')
       expect(prompt).toContain('stadium background')
     })
@@ -122,7 +122,7 @@ describe('Avatar Prompts', () => {
       const prompt = buildDefaultAvatarPrompt('male', 'basketball')
 
       expect(prompt).toContain('male athlete')
-      expect(prompt).toContain('medium skin tone')
+      expect(prompt).toContain('medium brown skin tone')
       expect(prompt).toContain('short black hair')
       expect(prompt).toContain('basketball jersey')
     })
@@ -152,8 +152,8 @@ describe('Avatar Prompts', () => {
     it('should include base style keywords', () => {
       const prompt = buildDefaultAvatarPrompt('male', 'basketball')
 
-      expect(prompt).toContain('Cartoon')
-      expect(prompt).toContain('mobile game card style')
+      expect(prompt.toLowerCase()).toContain('cartoon')
+      expect(prompt).toContain('card style')
       expect(prompt).toContain('stadium background')
     })
   })
@@ -164,33 +164,25 @@ describe('Avatar Prompts', () => {
     })
 
     it('should have basketball male avatar', () => {
-      const avatar = DEFAULT_AVATARS.find(
-        (a) => a.gender === 'male' && a.sport === 'basketball'
-      )
+      const avatar = DEFAULT_AVATARS.find((a) => a.gender === 'male' && a.sport === 'basketball')
       expect(avatar).toBeDefined()
       expect(avatar?.fileName).toBe('basketball_male.png')
     })
 
     it('should have basketball female avatar', () => {
-      const avatar = DEFAULT_AVATARS.find(
-        (a) => a.gender === 'female' && a.sport === 'basketball'
-      )
+      const avatar = DEFAULT_AVATARS.find((a) => a.gender === 'female' && a.sport === 'basketball')
       expect(avatar).toBeDefined()
       expect(avatar?.fileName).toBe('basketball_female.png')
     })
 
     it('should have soccer male avatar', () => {
-      const avatar = DEFAULT_AVATARS.find(
-        (a) => a.gender === 'male' && a.sport === 'soccer'
-      )
+      const avatar = DEFAULT_AVATARS.find((a) => a.gender === 'male' && a.sport === 'soccer')
       expect(avatar).toBeDefined()
       expect(avatar?.fileName).toBe('soccer_male.png')
     })
 
     it('should have soccer female avatar', () => {
-      const avatar = DEFAULT_AVATARS.find(
-        (a) => a.gender === 'female' && a.sport === 'soccer'
-      )
+      const avatar = DEFAULT_AVATARS.find((a) => a.gender === 'female' && a.sport === 'soccer')
       expect(avatar).toBeDefined()
       expect(avatar?.fileName).toBe('soccer_female.png')
     })

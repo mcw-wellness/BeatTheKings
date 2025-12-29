@@ -103,10 +103,9 @@ describe('Trump Card API Integration Tests', () => {
     it('should return 401 when not authenticated', async () => {
       mockGetSession.mockResolvedValue(null)
 
-      const response = await GET(
-        new Request('http://localhost/api/players/123/trump-card'),
-        { params: Promise.resolve({ userId: '123' }) }
-      )
+      const response = await GET(new Request('http://localhost/api/players/123/trump-card'), {
+        params: Promise.resolve({ userId: '123' }),
+      })
 
       expect(response.status).toBe(401)
     })
@@ -241,9 +240,7 @@ describe('Trump Card API Integration Tests', () => {
     it('should return 401 when not authenticated', async () => {
       mockGetSession.mockResolvedValue(null)
 
-      const response = await GET_ME(
-        new Request('http://localhost/api/players/me/trump-card')
-      )
+      const response = await GET_ME(new Request('http://localhost/api/players/me/trump-card'))
 
       expect(response.status).toBe(401)
     })
@@ -256,9 +253,7 @@ describe('Trump Card API Integration Tests', () => {
 
       mockGetSession.mockResolvedValue({ user: { id: user.id, email: user.email } })
 
-      const response = await GET_ME(
-        new Request('http://localhost/api/players/me/trump-card')
-      )
+      const response = await GET_ME(new Request('http://localhost/api/players/me/trump-card'))
 
       expect(response.status).toBe(200)
       const body = await response.json()

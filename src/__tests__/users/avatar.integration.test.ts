@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import { createTestDb, closeTestDb, clearTestDb, type TestDatabase } from '@/db/test-utils'
-import { users, avatars, sports, avatarItems, avatarEquipments, userUnlockedItems } from '@/db/schema'
+import {
+  users,
+  avatars,
+  sports,
+  avatarItems,
+  avatarEquipments,
+  userUnlockedItems,
+} from '@/db/schema'
 import { eq } from 'drizzle-orm'
 
 // Mock getSession before importing the route handler
@@ -40,10 +47,7 @@ describe('Avatar API Integration Tests', () => {
 
   // Helper to create test user
   async function createTestUser(email = 'test@example.com') {
-    const [user] = await testDb
-      .insert(users)
-      .values({ email, hasCreatedAvatar: false })
-      .returning()
+    const [user] = await testDb.insert(users).values({ email, hasCreatedAvatar: false }).returning()
     return user
   }
 
@@ -61,9 +65,27 @@ describe('Avatar API Integration Tests', () => {
     return testDb
       .insert(avatarItems)
       .values([
-        { name: 'Default Jersey', itemType: 'jersey', sportId, imageUrl: '/items/jersey.png', isDefault: true },
-        { name: 'Default Shorts', itemType: 'shorts', sportId, imageUrl: '/items/shorts.png', isDefault: true },
-        { name: 'Default Shoes', itemType: 'shoes', sportId, imageUrl: '/items/shoes.png', isDefault: true },
+        {
+          name: 'Default Jersey',
+          itemType: 'jersey',
+          sportId,
+          imageUrl: '/items/jersey.png',
+          isDefault: true,
+        },
+        {
+          name: 'Default Shorts',
+          itemType: 'shorts',
+          sportId,
+          imageUrl: '/items/shorts.png',
+          isDefault: true,
+        },
+        {
+          name: 'Default Shoes',
+          itemType: 'shoes',
+          sportId,
+          imageUrl: '/items/shoes.png',
+          isDefault: true,
+        },
       ])
       .returning()
   }
@@ -223,10 +245,7 @@ describe('Avatar API Integration Tests', () => {
       await POST(request)
 
       // Verify user was updated
-      const [updatedUser] = await testDb
-        .select()
-        .from(users)
-        .where(eq(users.id, user.id))
+      const [updatedUser] = await testDb.select().from(users).where(eq(users.id, user.id))
       expect(updatedUser.hasCreatedAvatar).toBe(true)
     })
 

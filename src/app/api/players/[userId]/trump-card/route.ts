@@ -12,10 +12,7 @@ interface RouteParams {
  * GET /api/players/[userId]/trump-card
  * Get a player's Trump Card data
  */
-export async function GET(
-  request: Request,
-  { params }: RouteParams
-): Promise<NextResponse> {
+export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
