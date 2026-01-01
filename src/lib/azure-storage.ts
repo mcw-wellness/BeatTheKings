@@ -102,15 +102,15 @@ export function generateSasUrl(blobPath: string, expiresInHours: number = 24): s
 }
 
 /**
- * Get the SAS URL for a default avatar
+ * Get the SAS URL for a default avatar from Azure Blob Storage
  */
 export function getDefaultAvatarSasUrl(gender: string, sport: string = 'basketball'): string {
   const genderKey = gender?.toLowerCase() === 'female' ? 'female' : 'male'
   const blobPath = `default/${sport}_${genderKey}.png`
 
-  // In test environment or when Azure isn't configured, return a placeholder URL
+  // In test environment or when Azure isn't configured, return placeholder
   if (!connectionString) {
-    return `https://placeholder.blob.core.windows.net/avatar/${blobPath}`
+    return `https://api.dicebear.com/7.x/avataaars/png?seed=${genderKey}&size=128`
   }
 
   return generateSasUrl(blobPath)

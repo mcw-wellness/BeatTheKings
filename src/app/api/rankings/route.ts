@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { eq } from 'drizzle-orm'
 import { getDb } from '@/db'
+import { users } from '@/db/schema'
 import { getSession } from '@/lib/auth'
 import {
   getSportId,
@@ -11,6 +13,7 @@ import {
   getUserLocation,
   type RankingLevel,
   type RankingsResponse,
+  type RankedPlayer,
 } from '@/lib/rankings'
 import { logger } from '@/lib/logger'
 
@@ -48,6 +51,22 @@ export async function GET(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Sport not found' }, { status: 404 })
     }
 
+    // Get user's age group (required for filtering)
+    const [currentUser] = await db
+      .select({ ageGroup: users.ageGroup })
+      .from(users)
+      .where(eq(users.id, session.user.id))
+      .limit(1)
+
+    if (!currentUser?.ageGroup) {
+      return NextResponse.json(
+        { error: 'User age group not set. Please complete your profile.' },
+        { status: 400 }
+      )
+    }
+
+    const ageGroup = currentUser.ageGroup
+
     // Get user's location if not provided
     if (!cityId || !countryId) {
       const userLocation = await getUserLocation(db, session.user.id)
@@ -55,16 +74,16 @@ export async function GET(request: Request): Promise<NextResponse> {
       if (!countryId) countryId = userLocation.countryId || undefined
     }
 
-    let rankings: { players: typeof response.rankings; total: number }
+    let rankings: { players: RankedPlayer[]; total: number }
     let location: { id: string; name: string } | null = null
 
-    // Get rankings based on level
+    // Get rankings based on level (filtered by user's age group)
     switch (level) {
       case 'city':
         if (!cityId) {
           return NextResponse.json({ error: 'City ID required for city rankings' }, { status: 400 })
         }
-        rankings = await getCityRankings(db, sportId, cityId, limit)
+        rankings = await getCityRankings(db, sportId, cityId, ageGroup, limit)
         location = await getLocationInfo(db, 'city', cityId)
         break
 
@@ -75,22 +94,22 @@ export async function GET(request: Request): Promise<NextResponse> {
             { status: 400 }
           )
         }
-        rankings = await getCountryRankings(db, sportId, countryId, limit)
+        rankings = await getCountryRankings(db, sportId, countryId, ageGroup, limit)
         location = await getLocationInfo(db, 'country', undefined, countryId)
         break
 
       case 'venue':
         // For now, fall back to global rankings
         // Venue rankings will require tracking which venue users play at
-        rankings = await getGlobalRankings(db, sportId, limit)
+        rankings = await getGlobalRankings(db, sportId, ageGroup, limit)
         break
 
       default:
-        rankings = await getGlobalRankings(db, sportId, limit)
+        rankings = await getGlobalRankings(db, sportId, ageGroup, limit)
     }
 
-    // Get current user's rank
-    const currentUser = await getUserRank(db, session.user.id, sportId, cityId)
+    // Get current user's rank (within their age group)
+    const userRank = await getUserRank(db, session.user.id, sportId, ageGroup, cityId)
 
     // Find the king (rank 1)
     const king = rankings.players.find((p) => p.rank === 1) || null
@@ -101,7 +120,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       location,
       king,
       rankings: rankings.players,
-      currentUser,
+      currentUser: userRank,
       totalPlayers: rankings.total,
     }
 

@@ -8,21 +8,18 @@ import { getToken } from 'next-auth/jwt'
 const PUBLIC_PATHS = ['/login', '/api/auth']
 
 /**
- * Routes that require profile completion (name set)
+ * Routes that require avatar to be created
+ * Flow: Login → Avatar → Location → Welcome
  */
-const PROFILE_REQUIRED_PATHS = [
-  '/avatar',
+const AVATAR_REQUIRED_PATHS = [
+  '/location',
   '/welcome',
   '/ranking',
   '/map',
   '/challenges',
   '/matches',
+  '/player',
 ]
-
-/**
- * Routes that require avatar to be created
- */
-const AVATAR_REQUIRED_PATHS = ['/welcome', '/ranking', '/map', '/challenges', '/matches']
 
 /**
  * Check if path matches any of the patterns
@@ -52,37 +49,27 @@ export async function middleware(request: NextRequest) {
 
   // No token = not authenticated
   if (!token) {
-    // Redirect to login
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // User is authenticated - check profile and avatar status
-  const hasCompletedProfile = !!token.name
+  // User is authenticated - check avatar status
   const hasCreatedAvatar = token.hasCreatedAvatar as boolean
-
-  // If user hasn't completed profile and tries to access profile-required routes
-  if (!hasCompletedProfile && matchesPath(pathname, PROFILE_REQUIRED_PATHS)) {
-    return NextResponse.redirect(new URL('/register', request.url))
-  }
-
-  // If user has completed profile, already on /register, redirect to next step
-  if (hasCompletedProfile && pathname === '/register') {
-    const redirectPath = hasCreatedAvatar ? '/welcome' : '/avatar'
-    return NextResponse.redirect(new URL(redirectPath, request.url))
-  }
 
   // If user hasn't created avatar and tries to access avatar-required routes
   if (!hasCreatedAvatar && matchesPath(pathname, AVATAR_REQUIRED_PATHS)) {
     return NextResponse.redirect(new URL('/avatar', request.url))
   }
 
-  // If authenticated user visits login page, redirect to appropriate page
+  // If authenticated user visits login page, redirect to avatar or welcome
   if (pathname === '/login') {
-    if (!hasCompletedProfile) {
-      return NextResponse.redirect(new URL('/register', request.url))
-    }
+    const redirectPath = hasCreatedAvatar ? '/welcome' : '/avatar'
+    return NextResponse.redirect(new URL(redirectPath, request.url))
+  }
+
+  // If user visits root, redirect to avatar or welcome
+  if (pathname === '/') {
     const redirectPath = hasCreatedAvatar ? '/welcome' : '/avatar'
     return NextResponse.redirect(new URL(redirectPath, request.url))
   }

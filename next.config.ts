@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
         hostname: 'beatthekingz.blob.core.windows.net',
         pathname: '/avatar/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+        pathname: '/**',
+      },
     ],
   },
 }

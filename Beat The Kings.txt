@@ -36,42 +36,71 @@ The crown for King of the Court, King of the City, or King of the State should b
 Please review these points and confirm how feasible it is to implement them. Let me know if anything needs clarification or if you foresee technical challenges.
 
 
+Trump Card & Stats
+  - Marks: 227/192 - Is this total points scored in all matches?
+) no just numbers. wins and losses 
 
-Hi Everyone:
+  - Percentage at top (23%) - Is this the win rate? 
+) yes
 
-I’ve reviewed the current app concept and wanted to share my key observations and requirements for implementation. Please see the points below:
-	1.	Create Your Avatar
-The entry point should be exclusively Create Your Avatar. No additional terms are needed. Players create their avatar, and names are generally not displayed. Some avatar items should be visible but locked. These can be unlocked by:
+  - Reward Points (RP) -  players spend these to unlock avatar items ? And they earn RP by winning matches, completing challenges, inviting friends?
+)yes thats what RP’s are for and yes you earn RP through participating in the game.Its included to your total XP
 
-	•	Reaching a certain milestone, e.g., 25 played matches
-	•	Completing a specific number of challenges, e.g., 13
-	•	Inviting or bringing in another user to the app
+  - Park challenges (Donaupark 1/3, etc) - These show completed challenges out of total available at that park? 
+)yes 
 
-	2.	Rankings
-Each player should be clickable to open their Trump Card. Below the ranking, only the player’s own rank and the current King should be displayed. No age groups are necessary, as the app automatically assigns the correct age group.
-	3.	Venues
-All venues must display distance from the user and be sorted by proximity. The closest park should always appear at the top.
-	4.	Active Players on the Courts
-Only Avatar + Rank are displayed, no names. Clicking the avatar opens the Trump Card. Players should be encouraged to meet and interact in person.
-	5.	Challenges – General
-For challenges like 3-Throw, Around the World, 3-Point-Shots, or Free-Throws, include both Start and Stop count buttons. A View-Avatar button is not required.
-	6.	Challenges – 1 vs. 1
-The app should automatically detect who is on the court. Players verify themselves by briefly touching their smartphones together (Bluetooth/NFC), exchanging Trump Cards. No photo verification is needed. The app then automatically starts and evaluates the match via video + AI. Both players can select Agree or Dispute. If Agree, the result is automatically added to their statistics.
-	7.	Challenges – Location Selection
-When entering the Challenges section, players should first select the park. The nearest park is displayed at the top, followed by all available challenges in that park.
-	8.	Trump Card (Central Element)
-The Trump Card must display all key player information:
+And it's all-time, not monthly?
+) well since we have a monthly challenge competition. it could vary every month
 
-	•	Avatar, Rank
-	•	XP, RP, Reward Points
-	•	Win Rate, Shooting Accuracy, Total Points
-	•	Match history & completed challenges
-	•	Detailed stats like 3-Point Accuracy, Free-Throw Accuracy, etc.
-It serves as the player’s identity, performance overview, and verification tool, and should be accessible in rankings, courts, verification, and the player’s profile.
 
-	9.	The Crown (King System)
-The crown for King of the Court, King of the City, or King of the State should be automatically awarded based on rankings, stats, and achievements. It transfers automatically from one Trump Card to the next when a new King emerges. Players cannot assign the crown manually.
+  Navigation
+  - Main menu after avatar creation - Should be: Trump Card | Rankings | Map | Challenges. Is this correct?
+)after create your avatar, yes trumpcard is home
+very other category should be in the main menü bar at the buttom
 
-Please review these points and confirm how feasible it is to implement them. Let me know if anything needs clarification or if you foresee technical challenges.
+  - Avatar editor location - Put "Edit Avatar" in a Settings menu, accessible from Trump Card or profile area?
+) yes edit avatar ia setting menü access through both
+
+  Avatar Items
+  - Unlock milestones - We'll create a list showing which items unlock at 10 matches, 25 matches, 50 matches, completing 5 challenges, 13
+  challenges, inviting 3 users, etc. You can review and adjust the list?
+)👍🏽
+
+  Regular Challenges
+  - Retry attempts - Players can retry challenges unlimited times per day?
+) yes
+
+  
+  Age Groups
+  - Completely remove age groups and have one single ranking for everyone regardless of age?
+) oh no thats not what i meant! 
+when you sign in you give use your age. after signing in you as a user never see anything thats not related to your age group. rankings, aktiv players,challenges and so on  only in your own age group 
+
+  Rankings
+  - Display format - Show top 10 players, then below that show "Your Rank: #50" (if player is not in top 10) and "Current King: Tom Tom #1" in a
+   separate section?
+) yes
+
+  - Sport-specific Kings - separate King for basketball, soccer, running, etc?
+)sport specific
+
+  - Rank calculation - Primarily based on XP, or win rate? 
+) only on XP
+
+  - Update frequency - Rankings update in real-time after each match/challenge?
+) yes
+
+  Active Players
+  - Marking as active - When player opens the app within 100m of a court, they're auto-marked as active there?
+)yes
+  - Active duration - Status lasts 30 minutes or until they move away from the court?
+) move away from the court
+
+  King/Crown
+  - King determination - Highest XP in that venue/city/country for that sport?
+) yes
+
+  - Crown transfer - Happens immediately when someone overtakes the current King in XP?
+) yes
 
 

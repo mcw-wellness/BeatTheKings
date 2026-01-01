@@ -33,7 +33,7 @@ describe('Profile Adapter Functions', () => {
       const input = {
         name: 'John Doe',
         dateOfBirth: '1995-06-15',
-        gender: 'Male',
+        gender: 'male',
         cityId: '123e4567-e89b-12d3-a456-426614174000',
       }
 
@@ -50,7 +50,7 @@ describe('Profile Adapter Functions', () => {
     it('should reject missing name', () => {
       const input = {
         dateOfBirth: '1995-06-15',
-        gender: 'Male',
+        gender: 'male',
         cityId: '123e4567-e89b-12d3-a456-426614174000',
       }
 
@@ -66,7 +66,7 @@ describe('Profile Adapter Functions', () => {
       const input = {
         name: 'J',
         dateOfBirth: '1995-06-15',
-        gender: 'Male',
+        gender: 'male',
         cityId: '123e4567-e89b-12d3-a456-426614174000',
       }
 
@@ -82,7 +82,7 @@ describe('Profile Adapter Functions', () => {
       const input = {
         name: 'A'.repeat(101),
         dateOfBirth: '1995-06-15',
-        gender: 'Male',
+        gender: 'male',
         cityId: '123e4567-e89b-12d3-a456-426614174000',
       }
 
@@ -97,7 +97,7 @@ describe('Profile Adapter Functions', () => {
     it('should reject missing date of birth', () => {
       const input = {
         name: 'John Doe',
-        gender: 'Male',
+        gender: 'male',
         cityId: '123e4567-e89b-12d3-a456-426614174000',
       }
 
@@ -113,7 +113,7 @@ describe('Profile Adapter Functions', () => {
       const input = {
         name: 'John Doe',
         dateOfBirth: 'not-a-date',
-        gender: 'Male',
+        gender: 'male',
         cityId: '123e4567-e89b-12d3-a456-426614174000',
       }
 
@@ -132,7 +132,7 @@ describe('Profile Adapter Functions', () => {
       const input = {
         name: 'John Doe',
         dateOfBirth: recentDate.toISOString().split('T')[0],
-        gender: 'Male',
+        gender: 'male',
         cityId: '123e4567-e89b-12d3-a456-426614174000',
       }
 
@@ -164,7 +164,7 @@ describe('Profile Adapter Functions', () => {
       const input = {
         name: 'John Doe',
         dateOfBirth: '1995-06-15',
-        gender: 'Male',
+        gender: 'male',
       }
 
       const result = validateProfileInput(input)
@@ -195,7 +195,7 @@ describe('Profile Adapter Functions', () => {
       const input = {
         name: '  John Doe  ',
         dateOfBirth: '1995-06-15',
-        gender: 'Male',
+        gender: 'male',
         cityId: '123e4567-e89b-12d3-a456-426614174000',
       }
 
@@ -216,7 +216,7 @@ describe('Profile Adapter Functions', () => {
       const updated = await updateUserProfile(db, user.id, {
         name: 'John Doe',
         dateOfBirth: '1995-06-15',
-        gender: 'Male',
+        gender: 'male',
         cityId: city.id,
       })
 
@@ -237,7 +237,7 @@ describe('Profile Adapter Functions', () => {
       const updated = await updateUserProfile(db, user.id, {
         name: 'Young User',
         dateOfBirth: youngDate.toISOString().split('T')[0],
-        gender: 'Male',
+        gender: 'male',
         cityId: city.id,
       })
 
@@ -251,7 +251,7 @@ describe('Profile Adapter Functions', () => {
       const updated = await updateUserProfile(db, user.id, {
         name: 'Older User',
         dateOfBirth: '1985-01-01',
-        gender: 'Male',
+        gender: 'male',
         cityId: city.id,
       })
 
@@ -267,7 +267,7 @@ describe('Profile Adapter Functions', () => {
       await updateUserProfile(db, user.id, {
         name: 'Profile User',
         dateOfBirth: '1990-01-01',
-        gender: 'Female',
+        gender: 'female',
         cityId: city.id,
       })
 

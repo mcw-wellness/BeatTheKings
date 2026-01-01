@@ -9,6 +9,45 @@ export interface AvatarPromptInput {
   hairStyle: string
   hairColor: string
   sport?: string
+  ageGroup?: string
+}
+
+/**
+ * Age groups for avatar styling
+ */
+export type AgeGroup = 'under-18' | '18-30' | '31+'
+
+/**
+ * Calculate age group from date of birth
+ */
+export function calculateAgeGroup(dateOfBirth: Date | string): AgeGroup {
+  const dob = typeof dateOfBirth === 'string' ? new Date(dateOfBirth) : dateOfBirth
+  const today = new Date()
+  let age = today.getFullYear() - dob.getFullYear()
+  const monthDiff = today.getMonth() - dob.getMonth()
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--
+  }
+
+  if (age < 18) return 'under-18'
+  if (age <= 30) return '18-30'
+  return '31+'
+}
+
+/**
+ * Get age-based description for avatar
+ */
+function getAgeDescription(ageGroup?: string): string {
+  switch (ageGroup) {
+    case 'under-18':
+      return 'young teenage athlete, youthful energetic appearance, lean athletic build'
+    case '31+':
+      return 'mature experienced athlete, confident seasoned appearance, strong athletic build'
+    case '18-30':
+    default:
+      return 'young adult athlete in prime athletic form, fit muscular build'
+  }
 }
 
 /**
@@ -47,10 +86,10 @@ function getOutfitDescription(sport: string): string {
  */
 export function buildUserAvatarPrompt(input: AvatarPromptInput): string {
   const sport = input.sport || 'basketball'
+  const ageDesc = getAgeDescription(input.ageGroup)
 
   const character = `
-    ${input.gender} athlete with ${input.skinTone} skin tone,
-    athletic build,
+    ${input.gender} ${ageDesc} with ${input.skinTone} skin tone,
     ${input.hairStyle} ${input.hairColor} hair
   `.trim()
 

@@ -37,7 +37,7 @@ export async function GET(): Promise<NextResponse> {
 
 /**
  * PUT /api/users/profile
- * Update authenticated user's profile
+ * Update authenticated user's profile (partial update supported)
  */
 export async function PUT(request: Request): Promise<NextResponse> {
   try {
@@ -65,13 +65,15 @@ export async function PUT(request: Request): Promise<NextResponse> {
 
     const db = getDb()
 
-    // Verify city exists
-    const cityValid = await cityExists(db, validation.data.cityId)
-    if (!cityValid) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: { cityId: 'City not found' } },
-        { status: 400 }
-      )
+    // Verify city exists if cityId is being updated
+    if (validation.data.cityId) {
+      const cityValid = await cityExists(db, validation.data.cityId)
+      if (!cityValid) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: { cityId: 'City not found' } },
+          { status: 400 }
+        )
+      }
     }
 
     const updated = await updateUserProfile(db, session.user.id, validation.data)

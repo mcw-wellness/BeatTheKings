@@ -82,17 +82,17 @@ export default function PlayerPage(): JSX.Element {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-500 border-t-transparent" />
+      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#4361EE] border-t-transparent" />
       </main>
     )
   }
 
   if (error || !data) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex flex-col items-center justify-center p-4">
-        <p className="text-red-400 mb-4">{error || 'Player not found'}</p>
-        <button onClick={() => router.back()} className="text-yellow-500 underline">
+      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col items-center justify-center p-4">
+        <p className="text-red-500 mb-4">{error || 'Player not found'}</p>
+        <button onClick={() => router.back()} className="text-[#4361EE] underline">
           Go Back
         </button>
       </main>
@@ -100,17 +100,17 @@ export default function PlayerPage(): JSX.Element {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e]">
+    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <button
           onClick={() => router.back()}
-          className="text-gray-400 hover:text-white flex items-center gap-2"
+          className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
         >
           ← Back
         </button>
         {isKing && (
-          <span className="bg-yellow-500/20 text-yellow-400 text-xs px-3 py-1 rounded-full border border-yellow-500/50">
+          <span className="bg-yellow-100 text-yellow-700 text-xs px-3 py-1 rounded-full border border-yellow-300">
             👑 King
           </span>
         )}
@@ -120,22 +120,23 @@ export default function PlayerPage(): JSX.Element {
       <div className="px-4 pb-8">
         {/* Player Name & Rank */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-white">{data.player.name || 'Player'}</h1>
-          <div className="flex items-center gap-2 bg-yellow-500/20 px-4 py-2 rounded-xl border border-yellow-500/50">
-            <span className="text-yellow-400 text-lg">🏆</span>
-            <span className="text-white font-bold text-xl">#{data.stats.rank || '-'}</span>
+          <h1 className="text-2xl font-bold text-gray-900">{data.player.name || 'Player'}</h1>
+          <div className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded-xl border border-yellow-300">
+            <span className="text-yellow-600 text-lg">🏆</span>
+            <span className="text-gray-900 font-bold text-xl">#{data.stats.rank || '-'}</span>
           </div>
         </div>
 
         {/* Avatar */}
         <div className="flex justify-center mb-6">
-          <div className="relative w-48 h-56 bg-gradient-to-b from-amber-900/30 to-amber-950/30 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-yellow-500/30">
+          <div className="relative w-48 h-56 bg-gradient-to-b from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-blue-200 shadow-lg">
             <Image
               src={data.player.avatar?.imageUrl || ''}
               alt="Avatar"
               width={180}
               height={220}
               className="object-contain"
+              unoptimized
             />
             {isKing && <div className="absolute top-2 left-1/2 -translate-x-1/2 text-4xl">👑</div>}
           </div>
@@ -161,8 +162,8 @@ export default function PlayerPage(): JSX.Element {
         </div>
 
         {/* Detailed Stats */}
-        <div className="bg-black/30 rounded-xl p-4 mb-6">
-          <h2 className="text-white font-semibold mb-3">Stats</h2>
+        <div className="bg-white rounded-xl p-4 mb-6 shadow">
+          <h2 className="text-gray-900 font-semibold mb-3">Stats</h2>
           <div className="space-y-3">
             <DetailRow
               label="Matches"
@@ -185,16 +186,16 @@ export default function PlayerPage(): JSX.Element {
 
         {/* Events */}
         <div className="space-y-3">
-          <h2 className="text-white font-semibold">Championships</h2>
-          <div className="bg-gradient-to-r from-purple-600/20 to-purple-500/10 border border-purple-500/30 rounded-xl p-4">
-            <p className="text-purple-300 text-xs uppercase tracking-wide">Current</p>
-            <p className="text-white font-semibold">December BB Championship</p>
-            <p className="text-purple-400 text-sm">sponsored by AVIS</p>
+          <h2 className="text-gray-900 font-semibold">Championships</h2>
+          <div className="bg-gradient-to-r from-purple-100 to-purple-50 border border-purple-200 rounded-xl p-4 shadow">
+            <p className="text-purple-600 text-xs uppercase tracking-wide">Current</p>
+            <p className="text-gray-900 font-semibold">December BB Championship</p>
+            <p className="text-purple-500 text-sm">sponsored by AVIS</p>
           </div>
-          <div className="bg-black/30 border border-gray-700 rounded-xl p-4">
-            <p className="text-gray-500 text-xs uppercase tracking-wide">Coming Soon</p>
-            <p className="text-gray-400 font-semibold">3P Shooting Championship</p>
-            <p className="text-gray-500 text-sm">sponsored by K1</p>
+          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow">
+            <p className="text-gray-400 text-xs uppercase tracking-wide">Coming Soon</p>
+            <p className="text-gray-600 font-semibold">3P Shooting Championship</p>
+            <p className="text-gray-400 text-sm">sponsored by K1</p>
           </div>
         </div>
       </div>
@@ -216,20 +217,27 @@ function StatCard({
   color: string
 }): JSX.Element {
   const colorClasses: Record<string, string> = {
-    purple: 'bg-purple-500/20 border-purple-500/30',
-    yellow: 'bg-yellow-500/20 border-yellow-500/30',
-    blue: 'bg-blue-500/20 border-blue-500/30',
-    green: 'bg-green-500/20 border-green-500/30',
+    purple: 'bg-purple-50 border-purple-200',
+    yellow: 'bg-yellow-50 border-yellow-200',
+    blue: 'bg-blue-50 border-blue-200',
+    green: 'bg-green-50 border-green-200',
+  }
+
+  const textClasses: Record<string, string> = {
+    purple: 'text-purple-600',
+    yellow: 'text-yellow-600',
+    blue: 'text-blue-600',
+    green: 'text-green-600',
   }
 
   return (
-    <div className={`${colorClasses[color]} border rounded-xl p-4`}>
+    <div className={`${colorClasses[color]} border rounded-xl p-4 shadow`}>
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-sm">{icon}</span>
-        <span className="text-gray-400 text-sm">{label}</span>
+        <span className={`text-sm ${textClasses[color]}`}>{icon}</span>
+        <span className="text-gray-500 text-sm">{label}</span>
       </div>
-      <p className="text-white text-2xl font-bold">{value}</p>
-      {subValue && <p className="text-gray-500 text-xs">{subValue}</p>}
+      <p className="text-gray-900 text-2xl font-bold">{value}</p>
+      {subValue && <p className="text-gray-400 text-xs">{subValue}</p>}
     </div>
   )
 }
@@ -237,8 +245,8 @@ function StatCard({
 function DetailRow({ label, value }: { label: string; value: string }): JSX.Element {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-gray-400">{label}</span>
-      <span className="text-white font-medium">{value}</span>
+      <span className="text-gray-500">{label}</span>
+      <span className="text-gray-900 font-medium">{value}</span>
     </div>
   )
 }

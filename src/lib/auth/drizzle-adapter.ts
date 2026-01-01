@@ -4,13 +4,13 @@ import type { Database } from '@/db'
 import { calculateAge, getAgeGroup } from '@/lib/utils/date'
 
 /**
- * Profile update input type
+ * Profile update input type - all fields optional for flexible updates
  */
 export interface ProfileUpdateInput {
-  name: string
-  dateOfBirth: string // ISO date string
-  gender: 'Male' | 'Female' | 'Other'
-  cityId: string
+  name?: string
+  dateOfBirth?: string
+  gender?: 'male' | 'female'
+  cityId?: string
 }
 
 /**
@@ -92,7 +92,7 @@ export async function updateUserAvatarStatus(
 }
 
 /**
- * Validate profile update input
+ * Validate profile update input - validates only provided fields
  */
 export function validateProfileInput(
   data: unknown
@@ -104,78 +104,102 @@ export function validateProfileInput(
   }
 
   const input = data as Record<string, unknown>
+  const result: ProfileUpdateInput = {}
 
-  // Name validation
-  if (!input.name || typeof input.name !== 'string') {
-    errors.name = 'Name is required'
-  } else if (input.name.trim().length < 2) {
-    errors.name = 'Name must be at least 2 characters'
-  } else if (input.name.trim().length > 100) {
-    errors.name = 'Name must be less than 100 characters'
+  // Name validation (if provided)
+  if (input.name !== undefined) {
+    if (typeof input.name !== 'string') {
+      errors.name = 'Name must be a string'
+    } else if (input.name.trim().length < 2) {
+      errors.name = 'Name must be at least 2 characters'
+    } else if (input.name.trim().length > 100) {
+      errors.name = 'Name must be less than 100 characters'
+    } else {
+      result.name = input.name.trim()
+    }
   }
 
-  // Date of birth validation
-  if (!input.dateOfBirth || typeof input.dateOfBirth !== 'string') {
-    errors.dateOfBirth = 'Date of birth is required'
-  } else {
-    const dob = new Date(input.dateOfBirth)
-    if (isNaN(dob.getTime())) {
-      errors.dateOfBirth = 'Invalid date format'
+  // Date of birth validation (if provided)
+  if (input.dateOfBirth !== undefined) {
+    if (typeof input.dateOfBirth !== 'string') {
+      errors.dateOfBirth = 'Date of birth must be a string'
     } else {
-      const age = calculateAge(dob)
-      if (age < 5) {
-        errors.dateOfBirth = 'Must be at least 5 years old'
-      } else if (age > 120) {
-        errors.dateOfBirth = 'Invalid date of birth'
+      const dob = new Date(input.dateOfBirth)
+      if (isNaN(dob.getTime())) {
+        errors.dateOfBirth = 'Invalid date format'
+      } else {
+        const age = calculateAge(dob)
+        if (age < 5) {
+          errors.dateOfBirth = 'Must be at least 5 years old'
+        } else if (age > 120) {
+          errors.dateOfBirth = 'Invalid date of birth'
+        } else {
+          result.dateOfBirth = input.dateOfBirth
+        }
       }
     }
   }
 
-  // Gender validation
-  const validGenders = ['Male', 'Female', 'Other']
-  if (!input.gender || typeof input.gender !== 'string') {
-    errors.gender = 'Gender is required'
-  } else if (!validGenders.includes(input.gender)) {
-    errors.gender = 'Invalid gender selection'
+  // Gender validation (if provided)
+  if (input.gender !== undefined) {
+    const validGenders = ['male', 'female']
+    if (typeof input.gender !== 'string') {
+      errors.gender = 'Gender must be a string'
+    } else if (!validGenders.includes(input.gender.toLowerCase())) {
+      errors.gender = 'Invalid gender'
+    } else {
+      result.gender = input.gender.toLowerCase() as 'male' | 'female'
+    }
   }
 
-  // City ID validation
-  if (!input.cityId || typeof input.cityId !== 'string') {
-    errors.cityId = 'City is required'
+  // City ID validation (if provided)
+  if (input.cityId !== undefined) {
+    if (typeof input.cityId !== 'string') {
+      errors.cityId = 'City ID must be a string'
+    } else {
+      result.cityId = input.cityId
+    }
   }
 
   if (Object.keys(errors).length > 0) {
     return { valid: false, errors }
   }
 
-  return {
-    valid: true,
-    data: {
-      name: (input.name as string).trim(),
-      dateOfBirth: input.dateOfBirth as string,
-      gender: input.gender as 'Male' | 'Female' | 'Other',
-      cityId: input.cityId as string,
-    },
+  if (Object.keys(result).length === 0) {
+    return { valid: false, errors: { _form: 'No fields to update' } }
   }
+
+  return { valid: true, data: result }
 }
 
 /**
- * Update user profile
+ * Update user profile - only updates provided fields
  */
 export async function updateUserProfile(db: Database, userId: string, data: ProfileUpdateInput) {
-  const dob = new Date(data.dateOfBirth)
-  const ageGroup = getAgeGroup(dob)
+  const updateData: Record<string, unknown> = {
+    updatedAt: new Date(),
+  }
+
+  if (data.name !== undefined) {
+    updateData.name = data.name
+  }
+
+  if (data.dateOfBirth !== undefined) {
+    updateData.dateOfBirth = data.dateOfBirth
+    updateData.ageGroup = getAgeGroup(new Date(data.dateOfBirth))
+  }
+
+  if (data.gender !== undefined) {
+    updateData.gender = data.gender
+  }
+
+  if (data.cityId !== undefined) {
+    updateData.cityId = data.cityId
+  }
 
   const [updated] = await db
     .update(users)
-    .set({
-      name: data.name,
-      dateOfBirth: data.dateOfBirth,
-      ageGroup,
-      gender: data.gender,
-      cityId: data.cityId,
-      updatedAt: new Date(),
-    })
+    .set(updateData)
     .where(eq(users.id, userId))
     .returning()
 

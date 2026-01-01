@@ -13,10 +13,12 @@ import {
   VALID_HAIR_STYLES,
   VALID_HAIR_COLORS,
 } from '@/components/avatar/AvatarPreview'
+import { calculateAgeGroup } from '@/lib/avatar/prompts'
 
 type SkinTone = (typeof VALID_SKIN_TONES)[number]
 type HairStyle = (typeof VALID_HAIR_STYLES)[number]
 type HairColor = (typeof VALID_HAIR_COLORS)[number]
+type Gender = 'male' | 'female'
 
 interface AvatarItem {
   id: string
@@ -45,53 +47,61 @@ function AvatarPageSkeleton(): JSX.Element {
 
 function AvatarPageContent(): JSX.Element {
   const router = useRouter()
-  const { status } = useSession()
+  const { status, update } = useSession()
 
+  // User profile fields (collected on this page)
+  const [gender, setGender] = useState<Gender>('male')
+  const [dateOfBirth, setDateOfBirth] = useState<string>('')
+
+  // Avatar customization fields
   const [skinTone, setSkinTone] = useState<SkinTone>('medium')
   const [hairStyle, setHairStyle] = useState<HairStyle>('short')
   const [hairColor, setHairColor] = useState<HairColor>('black')
   const [jerseyNumber, setJerseyNumber] = useState(10)
+
+  // UI state
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [userGender, setUserGender] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null)
   const [isNewPreview, setIsNewPreview] = useState(false)
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(true)
 
-  // Fetch user's gender and existing avatar
+  // Fetch user's existing profile and avatar data
   useEffect(() => {
     const fetchUserData = async (): Promise<void> => {
       try {
-        // Fetch gender
+        // Fetch user profile (gender, DOB)
         const profileRes = await fetch('/api/users/profile')
         if (profileRes.ok) {
           const profileData = await profileRes.json()
-          setUserGender(profileData.gender)
+          if (profileData.gender) {
+            setGender(profileData.gender as Gender)
+          }
+          if (profileData.dateOfBirth) {
+            setDateOfBirth(profileData.dateOfBirth.split('T')[0]) // Format as YYYY-MM-DD
+            setIsFirstTimeUser(false)
+          }
         }
 
         // Fetch existing avatar if user has one
         const avatarRes = await fetch('/api/users/avatar')
-        console.log('Avatar API response status:', avatarRes.status)
 
         if (avatarRes.ok) {
           const data = await avatarRes.json()
-          console.log('Avatar data:', data)
           const avatar = data.avatar
 
           if (avatar) {
             if (avatar.skinTone) setSkinTone(avatar.skinTone)
             if (avatar.hairStyle) setHairStyle(avatar.hairStyle)
             if (avatar.hairColor) setHairColor(avatar.hairColor)
+            setIsFirstTimeUser(false)
 
             // If user has a saved avatar image, fetch SAS URL for it
-            console.log('Avatar imageUrl:', avatar.imageUrl)
             if (avatar.imageUrl) {
-              console.log('Fetching SAS URL for user avatar...')
               const sasRes = await fetch('/api/avatar/url?type=user&userId=me')
-              console.log('SAS URL response status:', sasRes.status)
               const sasData = await sasRes.json()
-              console.log('SAS URL data:', sasData)
               if (sasRes.ok && sasData.url) {
                 setSavedAvatarUrl(sasData.url)
               }
@@ -100,14 +110,16 @@ function AvatarPageContent(): JSX.Element {
         }
       } catch (error) {
         console.error('Error in fetchUserData:', error)
-        setUserGender('male')
       }
     }
     fetchUserData()
   }, [])
 
   // Get default avatar URL with SAS token
-  const defaultAvatarUrl = useAvatarUrl({ type: 'default', gender: userGender })
+  const defaultAvatarUrl = useAvatarUrl({ type: 'default', gender })
+
+  // Calculate age group from DOB for avatar generation
+  const ageGroup = dateOfBirth ? calculateAgeGroup(dateOfBirth) : undefined
 
   // Priority: new preview > saved avatar > default
   const displayAvatarUrl = previewImage || savedAvatarUrl || defaultAvatarUrl
@@ -158,6 +170,12 @@ function AvatarPageContent(): JSX.Element {
   if (status === 'loading') return <AvatarPageSkeleton />
 
   const handleGeneratePreview = async (): Promise<void> => {
+    // Validate required fields
+    if (!dateOfBirth) {
+      setError('Please enter your date of birth')
+      return
+    }
+
     setError(null)
     setIsGenerating(true)
 
@@ -166,10 +184,11 @@ function AvatarPageContent(): JSX.Element {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          gender: userGender || 'male',
+          gender,
           skinTone,
           hairStyle,
           hairColor,
+          ageGroup,
         }),
       })
 
@@ -189,48 +208,64 @@ function AvatarPageContent(): JSX.Element {
   }
 
   const handleSave = async (): Promise<void> => {
+    // Validate required fields
+    if (!dateOfBirth) {
+      setError('Please enter your date of birth')
+      return
+    }
+
     setError(null)
     setIsSubmitting(true)
 
     try {
-      // Only include previewImage if it's a new preview (base64)
-      const payload = {
+      // First, update user profile with gender and DOB
+      const profileRes = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gender,
+          dateOfBirth,
+        }),
+      })
+
+      if (!profileRes.ok) {
+        const profileData = await profileRes.json()
+        throw new Error(profileData.error || 'Failed to update profile')
+      }
+
+      // Then save avatar
+      const avatarPayload = {
         skinTone,
         hairStyle,
         hairColor,
         ...(isNewPreview && previewImage && { previewImage }),
       }
 
-      console.log('Saving avatar with payload:', {
-        ...payload,
-        previewImage: payload.previewImage ? '[base64 data]' : undefined,
-      })
-
       const res = await fetch('/api/users/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(avatarPayload),
       })
 
       let data = await res.json()
-      console.log('POST response:', res.status, data)
 
       if (res.status === 409) {
-        console.log('Avatar exists, trying PUT...')
         const updateRes = await fetch('/api/users/avatar', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(avatarPayload),
         })
         data = await updateRes.json()
-        console.log('PUT response:', updateRes.status, data)
         if (!updateRes.ok) throw new Error(data.error || 'Failed to update avatar')
       } else if (!res.ok) {
         throw new Error(data.error || 'Failed to create avatar')
       }
 
-      console.log('Save successful, redirecting...')
-      router.push('/welcome')
+      // Refresh the session to update hasCreatedAvatar in the JWT token
+      await update()
+
+      // Redirect to location selection (new step) or welcome
+      router.push('/location')
     } catch (err) {
       console.error('Save error:', err)
       setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -245,10 +280,21 @@ function AvatarPageContent(): JSX.Element {
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 sm:p-6 pb-24">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-center mb-4">
+        <div className="flex items-center justify-between mb-4">
+          {!isFirstTimeUser ? (
+            <button
+              onClick={() => router.push('/welcome')}
+              className="text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            >
+              ← Back
+            </button>
+          ) : (
+            <div className="w-14" />
+          )}
           <div className="w-16 h-16">
             <Logo size="lg" pulsing />
           </div>
+          <div className="w-14" /> {/* Spacer for centering */}
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-2">
           Create Your Avatar
@@ -313,6 +359,53 @@ function AvatarPageContent(): JSX.Element {
 
           {/* Customization Options */}
           <div className="space-y-4">
+            {/* Gender Selection */}
+            <div className="bg-white rounded-xl shadow p-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setGender('male')}
+                  className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                    gender === 'male'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  Male
+                </button>
+                <button
+                  onClick={() => setGender('female')}
+                  className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                    gender === 'female'
+                      ? 'border-pink-500 bg-pink-50 text-pink-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  Female
+                </button>
+              </div>
+            </div>
+
+            {/* Date of Birth */}
+            <div className="bg-white rounded-xl shadow p-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Date of Birth
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <input
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none text-gray-700"
+              />
+              {dateOfBirth && (
+                <p className="text-xs text-gray-500 mt-2">
+                  Age Group: <span className="font-medium">{ageGroup}</span>
+                </p>
+              )}
+            </div>
+
             {/* Skin Tone */}
             <div className="bg-white rounded-xl shadow p-4">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Skin Tone</label>

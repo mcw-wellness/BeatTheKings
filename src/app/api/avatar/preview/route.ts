@@ -15,6 +15,7 @@ interface PreviewRequest {
   hairStyle: string
   hairColor: string
   sport?: string
+  ageGroup?: string
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -26,7 +27,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     const body: PreviewRequest = await request.json()
-    const { gender, skinTone, hairStyle, hairColor, sport = 'basketball' } = body
+    const { gender, skinTone, hairStyle, hairColor, sport = 'basketball', ageGroup } = body
 
     // Validate required fields
     if (!gender || !skinTone || !hairStyle || !hairColor) {
@@ -45,6 +46,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       hairStyle,
       hairColor,
       sport,
+      ageGroup,
     })
 
     // Return as base64 data URL for preview

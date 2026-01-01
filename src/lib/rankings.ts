@@ -10,7 +10,7 @@ import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage
 
 /**
  * Get avatar URL with SAS token
- * Returns user's avatar SAS URL if they have one, otherwise default based on gender
+ * Returns user's avatar SAS URL if they have one, otherwise default from Azure
  */
 function getAvatarSasUrl(userId: string, hasAvatar: boolean, gender: string | null): string {
   if (hasAvatar) {
@@ -90,15 +90,16 @@ export async function getSportId(db: Database, slug: string): Promise<string | n
 // ===========================================
 
 /**
- * Get city rankings
+ * Get city rankings (filtered by age group)
  */
 export async function getCityRankings(
   db: Database,
   sportId: string,
   cityId: string,
+  ageGroup: string,
   limit: number = 10
 ): Promise<{ players: RankedPlayer[]; total: number }> {
-  // Get all players in the city with stats for this sport
+  // Get all players in the city with stats for this sport (same age group)
   const playersWithStats = await db
     .select({
       id: users.id,
@@ -113,7 +114,7 @@ export async function getCityRankings(
     .from(users)
     .innerJoin(playerStats, and(eq(playerStats.userId, users.id), eq(playerStats.sportId, sportId)))
     .leftJoin(avatars, eq(avatars.userId, users.id))
-    .where(eq(users.cityId, cityId))
+    .where(and(eq(users.cityId, cityId), eq(users.ageGroup, ageGroup)))
     .orderBy(desc(playerStats.totalXp))
 
   const total = playersWithStats.length
@@ -141,15 +142,16 @@ export async function getCityRankings(
 }
 
 /**
- * Get country rankings
+ * Get country rankings (filtered by age group)
  */
 export async function getCountryRankings(
   db: Database,
   sportId: string,
   countryId: string,
+  ageGroup: string,
   limit: number = 10
 ): Promise<{ players: RankedPlayer[]; total: number }> {
-  // Get all players in cities of this country with stats
+  // Get all players in cities of this country with stats (same age group)
   const playersWithStats = await db
     .select({
       id: users.id,
@@ -165,7 +167,7 @@ export async function getCountryRankings(
     .innerJoin(cities, eq(users.cityId, cities.id))
     .innerJoin(playerStats, and(eq(playerStats.userId, users.id), eq(playerStats.sportId, sportId)))
     .leftJoin(avatars, eq(avatars.userId, users.id))
-    .where(eq(cities.countryId, countryId))
+    .where(and(eq(cities.countryId, countryId), eq(users.ageGroup, ageGroup)))
     .orderBy(desc(playerStats.totalXp))
 
   const total = playersWithStats.length
@@ -193,11 +195,12 @@ export async function getCountryRankings(
 }
 
 /**
- * Get global rankings (all players)
+ * Get global rankings (filtered by age group)
  */
 export async function getGlobalRankings(
   db: Database,
   sportId: string,
+  ageGroup: string,
   limit: number = 10
 ): Promise<{ players: RankedPlayer[]; total: number }> {
   const playersWithStats = await db
@@ -214,6 +217,7 @@ export async function getGlobalRankings(
     .from(users)
     .innerJoin(playerStats, and(eq(playerStats.userId, users.id), eq(playerStats.sportId, sportId)))
     .leftJoin(avatars, eq(avatars.userId, users.id))
+    .where(eq(users.ageGroup, ageGroup))
     .orderBy(desc(playerStats.totalXp))
 
   const total = playersWithStats.length
@@ -241,12 +245,13 @@ export async function getGlobalRankings(
 }
 
 /**
- * Get current user's rank
+ * Get current user's rank (within their age group)
  */
 export async function getUserRank(
   db: Database,
   userId: string,
   sportId: string,
+  ageGroup: string,
   cityId?: string
 ): Promise<RankedPlayer | null> {
   // Get user data
@@ -293,7 +298,7 @@ export async function getUserRank(
   // Get user's avatar
   const [avatar] = await db.select().from(avatars).where(eq(avatars.userId, userId)).limit(1)
 
-  // Calculate rank by counting players with higher XP
+  // Calculate rank by counting players with higher XP (within same age group)
   const effectiveCityId = cityId || user.cityId
 
   let higherRankedCount: number
@@ -307,6 +312,7 @@ export async function getUserRank(
         and(
           eq(playerStats.sportId, sportId),
           eq(users.cityId, effectiveCityId),
+          eq(users.ageGroup, ageGroup),
           sql`${playerStats.totalXp} > ${stats.xp}`
         )
       )
@@ -315,7 +321,14 @@ export async function getUserRank(
     const result = await db
       .select({ count: sql<number>`count(*)` })
       .from(playerStats)
-      .where(and(eq(playerStats.sportId, sportId), sql`${playerStats.totalXp} > ${stats.xp}`))
+      .innerJoin(users, eq(users.id, playerStats.userId))
+      .where(
+        and(
+          eq(playerStats.sportId, sportId),
+          eq(users.ageGroup, ageGroup),
+          sql`${playerStats.totalXp} > ${stats.xp}`
+        )
+      )
     higherRankedCount = Number(result[0]?.count || 0)
   }
 
