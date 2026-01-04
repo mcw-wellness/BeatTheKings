@@ -31,21 +31,21 @@ avatars/                          # Container
 
 ### Avatar Types
 
-| Type | Description | When Generated |
-|------|-------------|----------------|
-| **Default Avatar** | Pre-generated, shared by all new users | Once at app setup |
-| **Custom Avatar** | AI-generated based on user preferences | When user customizes |
+| Type               | Description                            | When Generated       |
+| ------------------ | -------------------------------------- | -------------------- |
+| **Default Avatar** | Pre-generated, shared by all new users | Once at app setup    |
+| **Custom Avatar**  | AI-generated based on user preferences | When user customizes |
 
 ---
 
 ## Technology Stack
 
-| Component | Technology |
-|-----------|------------|
+| Component     | Technology                                              |
+| ------------- | ------------------------------------------------------- |
 | AI Generation | Google Gemini (`gemini-2.0-flash-exp-image-generation`) |
-| Image Storage | Azure Blob Storage |
-| API Framework | Next.js API Routes |
-| Database | PostgreSQL (Drizzle ORM) |
+| Image Storage | Azure Blob Storage                                      |
+| API Framework | Next.js API Routes                                      |
+| Database      | PostgreSQL (Drizzle ORM)                                |
 
 ---
 
@@ -57,15 +57,18 @@ avatars/                          # Container
 // avatars table - EXISTING fields
 export const avatars = pgTable('Avatar', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('userId').notNull().unique().references(() => users.id),
+  userId: uuid('userId')
+    .notNull()
+    .unique()
+    .references(() => users.id),
 
   // Base appearance - EXISTING
-  skinTone: varchar('skinTone', { length: 50 }),   // light, medium, dark, etc.
+  skinTone: varchar('skinTone', { length: 50 }), // light, medium, dark, etc.
   hairStyle: varchar('hairStyle', { length: 50 }), // short, afro, braids, etc.
   hairColor: varchar('hairColor', { length: 50 }), // black, brown, blonde, etc.
 
   // ADD THIS FIELD ONLY
-  imageUrl: varchar('imageUrl', { length: 500 }),  // Generated avatar URL
+  imageUrl: varchar('imageUrl', { length: 500 }), // Generated avatar URL
 
   createdAt: timestamp('createdAt').defaultNow().notNull(),
   updatedAt: timestamp('updatedAt').defaultNow().notNull(),
@@ -149,12 +152,12 @@ ALTER TABLE "Avatar" ADD COLUMN "imageUrl" VARCHAR(500);
 
 ## User Preferences (Using Existing Fields)
 
-| Field | Source | Options |
-|-------|--------|---------|
-| `gender` | `users.gender` | Male, Female, Other |
-| `skinTone` | `avatars.skinTone` | light, medium-light, medium, medium-dark, dark |
+| Field       | Source              | Options                                                 |
+| ----------- | ------------------- | ------------------------------------------------------- |
+| `gender`    | `users.gender`      | Male, Female, Other                                     |
+| `skinTone`  | `avatars.skinTone`  | light, medium-light, medium, medium-dark, dark          |
 | `hairStyle` | `avatars.hairStyle` | short, medium, long, bald, afro, braids, dreads, mohawk |
-| `hairColor` | `avatars.hairColor` | black, brown, blonde, red, gray, white |
+| `hairColor` | `avatars.hairColor` | black, brown, blonde, red, gray, white                  |
 
 **Outfit colors:** Use defaults based on sport (blue jersey for basketball, etc.)
 
@@ -163,9 +166,11 @@ ALTER TABLE "Avatar" ADD COLUMN "imageUrl" VARCHAR(500);
 ## API Endpoints
 
 ### POST /api/users/avatar
+
 Create avatar with preferences and generate AI image.
 
 **Request:**
+
 ```json
 {
   "skinTone": "medium",
@@ -175,6 +180,7 @@ Create avatar with preferences and generate AI image.
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -192,9 +198,11 @@ Create avatar with preferences and generate AI image.
 ---
 
 ### PUT /api/users/avatar
+
 Update avatar preferences and regenerate AI image.
 
 **Request:**
+
 ```json
 {
   "skinTone": "dark",
@@ -204,6 +212,7 @@ Update avatar preferences and regenerate AI image.
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -220,9 +229,11 @@ Update avatar preferences and regenerate AI image.
 ---
 
 ### GET /api/users/avatar
+
 Get current user's avatar.
 
 **Response (200):**
+
 ```json
 {
   "avatar": {
@@ -243,11 +254,11 @@ Get current user's avatar.
 
 ```typescript
 interface AvatarPromptInput {
-  gender: string      // From users.gender
-  skinTone: string    // From avatars.skinTone
-  hairStyle: string   // From avatars.hairStyle
-  hairColor: string   // From avatars.hairColor
-  sport?: string      // Default: basketball
+  gender: string // From users.gender
+  skinTone: string // From avatars.skinTone
+  hairStyle: string // From avatars.hairStyle
+  hairColor: string // From avatars.hairColor
+  sport?: string // Default: basketball
 }
 
 function buildAvatarPrompt(input: AvatarPromptInput): string {
@@ -266,9 +277,10 @@ function buildAvatarPrompt(input: AvatarPromptInput): string {
 
   const sport = input.sport || 'basketball'
 
-  const outfit = sport === 'basketball'
-    ? 'wearing blue basketball jersey, blue shorts, white high-top shoes, holding basketball, confident pose'
-    : 'wearing red soccer jersey, white shorts, black cleats, foot on soccer ball'
+  const outfit =
+    sport === 'basketball'
+      ? 'wearing blue basketball jersey, blue shorts, white high-top shoes, holding basketball, confident pose'
+      : 'wearing red soccer jersey, white shorts, black cleats, foot on soccer ball'
 
   return `${baseStyle}. ${character}. ${outfit}.`
 }
@@ -303,15 +315,12 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
 )
 const containerClient = blobServiceClient.getContainerClient('avatars')
 
-export async function uploadAvatar(
-  userId: string,
-  imageBuffer: Buffer
-): Promise<string> {
+export async function uploadAvatar(userId: string, imageBuffer: Buffer): Promise<string> {
   const blobPath = `users/${userId}/avatar.png`
   const blockBlobClient = containerClient.getBlockBlobClient(blobPath)
 
   await blockBlobClient.upload(imageBuffer, imageBuffer.length, {
-    blobHTTPHeaders: { blobContentType: 'image/png' }
+    blobHTTPHeaders: { blobContentType: 'image/png' },
   })
 
   return blockBlobClient.url
@@ -329,12 +338,12 @@ export function getDefaultAvatarUrl(gender: string): string {
 
 Generate 4 default avatars and upload to Azure:
 
-| File | Description |
-|------|-------------|
-| `default/basketball_male.png` | Default male basketball player |
+| File                            | Description                      |
+| ------------------------------- | -------------------------------- |
+| `default/basketball_male.png`   | Default male basketball player   |
 | `default/basketball_female.png` | Default female basketball player |
-| `default/soccer_male.png` | Default male soccer player |
-| `default/soccer_female.png` | Default female soccer player |
+| `default/soccer_male.png`       | Default male soccer player       |
+| `default/soccer_female.png`     | Default female soccer player     |
 
 ---
 
@@ -366,12 +375,14 @@ GEMINI_API_KEY=your-gemini-api-key
 ## Test Scenarios
 
 ### Unit Tests
+
 - [ ] Validate skinTone options
 - [ ] Validate hairStyle options
 - [ ] Validate hairColor options
 - [ ] Build prompt correctly
 
 ### Integration Tests
+
 - [ ] POST creates avatar and generates image
 - [ ] PUT updates avatar and regenerates image
 - [ ] GET returns avatar with imageUrl
@@ -389,8 +400,8 @@ GEMINI_API_KEY=your-gemini-api-key
 
 ## Rate Limiting
 
-| Constraint | Limit |
-|------------|-------|
-| Free tier | 500 images/day |
+| Constraint         | Limit              |
+| ------------------ | ------------------ |
+| Free tier          | 500 images/day     |
 | Regeneration limit | 3 per user per day |
-| Image size | 1024x1024 |
+| Image size         | 1024x1024          |

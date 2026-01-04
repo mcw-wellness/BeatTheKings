@@ -197,11 +197,7 @@ export async function updateUserProfile(db: Database, userId: string, data: Prof
     updateData.cityId = data.cityId
   }
 
-  const [updated] = await db
-    .update(users)
-    .set(updateData)
-    .where(eq(users.id, userId))
-    .returning()
+  const [updated] = await db.update(users).set(updateData).where(eq(users.id, userId)).returning()
 
   return updated
 }

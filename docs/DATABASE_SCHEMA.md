@@ -40,6 +40,7 @@ Password stored in `.env` (not committed).
 The location system uses a simplified 3-tier hierarchy: **Country → City → Venue**. This enables city/country rankings while keeping the structure simple (KISS/YAGNI principles).
 
 **Design Decision:** District is stored as an optional text field on Venue (not a separate table) because:
+
 - "District" means different things globally (Vienna Bezirk = neighborhood, Austrian Bezirk = large area, NYC boroughs, etc.)
 - No district-level rankings needed
 - Simpler to maintain and query
@@ -592,16 +593,16 @@ erDiagram
 
 ### Decisions Made
 
-| Decision           | Choice                        | Rationale                                                    |
-| ------------------ | ----------------------------- | ------------------------------------------------------------ |
-| Location storage   | 3-tier: Country → City → Venue | Enables city/country rankings, simple hierarchy              |
-| District handling  | Optional text field on Venue  | "District" varies globally; no district-level rankings needed |
-| Sport reference    | First-class entity            | Proper FKs, extensible for new sports                        |
-| Authentication     | OAuth only                    | Simpler, more secure, no password management                 |
-| Currency system    | Dual (XP + RP)                | XP for ranking, RP for purchases                             |
-| Avatar equipment   | Per-sport loadouts            | Different gear for basketball vs soccer                      |
-| Item unlocks       | Multiple paths                | Achievement OR purchase flexibility                          |
-| Match verification | Mutual agreement              | Both players confirm score                                   |
+| Decision           | Choice                         | Rationale                                                     |
+| ------------------ | ------------------------------ | ------------------------------------------------------------- |
+| Location storage   | 3-tier: Country → City → Venue | Enables city/country rankings, simple hierarchy               |
+| District handling  | Optional text field on Venue   | "District" varies globally; no district-level rankings needed |
+| Sport reference    | First-class entity             | Proper FKs, extensible for new sports                         |
+| Authentication     | OAuth only                     | Simpler, more secure, no password management                  |
+| Currency system    | Dual (XP + RP)                 | XP for ranking, RP for purchases                              |
+| Avatar equipment   | Per-sport loadouts             | Different gear for basketball vs soccer                       |
+| Item unlocks       | Multiple paths                 | Achievement OR purchase flexibility                           |
+| Match verification | Mutual agreement               | Both players confirm score                                    |
 
 ### Indexes Required
 

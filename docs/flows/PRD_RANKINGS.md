@@ -23,10 +23,10 @@ The Rankings system displays player leaderboards at three levels: Venue (Court),
 
 ## Ranking Levels
 
-| Level | Scope | King Title |
-|-------|-------|------------|
-| Venue | Single court/field | King of the Court |
-| City | All venues in city | King of the City |
+| Level   | Scope                 | King Title          |
+| ------- | --------------------- | ------------------- |
+| Venue   | Single court/field    | King of the Court   |
+| City    | All venues in city    | King of the City    |
 | Country | All venues in country | King of the Country |
 
 ---
@@ -75,15 +75,15 @@ The Rankings system displays player leaderboards at three levels: Venue (Court),
 
 ### From Existing Schema
 
-| Data | Source |
-|------|--------|
-| Player list | `users` + `playerStats` |
-| Avatar | `avatars` |
-| XP | `playerStats.totalXp` |
-| Rank | Calculated (position by XP) |
-| Venue rankings | `playerStats` filtered by venue activity |
-| City rankings | `users.cityId` + `playerStats` |
-| Country rankings | `cities.countryId` + `playerStats` |
+| Data             | Source                                   |
+| ---------------- | ---------------------------------------- |
+| Player list      | `users` + `playerStats`                  |
+| Avatar           | `avatars`                                |
+| XP               | `playerStats.totalXp`                    |
+| Rank             | Calculated (position by XP)              |
+| Venue rankings   | `playerStats` filtered by venue activity |
+| City rankings    | `users.cityId` + `playerStats`           |
+| Country rankings | `cities.countryId` + `playerStats`       |
 
 ---
 
@@ -104,6 +104,7 @@ Get rankings with filters.
 | `limit` | number | 10 | Max players to return |
 
 **Response (200):**
+
 ```json
 {
   "level": "city",
@@ -228,12 +229,14 @@ src/components/rankings/
 ## Test Scenarios
 
 ### Unit Tests
+
 - [ ] Calculate rank correctly from XP list
 - [ ] Handle ties (same XP)
 - [ ] Filter by venue/city/country
 - [ ] Determine King correctly
 
 ### Integration Tests
+
 - [ ] GET returns rankings sorted by XP
 - [ ] GET includes current user's rank
 - [ ] GET identifies King correctly
@@ -241,6 +244,7 @@ src/components/rankings/
 - [ ] Sport filter works
 
 ### UI Tests
+
 - [ ] Tabs switch ranking levels
 - [ ] Clicking avatar opens Trump Card
 - [ ] King highlighted with crown

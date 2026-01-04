@@ -411,10 +411,10 @@ model AvatarImage {
 
 ### Model Selection
 
-| Model ID | Free Tier | Quality | Notes |
-| -------- | --------- | ------- | ----- |
-| `gemini-2.0-flash-exp-image-generation` | 500/day | Good | Best for MVP |
-| `imagen-3.0-generate-002` | 10-20/day | Higher | Better quality |
+| Model ID                                | Free Tier | Quality | Notes          |
+| --------------------------------------- | --------- | ------- | -------------- |
+| `gemini-2.0-flash-exp-image-generation` | 500/day   | Good    | Best for MVP   |
+| `imagen-3.0-generate-002`               | 10-20/day | Higher  | Better quality |
 
 **Recommendation:** Use `gemini-2.0-flash-exp-image-generation` for MVP (500 free images/day).
 

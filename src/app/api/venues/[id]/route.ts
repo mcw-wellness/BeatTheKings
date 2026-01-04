@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
-import {
-  getVenueById,
-  getActivePlayersAtVenue,
-  getVenueChallenges,
-} from '@/lib/venues'
+import { getVenueById, getActivePlayersAtVenue, getVenueChallenges } from '@/lib/venues'
 import { formatDistance } from '@/lib/distance'
 import { logger } from '@/lib/logger'
 

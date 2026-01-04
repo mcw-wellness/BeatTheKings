@@ -51,26 +51,26 @@ Based on the provided design mockup:
 
 ### From Existing Schema
 
-| UI Element | Source Table | Field |
-|------------|--------------|-------|
-| Player Name | `users` | `name` (optional, may not display) |
-| Avatar Image | `avatars` | `imageUrl` or SVG fallback |
-| Rank | Calculated | Position in `playerStats` by XP |
-| XP | `playerStats` | `totalXp` |
-| RP | `playerStats` | `availableRp` |
-| Total Points | `playerStats` | `totalPointsScored` |
-| Win Rate | `playerStats` | `matchesWon / matchesPlayed * 100` |
-| Matches (Marks) | `playerStats` | `matchesWon / matchesPlayed` |
-| Challenges | `playerStats` | `challengesCompleted` / total available |
-| Is King | Calculated | Highest XP at venue/city/country |
+| UI Element      | Source Table  | Field                                   |
+| --------------- | ------------- | --------------------------------------- |
+| Player Name     | `users`       | `name` (optional, may not display)      |
+| Avatar Image    | `avatars`     | `imageUrl` or SVG fallback              |
+| Rank            | Calculated    | Position in `playerStats` by XP         |
+| XP              | `playerStats` | `totalXp`                               |
+| RP              | `playerStats` | `availableRp`                           |
+| Total Points    | `playerStats` | `totalPointsScored`                     |
+| Win Rate        | `playerStats` | `matchesWon / matchesPlayed * 100`      |
+| Matches (Marks) | `playerStats` | `matchesWon / matchesPlayed`            |
+| Challenges      | `playerStats` | `challengesCompleted` / total available |
+| Is King         | Calculated    | Highest XP at venue/city/country        |
 
 ### Crown System
 
-| Crown Type | Criteria |
-|------------|----------|
-| King of the Court | #1 XP at specific venue |
-| King of the City | #1 XP in city |
-| King of the Country | #1 XP in country |
+| Crown Type          | Criteria                |
+| ------------------- | ----------------------- |
+| King of the Court   | #1 XP at specific venue |
+| King of the City    | #1 XP in city           |
+| King of the Country | #1 XP in country        |
 
 ---
 
@@ -81,6 +81,7 @@ Based on the provided design mockup:
 Get a player's Trump Card data.
 
 **Response (200):**
+
 ```json
 {
   "player": {
@@ -161,23 +162,23 @@ src/components/trump-card/
 
 ### Colors (from mockup)
 
-| Element | Color |
-|---------|-------|
-| Background | Dark gradient (#1a1a2e → #16213e) |
-| Card border | Gold gradient |
-| Crown | Gold (#FFD700) |
-| Stats panel | Dark semi-transparent |
-| Text primary | White |
-| Text secondary | Gold/Yellow |
-| XP badge | Purple |
-| RP badge | Gold coin |
+| Element        | Color                             |
+| -------------- | --------------------------------- |
+| Background     | Dark gradient (#1a1a2e → #16213e) |
+| Card border    | Gold gradient                     |
+| Crown          | Gold (#FFD700)                    |
+| Stats panel    | Dark semi-transparent             |
+| Text primary   | White                             |
+| Text secondary | Gold/Yellow                       |
+| XP badge       | Purple                            |
+| RP badge       | Gold coin                         |
 
 ### Responsive Design
 
-| Screen | Behavior |
-|--------|----------|
-| Mobile | Full-screen modal |
-| Tablet | Centered modal (80% width) |
+| Screen  | Behavior                   |
+| ------- | -------------------------- |
+| Mobile  | Full-screen modal          |
+| Tablet  | Centered modal (80% width) |
 | Desktop | Centered modal (500px max) |
 
 ### Animations
@@ -239,18 +240,21 @@ src/components/trump-card/
 ## Test Scenarios
 
 ### Unit Tests
+
 - [ ] Calculate rank correctly from XP
 - [ ] Calculate win rate (handle 0 matches)
 - [ ] Determine King status correctly
 - [ ] Format XP progress (current/next level)
 
 ### Integration Tests
+
 - [ ] GET returns correct player data
 - [ ] GET returns 404 for non-existent player
 - [ ] Crown status reflects actual rankings
 - [ ] Stats match database values
 
 ### UI Tests
+
 - [ ] Modal opens on avatar click
 - [ ] Modal closes on X click
 - [ ] Modal closes on outside click

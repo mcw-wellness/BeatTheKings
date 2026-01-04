@@ -1,81 +1,76 @@
+/**
+ * GET /api/matches - Get user's match history
+ * POST /api/matches - Create a new 1v1 match
+ */
+
 import { NextResponse } from 'next/server'
+import { eq, or, desc } from 'drizzle-orm'
+import { getSession } from '@/lib/auth'
+import { getDb } from '@/db'
+import { createMatch, getMatchById } from '@/lib/matches'
+import { matches } from '@/db/schema'
+import { logger } from '@/lib/logger'
 
-// Mock matches data
-const mockMatches = [
-  {
-    id: 'match-1',
-    opponentName: 'Lukas Müller',
-    opponentId: 'user-2',
-    venue: 'Donauinsel Basketball Court',
-    date: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-    status: 'pending',
-    canDispute: false,
-  },
-  {
-    id: 'match-2',
-    opponentName: 'Stefan Weber',
-    opponentId: 'user-3',
-    venue: 'Prater Basketball Court',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    status: 'verified',
-    result: {
-      winner: 'you',
-      yourScore: 11,
-      opponentScore: 7,
-      xpEarned: 150,
-    },
-    canDispute: true,
-  },
-  {
-    id: 'match-3',
-    opponentName: 'Thomas Bauer',
-    opponentId: 'user-4',
-    venue: 'Augarten Basketball Court',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-    status: 'verified',
-    result: {
-      winner: 'opponent',
-      yourScore: 8,
-      opponentScore: 11,
-      xpEarned: 50,
-    },
-    canDispute: true,
-  },
-  {
-    id: 'match-4',
-    opponentName: 'Michael Gruber',
-    opponentId: 'user-5',
-    venue: 'Donauinsel Basketball Court',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 72), // 3 days ago
-    status: 'disputed',
-    result: {
-      winner: 'opponent',
-      yourScore: 10,
-      opponentScore: 11,
-      xpEarned: 50,
-    },
-    canDispute: false,
-  },
-  {
-    id: 'match-5',
-    opponentName: 'Andreas Huber',
-    opponentId: 'user-6',
-    venue: 'Prater Basketball Court',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 120), // 5 days ago
-    status: 'verified',
-    result: {
-      winner: 'you',
-      yourScore: 11,
-      opponentScore: 9,
-      xpEarned: 150,
-    },
-    canDispute: false, // Too old to dispute
-  },
-]
+export async function GET(): Promise<Response> {
+  try {
+    const session = await getSession()
 
-export async function GET() {
-  // Sort by date (newest first)
-  const sortedMatches = mockMatches.sort((a, b) => b.date.getTime() - a.date.getTime())
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-  return NextResponse.json(sortedMatches)
+    const db = getDb()
+
+    // Get all matches where user is a participant
+    const userMatches = await db
+      .select({ id: matches.id })
+      .from(matches)
+      .where(or(eq(matches.player1Id, session.user.id), eq(matches.player2Id, session.user.id)))
+      .orderBy(desc(matches.createdAt))
+      .limit(20)
+
+    // Get full details for each match
+    const matchDetails = await Promise.all(userMatches.map(async (m) => getMatchById(db, m.id)))
+
+    return NextResponse.json({ matches: matchDetails.filter(Boolean) })
+  } catch (error) {
+    logger.error({ error }, 'Failed to get matches')
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const session = await getSession()
+
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { opponentId, venueId, sportId } = body
+
+    if (!opponentId || !venueId || !sportId) {
+      return NextResponse.json(
+        { error: 'opponentId, venueId, and sportId are required' },
+        { status: 400 }
+      )
+    }
+
+    if (opponentId === session.user.id) {
+      return NextResponse.json({ error: 'Cannot challenge yourself' }, { status: 400 })
+    }
+
+    const db = getDb()
+    const result = await createMatch(db, session.user.id, opponentId, venueId, sportId)
+
+    if ('error' in result) {
+      return NextResponse.json({ error: result.error }, { status: 400 })
+    }
+
+    return NextResponse.json({ matchId: result.matchId, message: 'Match created' })
+  } catch (error) {
+    logger.error({ error }, 'Failed to create match')
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

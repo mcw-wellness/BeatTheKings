@@ -4,7 +4,8 @@
       "Bash(git add:*)",
       "Bash(source ~/.nvm/nvm.sh)",
       "Bash(nvm use:*)",
-      "Bash(npm run test:ci:*)"
+      "Bash(npm run test:ci:*)",
+      "Bash(npm test:*)"
     ]
   }
 }

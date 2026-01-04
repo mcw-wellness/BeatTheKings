@@ -149,65 +149,71 @@ export default function VenueDetailPage(): JSX.Element {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-lg mx-auto p-4 space-y-4">
+      <div className="max-w-lg mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="text-gray-600 hover:text-gray-900">
             ← Back
           </button>
-          <h1 className="text-xl font-bold text-gray-900 flex-1">{venue.name}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 flex-1">{venue.name}</h1>
         </div>
 
         {/* Venue Info Card */}
-        <div className="bg-white rounded-xl shadow p-4">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow p-4 md:p-6">
           <div className="flex items-center justify-between mb-2">
             <div>
-              {venue.district && <p className="text-gray-500 text-sm">{venue.district}</p>}
-              {venue.cityName && <p className="text-gray-400 text-xs">{venue.cityName}</p>}
+              {venue.district && (
+                <p className="text-gray-500 text-sm md:text-base">{venue.district}</p>
+              )}
+              {venue.cityName && (
+                <p className="text-gray-400 text-xs md:text-sm">{venue.cityName}</p>
+              )}
             </div>
             {venue.distanceFormatted && (
-              <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full">
+              <span className="bg-blue-100 text-blue-700 text-sm md:text-base px-3 py-1 rounded-full">
                 📍 {venue.distanceFormatted}
               </span>
             )}
           </div>
-          {venue.description && <p className="text-gray-600 text-sm mt-2">{venue.description}</p>}
+          {venue.description && (
+            <p className="text-gray-600 text-sm md:text-base mt-2">{venue.description}</p>
+          )}
         </div>
 
         {/* King of the Court */}
         {king && (
           <div
             onClick={() => openPlayerCard(king.id)}
-            className="bg-gradient-to-r from-yellow-100 to-yellow-50 border border-yellow-300 rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-transform shadow"
+            className="bg-gradient-to-r from-yellow-100 to-yellow-50 border border-yellow-300 rounded-xl md:rounded-2xl p-4 md:p-5 cursor-pointer active:scale-[0.98] transition-transform shadow"
           >
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">👑</span>
-              <span className="text-yellow-700 font-bold text-sm uppercase tracking-wide">
+              <span className="text-xl md:text-2xl">👑</span>
+              <span className="text-yellow-700 font-bold text-sm md:text-base uppercase tracking-wide">
                 King of the Court
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-yellow-200 overflow-hidden border-2 border-yellow-500">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-yellow-200 overflow-hidden border-2 border-yellow-500">
                 <Image
                   src={king.avatar.imageUrl}
                   alt="King"
-                  width={48}
-                  height={48}
+                  width={56}
+                  height={56}
                   className="object-cover w-full h-full"
                   unoptimized
                 />
               </div>
               <div className="flex-1">
-                <p className="text-gray-900 font-semibold">{king.name || 'Player'}</p>
-                <p className="text-yellow-600 text-sm">Rank #{king.rank}</p>
+                <p className="text-gray-900 font-semibold md:text-lg">{king.name || 'Player'}</p>
+                <p className="text-yellow-600 text-sm md:text-base">Rank #{king.rank}</p>
               </div>
             </div>
           </div>
         )}
 
         {/* Active Players */}
-        <div className="bg-white rounded-xl shadow p-4">
-          <h2 className="text-gray-900 font-semibold mb-3 flex items-center gap-2">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow p-4 md:p-6">
+          <h2 className="text-gray-900 font-semibold md:text-lg mb-3 flex items-center gap-2">
             <span>👥</span>
             Active Players ({activePlayers.length})
           </h2>
@@ -241,8 +247,8 @@ export default function VenueDetailPage(): JSX.Element {
         </div>
 
         {/* Challenges */}
-        <div className="bg-white rounded-xl shadow p-4">
-          <h2 className="text-gray-900 font-semibold mb-3 flex items-center gap-2">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow p-4 md:p-6">
+          <h2 className="text-gray-900 font-semibold md:text-lg mb-3 flex items-center gap-2">
             <span>🏆</span>
             Challenges ({challenges.length})
           </h2>
@@ -251,23 +257,22 @@ export default function VenueDetailPage(): JSX.Element {
               No challenges available at this venue yet.
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 md:space-y-3">
               {challenges.map((challenge) => (
                 <div
                   key={challenge.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between p-3 md:p-4 bg-gray-50 rounded-lg md:rounded-xl"
                 >
                   <div>
-                    <p className="text-gray-900 font-medium">{challenge.name}</p>
-                    <p className="text-gray-500 text-xs">
+                    <p className="text-gray-900 font-medium md:text-lg">{challenge.name}</p>
+                    <p className="text-gray-500 text-xs md:text-sm">
                       {challenge.difficulty} • {challenge.xpReward} XP
                     </p>
                   </div>
                   <button
-                    className="bg-[#4361EE] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#3651DE] transition-colors"
+                    className="bg-[#4361EE] text-white px-4 md:px-5 py-2 md:py-3 rounded-lg text-sm md:text-base font-medium hover:bg-[#3651DE] transition-colors"
                     onClick={(e) => {
                       e.stopPropagation()
-                      // TODO: Navigate to challenge flow
                       router.push(`/challenges/${challenge.id}`)
                     }}
                   >
@@ -284,7 +289,7 @@ export default function VenueDetailPage(): JSX.Element {
           <button
             onClick={handleCheckIn}
             disabled={isCheckingIn || !latitude}
-            className="w-full py-4 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full py-4 md:py-5 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white text-lg font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {isCheckingIn ? (
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />

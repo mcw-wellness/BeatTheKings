@@ -162,7 +162,9 @@ export default function RankingPage(): JSX.Element {
               {data.rankings.length === 0 ? (
                 <div className="bg-white rounded-xl shadow p-8 text-center">
                   <p className="text-gray-500">No players ranked yet</p>
-                  <p className="text-gray-400 text-sm mt-1">Complete matches to earn XP and appear here!</p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    Complete matches to earn XP and appear here!
+                  </p>
                 </div>
               ) : (
                 data.rankings.map((player) => (

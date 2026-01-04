@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
 import { mockUsers } from '@/lib/mockData'
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const sport = searchParams.get('sport') || 'basketball'
-
+export async function GET() {
   // Mock available opponents - users who are online/available for 1x1 matches
   const availableOpponents = mockUsers
     .filter((u) => u.hasCompletedOnboarding)

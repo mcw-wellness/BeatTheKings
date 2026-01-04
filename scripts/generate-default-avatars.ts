@@ -32,11 +32,7 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-async function generateAvatar(
-  gender: string,
-  sport: string,
-  retries = 3
-): Promise<Buffer> {
+async function generateAvatar(gender: string, sport: string, retries = 3): Promise<Buffer> {
   console.log(`Generating ${gender} ${sport} avatar...`)
 
   const prompt = buildDefaultAvatarPrompt(gender, sport)

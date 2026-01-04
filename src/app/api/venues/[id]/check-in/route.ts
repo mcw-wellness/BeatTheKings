@@ -25,10 +25,7 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
     const { latitude, longitude } = body
 
     if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-      return NextResponse.json(
-        { error: 'Latitude and longitude are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Latitude and longitude are required' }, { status: 400 })
     }
 
     const db = getDb()

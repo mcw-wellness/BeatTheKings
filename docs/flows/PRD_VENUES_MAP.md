@@ -110,14 +110,14 @@ The Venues/Map feature displays all available sports venues (courts, fields, par
 
 ### From Existing Schema
 
-| Data | Source |
-|------|--------|
-| Venue list | `venues` table |
+| Data           | Source                                |
+| -------------- | ------------------------------------- |
+| Venue list     | `venues` table                        |
 | Venue location | `venues.latitude`, `venues.longitude` |
-| City/District | `venues.cityId`, `venues.district` |
-| Active players | `activePlayers` table |
-| Challenges | `challenges` table |
-| King of Court | `playerStats` (highest XP at venue) |
+| City/District  | `venues.cityId`, `venues.district`    |
+| Active players | `activePlayers` table                 |
+| Challenges     | `challenges` table                    |
+| King of Court  | `playerStats` (highest XP at venue)   |
 
 ### User Location
 
@@ -143,6 +143,7 @@ Get list of venues sorted by distance.
 | `cityId` | string | - | Optional city filter |
 
 **Response (200):**
+
 ```json
 {
   "venues": [
@@ -174,6 +175,7 @@ Get list of venues sorted by distance.
 Get single venue details with active players and challenges.
 
 **Response (200):**
+
 ```json
 {
   "venue": {
@@ -219,6 +221,7 @@ Get single venue details with active players and challenges.
 Check in to a venue (mark as active player).
 
 **Request Body:**
+
 ```json
 {
   "latitude": 48.1962,
@@ -227,6 +230,7 @@ Check in to a venue (mark as active player).
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -241,29 +245,25 @@ Check in to a venue (mark as active player).
 ### Haversine Formula
 
 ```typescript
-function calculateDistance(
-  lat1: number, lon1: number,
-  lat2: number, lon2: number
-): number {
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371 // Earth's radius in km
   const dLat = toRad(lat2 - lat1)
   const dLon = toRad(lon2 - lon1)
   const a =
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon/2) * Math.sin(dLon/2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   return R * c // Distance in km
 }
 ```
 
 ### Distance Display
 
-| Distance | Display |
-|----------|---------|
-| < 1 km | "0.3 km" |
-| 1-10 km | "2.5 km" |
-| > 10 km | "15 km" |
+| Distance | Display  |
+| -------- | -------- |
+| < 1 km   | "0.3 km" |
+| 1-10 km  | "2.5 km" |
+| > 10 km  | "15 km"  |
 
 ---
 
@@ -364,6 +364,7 @@ src/app/api/venues/
 ## Test Scenarios
 
 ### Unit Tests
+
 - [ ] Calculate distance correctly (Haversine)
 - [ ] Format distance display (km)
 - [ ] Sort venues by distance
@@ -371,12 +372,14 @@ src/app/api/venues/
 - [ ] Determine King of Court correctly
 
 ### Integration Tests
+
 - [ ] GET /api/venues returns sorted by distance
 - [ ] GET /api/venues/:id returns full details
 - [ ] POST /api/venues/:id/check-in creates active player
 - [ ] Active player expires when moved away
 
 ### UI Tests
+
 - [ ] Geolocation permission request works
 - [ ] Venues sorted by distance
 - [ ] Clicking venue opens detail page

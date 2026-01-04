@@ -139,7 +139,7 @@ export default function MapPage(): JSX.Element {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-4xl mx-auto p-4 space-y-4">
+      <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -149,9 +149,9 @@ export default function MapPage(): JSX.Element {
             >
               ← Back
             </button>
-            <h1 className="text-xl font-bold text-gray-900">Venue Map</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Venue Map</h1>
           </div>
-          <span className="text-2xl">🏀</span>
+          <span className="text-2xl md:text-3xl">🏀</span>
         </div>
 
         {/* Location Status */}
@@ -166,7 +166,7 @@ export default function MapPage(): JSX.Element {
         </div>
 
         {/* Map */}
-        <div className="bg-white rounded-xl shadow overflow-hidden" style={{ height: '400px' }}>
+        <div className="bg-white rounded-xl md:rounded-2xl shadow overflow-hidden h-[350px] md:h-[450px]">
           {mapReady && !isLoading ? (
             <MapContainer center={userCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
               <TileLayer
@@ -204,10 +204,10 @@ export default function MapPage(): JSX.Element {
 
         {/* Selected Venue Panel */}
         {selectedVenue && (
-          <div className="bg-white rounded-xl shadow p-4 space-y-4">
+          <div className="bg-white rounded-xl md:rounded-2xl shadow p-4 md:p-6 space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">{selectedVenue.name}</h2>
+                <h2 className="text-lg md:text-xl font-bold text-gray-900">{selectedVenue.name}</h2>
                 {selectedVenue.district && (
                   <p className="text-sm text-gray-500">{selectedVenue.district}</p>
                 )}
@@ -287,7 +287,7 @@ export default function MapPage(): JSX.Element {
             {/* View Challenges Button */}
             <button
               onClick={() => router.push(`/venues/${selectedVenue.id}`)}
-              className="w-full py-3 bg-[#4361EE] text-white font-semibold rounded-xl hover:bg-[#3651DE] transition-colors"
+              className="w-full py-3 md:py-4 bg-[#4361EE] text-white font-semibold rounded-xl hover:bg-[#3651DE] transition-colors"
             >
               View Challenges ({selectedVenue.challengeCount})
             </button>
@@ -296,7 +296,9 @@ export default function MapPage(): JSX.Element {
 
         {/* Venue List - Sorted by Distance */}
         <div>
-          <h3 className="text-lg font-bold text-gray-900 mb-3">Nearby Venues ({venues.length})</h3>
+          <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
+            Nearby Venues ({venues.length})
+          </h3>
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent mx-auto" />
@@ -306,12 +308,12 @@ export default function MapPage(): JSX.Element {
               <p className="text-gray-500">No venues found</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 md:space-y-3">
               {venues.map((venue) => (
                 <div
                   key={venue.id}
                   onClick={() => handleVenueClick(venue)}
-                  className={`bg-white rounded-xl shadow p-4 cursor-pointer active:scale-[0.98] transition-transform ${
+                  className={`bg-white rounded-xl md:rounded-2xl shadow p-4 md:p-5 cursor-pointer active:scale-[0.98] transition-transform ${
                     selectedVenue?.id === venue.id ? 'ring-2 ring-[#4361EE]' : ''
                   }`}
                 >
