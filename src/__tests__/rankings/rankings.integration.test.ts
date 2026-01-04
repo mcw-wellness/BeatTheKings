@@ -48,10 +48,10 @@ describe('Rankings API Integration Tests', () => {
     return city
   }
 
-  async function createUser(email: string, name: string, cityId: string) {
+  async function createUser(email: string, name: string, cityId: string, ageGroup: string = '18-30') {
     const [user] = await testDb
       .insert(users)
-      .values({ email, name, cityId, hasCreatedAvatar: true })
+      .values({ email, name, cityId, hasCreatedAvatar: true, ageGroup })
       .returning()
     return user
   }

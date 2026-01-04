@@ -110,17 +110,24 @@ async function seed() {
     .where(and(eq(cities.name, 'Vienna'), eq(cities.countryId, countryId!)))
     .limit(1)
 
-  // Seed Vienna venues
+  // Seed Vienna venues with real coordinates
   if (vienna) {
     console.log('Adding Vienna venues...')
-    const viennaVenues = ['Esterhazy Park', 'Schönborn Park', 'Weghuber Park']
+    const viennaVenues = [
+      { name: 'Esterhazy Park', lat: 48.1962, lng: 16.3551, district: '6. Bezirk' },
+      { name: 'Schönborn Park', lat: 48.2108, lng: 16.3536, district: '8. Bezirk' },
+      { name: 'Weghuber Park', lat: 48.2082, lng: 16.3574, district: '1. Bezirk' },
+    ]
 
-    for (const venueName of viennaVenues) {
+    for (const venue of viennaVenues) {
       await db
         .insert(venues)
         .values({
-          name: venueName,
+          name: venue.name,
           cityId: vienna.id,
+          latitude: venue.lat,
+          longitude: venue.lng,
+          district: venue.district,
           isActive: true,
         })
         .onConflictDoNothing()

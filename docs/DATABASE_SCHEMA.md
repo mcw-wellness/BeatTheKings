@@ -37,60 +37,47 @@ Password stored in `.env` (not committed).
 
 ## 1. Location & Venue System
 
-The location system uses a proper geographic hierarchy instead of storing location as strings. This enables city/country rankings and proper venue organization.
+The location system uses a simplified 3-tier hierarchy: **Country → City → Venue**. This enables city/country rankings while keeping the structure simple (KISS/YAGNI principles).
+
+**Design Decision:** District is stored as an optional text field on Venue (not a separate table) because:
+- "District" means different things globally (Vienna Bezirk = neighborhood, Austrian Bezirk = large area, NYC boroughs, etc.)
+- No district-level rankings needed
+- Simpler to maintain and query
 
 ### ER Diagram
 
 ```mermaid
 %%{init: {'themeVariables': {'fontSize': '12px'}}}%%
 erDiagram
-    Country ||--o{ State : "has"
-    State ||--o{ City : "has"
-    City ||--o{ District : "has"
+    Country ||--o{ City : "has"
     City ||--o{ Venue : "has"
-    District ||--o{ Venue : "has"
     City ||--o{ User : "located_in"
     Venue ||--o{ ActivePlayer : "has_active"
 
     Country {
         uuid id PK
         string name
-        string code
-        datetime createdAt
-    }
-
-    State {
-        uuid id PK
-        string name
-        uuid countryId FK
+        string code "unique ISO-3166-1"
         datetime createdAt
     }
 
     City {
         uuid id PK
         string name
-        uuid stateId FK
-        datetime createdAt
-    }
-
-    District {
-        uuid id PK
-        string name
-        int number
-        uuid cityId FK
+        uuid countryId FK
         datetime createdAt
     }
 
     Venue {
         uuid id PK
         string name
-        uuid districtId FK
         uuid cityId FK
-        string address
-        float latitude
-        float longitude
-        string description
-        string imageUrl
+        string district "nullable text"
+        string address "nullable"
+        float latitude "nullable"
+        float longitude "nullable"
+        string description "nullable"
+        string imageUrl "nullable"
         boolean isActive
         datetime createdAt
         datetime updatedAt
@@ -109,10 +96,10 @@ erDiagram
 
 ### Key Points
 
-- **Country** uses ISO 3166-1 codes (US, GB, DE, etc.) - `code` is unique
-- **State** can represent states, provinces, or regions
-- **District** is optional - `number` is nullable
-- **Venue** must belong to a City; `districtId`, `address`, `latitude`, `longitude`, `description`, `imageUrl` are nullable
+- **Country** uses ISO 3166-1 codes (AT, US, GB, etc.) - `code` is unique
+- **City** belongs to a Country (no State/Province layer for simplicity)
+- **Venue** must belong to a City; `district` is an optional text field (e.g., "6. Bezirk", "Downtown")
+- **Rankings**: 3 tiers only - Venue → City → Country (no district-level rankings)
 - **ActivePlayer** tracks real-time player presence at venues with GPS coordinates
 
 ---
@@ -387,12 +374,9 @@ Full system view showing all relationships:
 
 ```mermaid
 erDiagram
-    %% Location Hierarchy
-    Country ||--o{ State : "has"
-    State ||--o{ City : "has"
-    City ||--o{ District : "has"
+    %% Location Hierarchy (3-tier: Country → City → Venue)
+    Country ||--o{ City : "has"
     City ||--o{ Venue : "has"
-    District ||--o{ Venue : "has"
     City ||--o{ User : "located_in"
 
     %% Sport & Venue
@@ -433,25 +417,10 @@ erDiagram
         datetime createdAt
     }
 
-    State {
-        uuid id PK
-        string name
-        uuid countryId FK
-        datetime createdAt
-    }
-
     City {
         uuid id PK
         string name
-        uuid stateId FK
-        datetime createdAt
-    }
-
-    District {
-        uuid id PK
-        string name
-        int number "nullable"
-        uuid cityId FK
+        uuid countryId FK
         datetime createdAt
     }
 
@@ -479,8 +448,8 @@ erDiagram
     Venue {
         uuid id PK
         string name
-        uuid districtId "nullable FK"
         uuid cityId FK
+        string district "nullable text"
         string address "nullable"
         float latitude "nullable"
         float longitude "nullable"
@@ -623,22 +592,22 @@ erDiagram
 
 ### Decisions Made
 
-| Decision           | Choice               | Rationale                                    |
-| ------------------ | -------------------- | -------------------------------------------- |
-| Location storage   | Normalized hierarchy | Enables proper city/country rankings         |
-| Sport reference    | First-class entity   | Proper FKs, extensible for new sports        |
-| Authentication     | OAuth only           | Simpler, more secure, no password management |
-| Currency system    | Dual (XP + RP)       | XP for ranking, RP for purchases             |
-| Avatar equipment   | Per-sport loadouts   | Different gear for basketball vs soccer      |
-| Item unlocks       | Multiple paths       | Achievement OR purchase flexibility          |
-| Match verification | Mutual agreement     | Both players confirm score                   |
+| Decision           | Choice                        | Rationale                                                    |
+| ------------------ | ----------------------------- | ------------------------------------------------------------ |
+| Location storage   | 3-tier: Country → City → Venue | Enables city/country rankings, simple hierarchy              |
+| District handling  | Optional text field on Venue  | "District" varies globally; no district-level rankings needed |
+| Sport reference    | First-class entity            | Proper FKs, extensible for new sports                        |
+| Authentication     | OAuth only                    | Simpler, more secure, no password management                 |
+| Currency system    | Dual (XP + RP)                | XP for ranking, RP for purchases                             |
+| Avatar equipment   | Per-sport loadouts            | Different gear for basketball vs soccer                      |
+| Item unlocks       | Multiple paths                | Achievement OR purchase flexibility                          |
+| Match verification | Mutual agreement              | Both players confirm score                                   |
 
 ### Indexes Required
 
 ```sql
 -- Location queries
 CREATE INDEX idx_venue_city ON Venue(cityId);
-CREATE INDEX idx_venue_district ON Venue(districtId);
 CREATE INDEX idx_venue_location ON Venue(latitude, longitude);
 
 -- Active players

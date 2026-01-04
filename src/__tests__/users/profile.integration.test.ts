@@ -168,7 +168,7 @@ describe('Profile API Integration Tests', () => {
       const body = await response.json()
       expect(body.error).toBe('Validation failed')
       expect(body.details.name).toBe('Name must be at least 2 characters')
-      expect(body.details.gender).toBe('Invalid gender selection')
+      expect(body.details.gender).toBe('Invalid gender')
     })
 
     it('should return 400 for non-existent city', async () => {
@@ -235,7 +235,7 @@ describe('Profile API Integration Tests', () => {
       const body = await response.json()
       expect(body.success).toBe(true)
       expect(body.user.name).toBe('Updated User')
-      expect(body.user.gender).toBe('Female')
+      expect(body.user.gender).toBe('female') // Stored as lowercase
       expect(body.user.ageGroup).toBe('18-30')
       expect(body.user.cityId).toBe(city.id)
     })

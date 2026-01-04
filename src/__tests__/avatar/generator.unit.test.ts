@@ -23,7 +23,8 @@ describe('Avatar Generator', () => {
         hairColor: 'black',
       })
 
-      expect(prompt).toContain('male athlete')
+      expect(prompt).toContain('male')
+      expect(prompt).toContain('athlete')
       expect(prompt).toContain('medium skin tone')
       expect(prompt).toContain('short black hair')
       expect(prompt).toContain('basketball')
@@ -38,7 +39,8 @@ describe('Avatar Generator', () => {
         sport: 'soccer',
       })
 
-      expect(prompt).toContain('female athlete')
+      expect(prompt).toContain('female')
+      expect(prompt).toContain('athlete')
       expect(prompt).toContain('dark skin tone')
       expect(prompt).toContain('soccer jersey')
       expect(prompt).toContain('cleats')

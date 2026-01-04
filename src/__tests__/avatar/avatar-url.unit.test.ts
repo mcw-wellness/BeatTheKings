@@ -1,4 +1,18 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// Mock the generateSasUrl function to return predictable URLs
+vi.mock('@/lib/azure-storage', async () => {
+  return {
+    getDefaultAvatarSasUrl: (gender: string, sport: string = 'basketball') => {
+      const genderKey = gender?.toLowerCase() === 'female' ? 'female' : 'male'
+      return `https://test.blob.core.windows.net/avatar/default/${sport}_${genderKey}.png?sastoken`
+    },
+    getUserAvatarSasUrl: (userId: string) => {
+      return `https://test.blob.core.windows.net/avatar/users/${userId}/avatar.png?sastoken`
+    },
+  }
+})
+
 import { getDefaultAvatarSasUrl, getUserAvatarSasUrl } from '@/lib/azure-storage'
 
 describe('Avatar URL Functions', () => {

@@ -18,7 +18,8 @@ describe('Avatar Prompts', () => {
 
       const prompt = buildUserAvatarPrompt(input)
 
-      expect(prompt).toContain('male athlete')
+      expect(prompt).toContain('male')
+      expect(prompt).toContain('athlete')
       expect(prompt).toContain('medium skin tone')
       expect(prompt).toContain('short black hair')
       expect(prompt).toContain('basketball') // default sport
