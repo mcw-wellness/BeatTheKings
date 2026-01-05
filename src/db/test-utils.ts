@@ -112,7 +112,7 @@ async function createTables(db: TestDatabase): Promise<void> {
       "cityId" UUID REFERENCES "City"("id"),
       "hasCreatedAvatar" BOOLEAN DEFAULT FALSE NOT NULL,
       "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
-      "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL
+      "updatedAt" TIMESTAMP
     )
   `)
 
@@ -141,7 +141,7 @@ async function createTables(db: TestDatabase): Promise<void> {
       "imageUrl" VARCHAR(500),
       "isActive" BOOLEAN DEFAULT TRUE NOT NULL,
       "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
-      "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL
+      "updatedAt" TIMESTAMP
     )
   `)
 
@@ -174,7 +174,7 @@ async function createTables(db: TestDatabase): Promise<void> {
       "hairColor" VARCHAR(50),
       "imageUrl" VARCHAR(500),
       "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
-      "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL
+      "updatedAt" TIMESTAMP
     )
   `)
 
@@ -201,7 +201,7 @@ async function createTables(db: TestDatabase): Promise<void> {
       "shoesItemId" UUID REFERENCES "AvatarItem"("id"),
       "accessoryItemId" UUID REFERENCES "AvatarItem"("id"),
       "jerseyNumber" INTEGER,
-      "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL,
+      "updatedAt" TIMESTAMP,
       UNIQUE("avatarId", "sportId")
     )
   `)
@@ -221,7 +221,7 @@ async function createTables(db: TestDatabase): Promise<void> {
       "difficulty" VARCHAR(20) NOT NULL,
       "isActive" BOOLEAN DEFAULT TRUE NOT NULL,
       "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
-      "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL
+      "updatedAt" TIMESTAMP
     )
   `)
 
@@ -283,7 +283,7 @@ async function createTables(db: TestDatabase): Promise<void> {
       "freeThrowMade" INTEGER DEFAULT 0 NOT NULL,
       "freeThrowAttempted" INTEGER DEFAULT 0 NOT NULL,
       "usersInvited" INTEGER DEFAULT 0 NOT NULL,
-      "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL,
+      "updatedAt" TIMESTAMP,
       UNIQUE("userId", "sportId")
     )
   `)

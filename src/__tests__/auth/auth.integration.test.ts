@@ -159,13 +159,14 @@ describe('Auth Integration Tests', () => {
 
     it('should update the updatedAt timestamp', async () => {
       const user = await createUserFromOAuth(db, { email: 'timestamp@example.com' })
-      const originalUpdatedAt = user.updatedAt
+      expect(user.updatedAt).toBeNull()
 
       await new Promise((resolve) => setTimeout(resolve, 10))
 
       const updated = await updateUserAvatarStatus(db, user.id, true)
 
-      expect(updated.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt.getTime())
+      expect(updated.updatedAt).not.toBeNull()
+      expect(updated.updatedAt!.getTime()).toBeGreaterThan(user.createdAt.getTime())
     })
   })
 

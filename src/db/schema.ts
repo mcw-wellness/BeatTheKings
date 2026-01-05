@@ -79,7 +79,7 @@ export const users = pgTable(
     hasCreatedAvatar: boolean('hasCreatedAvatar').default(false).notNull(),
 
     createdAt: timestamp('createdAt').defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt'), // Nullable - set on update, not on create
   },
   (table) => [
     index('User_email_idx').on(table.email),
@@ -143,7 +143,7 @@ export const venues = pgTable(
     imageUrl: varchar('imageUrl', { length: 500 }), // Venue photo displayed in UI
     isActive: boolean('isActive').default(true).notNull(),
     createdAt: timestamp('createdAt').defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt'), // Nullable - set on update, not on create
   },
   (table) => [
     index('Venue_latLong_idx').on(table.latitude, table.longitude),
@@ -219,7 +219,7 @@ export const avatars = pgTable('Avatar', {
   imageUrl: varchar('imageUrl', { length: 500 }),
 
   createdAt: timestamp('createdAt').defaultNow().notNull(),
-  updatedAt: timestamp('updatedAt').defaultNow().notNull(),
+  updatedAt: timestamp('updatedAt'), // Nullable - set on update, not on create
 })
 
 export const avatarsRelations = relations(avatars, ({ one, many }) => ({
@@ -279,7 +279,7 @@ export const avatarEquipments = pgTable(
 
     jerseyNumber: integer('jerseyNumber'), // Player's number on jersey
 
-    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt'), // Nullable - set on update, not on create
   },
   (table) => [unique('AvatarEquipment_avatarId_sportId_key').on(table.avatarId, table.sportId)]
 )
@@ -341,7 +341,7 @@ export const challenges = pgTable(
 
     isActive: boolean('isActive').default(true).notNull(),
     createdAt: timestamp('createdAt').defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt'), // Nullable - set on update, not on create
   },
   (table) => [
     index('Challenge_venueId_idx').on(table.venueId),
@@ -524,7 +524,7 @@ export const playerStats = pgTable(
     // Invites tracking
     usersInvited: integer('usersInvited').default(0).notNull(),
 
-    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt'), // Nullable - set on update, not on create
   },
   (table) => [
     unique('PlayerStats_userId_sportId_key').on(table.userId, table.sportId),
