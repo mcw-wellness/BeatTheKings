@@ -40,6 +40,16 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy files needed for migrations and seeding
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/drizzle.config.ts ./
+COPY --from=builder /app/src/db ./src/db
+COPY --from=builder /app/scripts ./scripts
+COPY --from=deps /app/node_modules ./node_modules
+
+# Make startup script executable
+RUN chmod +x ./scripts/startup.sh
+
 USER nextjs
 
 EXPOSE 3000
@@ -47,5 +57,5 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# Run the app
-CMD ["node", "server.js"]
+# Run startup script (handles migrations + starts server)
+CMD ["./scripts/startup.sh"]
