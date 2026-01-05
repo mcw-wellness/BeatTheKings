@@ -5,12 +5,12 @@ echo "Starting Beat The Kings..."
 
 # Run database migrations (safe to run on every deploy)
 echo "Running database migrations..."
-npm run db:push
+npx drizzle-kit push
 
 # Check if we should seed (only if SEED_DATABASE=true)
 if [ "$SEED_DATABASE" = "true" ]; then
   echo "Seeding database..."
-  npm run db:seed
+  npx tsx src/db/seed.ts
   echo "Seeding complete"
 fi
 
