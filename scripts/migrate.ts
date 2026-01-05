@@ -1,6 +1,5 @@
 /**
  * One-time database reset script
- * Drops everything and recreates with proper migrations
  * DELETE THIS FILE after successful deployment
  */
 import 'dotenv/config'
@@ -17,9 +16,19 @@ async function run() {
   })
 
   console.log('Dropping all tables...')
+
+  // Drop drizzle schema
   await pool.query('DROP SCHEMA IF EXISTS drizzle CASCADE')
-  await pool.query('DROP SCHEMA public CASCADE')
-  await pool.query('CREATE SCHEMA public')
+
+  // Drop all tables in public schema
+  const tables = [
+    'ActivePlayer', 'ChallengeAttempt', 'Match', 'Challenge', 'PlayerStats',
+    'AvatarEquipment', 'UserUnlockedItem', 'Avatar', 'AvatarItem', 'Venue',
+    'User', 'Sport', 'City', 'Country'
+  ]
+  for (const t of tables) {
+    await pool.query(`DROP TABLE IF EXISTS "${t}" CASCADE`)
+  }
   console.log('✓ All tables dropped')
 
   console.log('Running migrations...')
