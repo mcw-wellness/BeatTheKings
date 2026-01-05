@@ -16,6 +16,7 @@ import {
   getBasketballSportId,
   createDefaultEquipment,
   getDefaultItems,
+  upsertEquipment,
 } from '@/lib/avatar'
 import { generateAvatarImage } from '@/lib/avatar/generator'
 import { uploadAvatar } from '@/lib/azure-storage'
@@ -94,6 +95,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // Check if a pre-generated preview image was provided
     const previewImage = (body as { previewImage?: string }).previewImage
+    const jerseyNumber = (body as { jerseyNumber?: number }).jerseyNumber
 
     let imageUrl: string | undefined
     if (previewImage && previewImage.startsWith('data:image/')) {
@@ -114,6 +116,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           skinTone: validation.data.skinTone,
           hairStyle: validation.data.hairStyle,
           hairColor: validation.data.hairColor,
+          jerseyNumber,
         })
         imageUrl = await uploadAvatar(session.user.id, imageBuffer)
         logger.info({ userId: session.user.id, imageUrl }, 'AI avatar generated and uploaded')
@@ -137,7 +140,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (basketballId) {
       const defaultItems = await getDefaultItems(db)
       if (defaultItems.length > 0) {
-        await createDefaultEquipment(db, avatar.id, basketballId, defaultItems)
+        await createDefaultEquipment(db, avatar.id, basketballId, defaultItems, jerseyNumber)
       }
     }
 
@@ -208,6 +211,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
 
     // Check if a pre-generated preview image was provided
     const previewImage = (body as { previewImage?: string }).previewImage
+    const jerseyNumber = (body as { jerseyNumber?: number }).jerseyNumber
 
     let imageUrl: string | undefined
     if (previewImage && previewImage.startsWith('data:image/')) {
@@ -228,6 +232,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
           skinTone,
           hairStyle,
           hairColor,
+          jerseyNumber,
         })
         imageUrl = await uploadAvatar(session.user.id, imageBuffer)
         logger.info({ userId: session.user.id, imageUrl }, 'AI avatar regenerated and uploaded')
@@ -242,6 +247,14 @@ export async function PUT(request: Request): Promise<NextResponse> {
       ...validation.data,
       imageUrl,
     })
+
+    // Upsert equipment (create if not exists, update jersey number if exists)
+    const basketballId = await getBasketballSportId(db)
+    if (basketballId) {
+      const defaultItems = await getDefaultItems(db)
+      await unlockDefaultItems(db, session.user.id)
+      await upsertEquipment(db, existingAvatar.id, basketballId, defaultItems, jerseyNumber)
+    }
 
     await markAvatarCreated(db, session.user.id)
 

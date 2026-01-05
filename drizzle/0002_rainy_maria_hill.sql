@@ -1,0 +1,1 @@
+ALTER TABLE "AvatarItem" ALTER COLUMN "imageUrl" DROP NOT NULL;

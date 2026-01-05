@@ -1,25 +1,16 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Logo } from '@/components/layout/Logo'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { useApp } from '@/context/AppContext'
-import { useAuth } from '@/lib/hooks/useAuth'
 
 export default function WelcomePage() {
   const router = useRouter()
-  const { user: appUser, hasAvatar, canAccessFeatures } = useApp()
-  const { user: authUser } = useAuth()
+  const { data: session } = useSession()
 
-  // Use authenticated user name, fallback to app context user
-  const userName = authUser?.name || appUser?.name || 'Player'
-
-  // Debug logging
-  console.log('Welcome Page - Debug Info:')
-  console.log('hasAvatar:', hasAvatar)
-  console.log('appUser.hasCompletedOnboarding:', appUser?.hasCompletedOnboarding)
-  console.log('canAccessFeatures:', canAccessFeatures)
+  // Use session data directly - this is the source of truth
+  const userName = session?.user?.name || 'Player'
+  const hasCreatedAvatar = session?.user?.hasCreatedAvatar ?? false
 
   const features = [
     {
@@ -33,28 +24,28 @@ export default function WelcomePage() {
       id: 'ranking',
       name: 'Rankings',
       description: 'See top players',
-      locked: !canAccessFeatures,
+      locked: !hasCreatedAvatar,
       path: '/ranking',
     },
     {
       id: 'map',
       name: 'Map',
       description: 'Find venues',
-      locked: !canAccessFeatures,
+      locked: !hasCreatedAvatar,
       path: '/map',
     },
     {
       id: 'challenges',
       name: 'Challenges',
       description: 'Compete now',
-      locked: !canAccessFeatures,
+      locked: !hasCreatedAvatar,
       path: '/challenges',
     },
     {
       id: 'matches',
       name: 'My Matches',
       description: 'View match history',
-      locked: !canAccessFeatures,
+      locked: !hasCreatedAvatar,
       path: '/matches',
     },
   ]
@@ -73,7 +64,7 @@ export default function WelcomePage() {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-gray-900">Welcome, {userName}!</h1>
           <p className="text-base text-gray-700">
-            {hasAvatar
+            {hasCreatedAvatar
               ? 'Ready to dominate the competition?'
               : 'Start by creating your avatar to unlock the full kingdom!'}
           </p>
@@ -151,10 +142,10 @@ export default function WelcomePage() {
         </div>
 
         {/* Instructions Banner - Only show when avatar not created */}
-        {!hasAvatar && (
+        {!hasCreatedAvatar && (
           <div className="bg-yellow-100 border border-yellow-300 rounded-xl p-4 mt-6">
             <p className="text-yellow-900 text-sm font-medium text-center">
-              💡 Create your avatar to unlock Rankings, Map, and Challenges!
+              Create your avatar to unlock Rankings, Map, and Challenges!
             </p>
           </div>
         )}

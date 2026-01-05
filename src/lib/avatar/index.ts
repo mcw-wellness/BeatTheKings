@@ -284,7 +284,8 @@ export async function createDefaultEquipment(
   db: Database,
   avatarId: string,
   sportId: string,
-  defaultItems: { id: string; itemType: string }[]
+  defaultItems: { id: string; itemType: string }[],
+  jerseyNumber?: number
 ) {
   const jersey = defaultItems.find((i) => i.itemType === 'jersey')
   const shorts = defaultItems.find((i) => i.itemType === 'shorts')
@@ -298,7 +299,43 @@ export async function createDefaultEquipment(
       jerseyItemId: jersey?.id || null,
       shortsItemId: shorts?.id || null,
       shoesItemId: shoes?.id || null,
-      jerseyNumber: Math.floor(Math.random() * 100), // Random 0-99
+      jerseyNumber: jerseyNumber ?? 10,
+    })
+    .returning()
+
+  return equipment
+}
+
+/**
+ * Create or update equipment for an avatar (upsert)
+ */
+export async function upsertEquipment(
+  db: Database,
+  avatarId: string,
+  sportId: string,
+  defaultItems: { id: string; itemType: string }[],
+  jerseyNumber?: number
+) {
+  const jersey = defaultItems.find((i) => i.itemType === 'jersey')
+  const shorts = defaultItems.find((i) => i.itemType === 'shorts')
+  const shoes = defaultItems.find((i) => i.itemType === 'shoes')
+
+  const [equipment] = await db
+    .insert(avatarEquipments)
+    .values({
+      avatarId,
+      sportId,
+      jerseyItemId: jersey?.id || null,
+      shortsItemId: shorts?.id || null,
+      shoesItemId: shoes?.id || null,
+      jerseyNumber: jerseyNumber ?? 10,
+    })
+    .onConflictDoUpdate({
+      target: [avatarEquipments.avatarId, avatarEquipments.sportId],
+      set: {
+        jerseyNumber: jerseyNumber ?? 10,
+        updatedAt: new Date(),
+      },
     })
     .returning()
 
@@ -348,7 +385,7 @@ export async function getAvatarWithStats(db: Database, userId: string) {
     string,
     {
       jerseyNumber: number | null
-      jersey: { id: string; name: string; imageUrl: string } | null
+      jersey: { id: string; name: string; imageUrl: string | null } | null
     }
   > = {}
 

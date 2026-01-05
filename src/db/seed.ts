@@ -17,6 +17,7 @@ import {
   playerStats,
   challenges,
   activePlayers,
+  avatarItems,
 } from './schema'
 
 // Austria cities (all major cities and district capitals)
@@ -82,6 +83,18 @@ async function seed() {
     ])
     .onConflictDoNothing()
   console.log('✅ Sports added')
+
+  // Seed default avatar items
+  console.log('Adding default avatar items...')
+  await db
+    .insert(avatarItems)
+    .values([
+      { id: randomUUID(), name: 'Default Jersey', itemType: 'jersey', isDefault: true },
+      { id: randomUUID(), name: 'Default Shorts', itemType: 'shorts', isDefault: true },
+      { id: randomUUID(), name: 'Default Shoes', itemType: 'shoes', isDefault: true },
+    ])
+    .onConflictDoNothing()
+  console.log('✅ Default avatar items added')
 
   // Seed Austria
   console.log('Adding Austria...')

@@ -15,6 +15,13 @@
       "when": 1767613429263,
       "tag": "0001_low_mongu",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767634410266,
+      "tag": "0002_rainy_maria_hill",
+      "breakpoints": true
     }
   ]
 }

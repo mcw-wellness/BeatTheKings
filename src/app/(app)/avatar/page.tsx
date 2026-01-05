@@ -57,7 +57,7 @@ function AvatarPageContent(): JSX.Element {
   const [skinTone, setSkinTone] = useState<SkinTone>('medium')
   const [hairStyle, setHairStyle] = useState<HairStyle>('short')
   const [hairColor, setHairColor] = useState<HairColor>('black')
-  const [jerseyNumber, setJerseyNumber] = useState(10)
+  const [jerseyNumber, setJerseyNumber] = useState('10')
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -97,6 +97,12 @@ function AvatarPageContent(): JSX.Element {
             if (avatar.hairStyle) setHairStyle(avatar.hairStyle)
             if (avatar.hairColor) setHairColor(avatar.hairColor)
             setIsFirstTimeUser(false)
+
+            // Load jersey number from equipment
+            const equipment = data.equipment
+            if (equipment?.basketball?.jerseyNumber != null) {
+              setJerseyNumber(String(equipment.basketball.jerseyNumber))
+            }
 
             // If user has a saved avatar image, fetch SAS URL for it
             if (avatar.imageUrl) {
@@ -189,7 +195,7 @@ function AvatarPageContent(): JSX.Element {
           hairStyle,
           hairColor,
           ageGroup,
-          jerseyNumber,
+          jerseyNumber: parseInt(jerseyNumber) || 10,
         }),
       })
 
@@ -239,6 +245,7 @@ function AvatarPageContent(): JSX.Element {
         skinTone,
         hairStyle,
         hairColor,
+        jerseyNumber: parseInt(jerseyNumber) || 10,
         ...(isNewPreview && previewImage && { previewImage }),
       }
 
@@ -345,13 +352,19 @@ function AvatarPageContent(): JSX.Element {
                 Jersey Number
               </label>
               <input
-                type="number"
-                min="0"
-                max="99"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={2}
                 value={jerseyNumber}
-                onChange={(e) =>
-                  setJerseyNumber(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)))
-                }
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 2)
+                  setJerseyNumber(val)
+                }}
+                onBlur={() => {
+                  if (jerseyNumber === '') setJerseyNumber('0')
+                }}
                 className="w-full max-w-[120px] mx-auto block text-center text-3xl font-bold py-2 bg-white/90 border-2 border-yellow-400 rounded-lg focus:border-yellow-500 focus:outline-none"
                 disabled={isGenerating}
               />

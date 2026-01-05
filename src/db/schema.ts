@@ -172,7 +172,7 @@ export const avatarItems = pgTable(
     name: varchar('name', { length: 255 }).notNull(), // "Red Jersey"
     itemType: varchar('itemType', { length: 50 }).notNull(), // "hair", "jersey", "shorts", "shoes", "accessory"
     sportId: uuid('sportId').references(() => sports.id), // null = universal (works for all sports)
-    imageUrl: varchar('imageUrl', { length: 500 }).notNull(),
+    imageUrl: varchar('imageUrl', { length: 500 }), // Nullable for default items
 
     // Unlock requirements (all nullable - if all null, item is free/default)
     requiredMatches: integer('requiredMatches'),
