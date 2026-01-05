@@ -4,6 +4,7 @@
  */
 
 import 'dotenv/config'
+import { randomUUID } from 'crypto'
 import { eq, and } from 'drizzle-orm'
 import { getDb } from './index'
 import {
@@ -76,8 +77,8 @@ async function seed() {
   await db
     .insert(sports)
     .values([
-      { name: 'Basketball', slug: 'basketball', isActive: true },
-      { name: 'Soccer', slug: 'soccer', isActive: true },
+      { id: randomUUID(), name: 'Basketball', slug: 'basketball', isActive: true },
+      { id: randomUUID(), name: 'Soccer', slug: 'soccer', isActive: true },
     ])
     .onConflictDoNothing()
   console.log('✅ Sports added')
@@ -86,7 +87,7 @@ async function seed() {
   console.log('Adding Austria...')
   const [country] = await db
     .insert(countries)
-    .values([{ name: 'Austria', code: 'AT' }])
+    .values([{ id: randomUUID(), name: 'Austria', code: 'AT' }])
     .onConflictDoNothing()
     .returning()
 
@@ -107,7 +108,7 @@ async function seed() {
     for (const cityName of AUSTRIA_CITIES) {
       await db
         .insert(cities)
-        .values([{ name: cityName, countryId }])
+        .values([{ id: randomUUID(), name: cityName, countryId }])
         .onConflictDoNothing()
     }
     console.log(`✅ ${AUSTRIA_CITIES.length} cities added`)
@@ -140,6 +141,7 @@ async function seed() {
       await db
         .insert(venues)
         .values({
+          id: randomUUID(),
           name: venue.name,
           cityId: vienna.id,
           latitude: venue.lat,
@@ -208,6 +210,7 @@ async function seed() {
         await db
           .insert(challenges)
           .values({
+            id: randomUUID(),
             venueId: venue.id,
             sportId: basketball.id,
             name: challenge.name,
@@ -320,6 +323,7 @@ async function seed() {
       const [newUser] = await db
         .insert(users)
         .values({
+          id: randomUUID(),
           email: player.email,
           name: player.name,
           gender: player.gender,
@@ -335,6 +339,7 @@ async function seed() {
         await db
           .insert(avatars)
           .values({
+            id: randomUUID(),
             userId: newUser.id,
             skinTone: 'medium',
             hairStyle: 'short',
@@ -346,6 +351,7 @@ async function seed() {
         await db
           .insert(playerStats)
           .values({
+            id: randomUUID(),
             userId: newUser.id,
             sportId: basketball.id,
             totalXp: player.xp,

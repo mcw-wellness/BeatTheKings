@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm'
+import { randomUUID } from 'crypto'
 import { users, cities } from '@/db/schema'
 import type { Database } from '@/db'
 import { calculateAge, getAgeGroup } from '@/lib/utils/date'
@@ -42,6 +43,7 @@ export async function createUserFromOAuth(
   const [user] = await db
     .insert(users)
     .values({
+      id: randomUUID(), 
       email: data.email,
       name: data.name || null,
       hasCreatedAvatar: false,
