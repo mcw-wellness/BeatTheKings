@@ -3,10 +3,9 @@ set -e
 
 echo "Starting Beat The Kings..."
 
-# Run database migrations (safe to run on every deploy)
-# Uses custom script that handles baseline for databases created with 'push'
+# Run database migrations
 echo "Running database migrations..."
-./node_modules/.bin/tsx scripts/migrate.ts
+./node_modules/.bin/drizzle-kit migrate
 
 # Check if we should seed (only if SEED_DATABASE=true)
 if [ "$SEED_DATABASE" = "true" ]; then

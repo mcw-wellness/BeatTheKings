@@ -243,6 +243,8 @@ export async function PUT(request: Request): Promise<NextResponse> {
       imageUrl,
     })
 
+    await markAvatarCreated(db, session.user.id)
+
     logger.info({ userId: session.user.id, avatarId: updated.id }, 'Avatar updated')
 
     return NextResponse.json({
