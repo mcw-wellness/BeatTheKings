@@ -48,8 +48,8 @@ COPY --from=builder /app/src/lib ./src/lib
 COPY --from=builder /app/scripts ./scripts
 COPY --from=deps /app/node_modules ./node_modules
 
-# Install tsx for running TypeScript seed script
-RUN npm install tsx --save-prod
+# Install tools needed for migrations and seeding
+RUN npm install tsx drizzle-kit --save-prod
 
 # Make startup script executable
 RUN chmod +x ./scripts/startup.sh
