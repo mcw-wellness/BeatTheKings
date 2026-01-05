@@ -189,6 +189,7 @@ function AvatarPageContent(): JSX.Element {
           hairStyle,
           hairColor,
           ageGroup,
+          jerseyNumber,
         }),
       })
 

@@ -58,33 +58,26 @@ export const authOptions: NextAuthOptions = {
       return baseUrl
     },
 
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user }) {
       // Initial sign-in: add user data to token
       if (user) {
         token.id = user.id
         token.email = user.email
         token.name = user.name
-
-        // Fetch hasCreatedAvatar from database
-        try {
-          const db = getDb()
-          const dbUser = await findUserById(db, user.id)
-          token.hasCreatedAvatar = dbUser?.hasCreatedAvatar ?? false
-        } catch {
-          token.hasCreatedAvatar = false
-        }
       }
 
-      // Handle session updates (when avatar is created)
-      if (trigger === 'update' && token.id) {
+      // Always refresh hasCreatedAvatar from database
+      // This ensures it stays in sync across all sessions/browsers
+      if (token.id) {
         try {
           const db = getDb()
           const dbUser = await findUserById(db, token.id as string)
-          if (dbUser) {
-            token.hasCreatedAvatar = dbUser.hasCreatedAvatar
-          }
+          token.hasCreatedAvatar = dbUser?.hasCreatedAvatar ?? false
         } catch {
           // Keep existing value on error
+          if (token.hasCreatedAvatar === undefined) {
+            token.hasCreatedAvatar = false
+          }
         }
       }
 

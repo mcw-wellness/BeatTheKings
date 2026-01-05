@@ -10,6 +10,7 @@ export interface AvatarPromptInput {
   hairColor: string
   sport?: string
   ageGroup?: string
+  jerseyNumber?: number
 }
 
 /**
@@ -66,15 +67,16 @@ golden frame aesthetic, warm amber tones in background
  * Get outfit description based on sport
  * Basketball: Warriors-style blue/gold, Soccer: Classic kit
  */
-function getOutfitDescription(sport: string): string {
+function getOutfitDescription(sport: string, jerseyNumber?: number): string {
+  const number = jerseyNumber ?? 10
   switch (sport) {
     case 'soccer':
-      return `wearing red soccer jersey with gold trim and number 10,
+      return `wearing red soccer jersey with gold trim and number ${number} clearly visible on back and front,
         white shorts with red stripe, black soccer cleats with gold accents,
         one foot on soccer ball, confident athletic pose, arms crossed`
     case 'basketball':
     default:
-      return `wearing royal blue basketball jersey with gold/yellow trim and team logo,
+      return `wearing royal blue basketball jersey with gold/yellow trim and number ${number} clearly visible on back and front,
         matching blue shorts with gold stripe, white and blue high-top basketball shoes,
         doing shaka hand gesture with one hand, spinning basketball on finger with other hand,
         confident playful pose, wristbands on both wrists`
@@ -93,7 +95,7 @@ export function buildUserAvatarPrompt(input: AvatarPromptInput): string {
     ${input.hairStyle} ${input.hairColor} hair
   `.trim()
 
-  const outfit = getOutfitDescription(sport)
+  const outfit = getOutfitDescription(sport, input.jerseyNumber)
 
   return `${BASE_STYLE}. ${character}. ${outfit}.`
 }
