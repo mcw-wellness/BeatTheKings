@@ -3,15 +3,15 @@
  * POST /api/matches - Create a new 1v1 match
  */
 
-import { NextResponse } from 'next/server'
-import { eq, or, desc } from 'drizzle-orm'
+import { NextRequest, NextResponse } from 'next/server'
+import { eq, or, desc, inArray } from 'drizzle-orm'
 import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { createMatch, getMatchById } from '@/lib/matches'
-import { matches } from '@/db/schema'
+import { matches, venues } from '@/db/schema'
 import { logger } from '@/lib/utils/logger'
 
-export async function GET(): Promise<Response> {
+export async function GET(request: NextRequest): Promise<Response> {
   try {
     const session = await getSession()
 
@@ -20,14 +20,89 @@ export async function GET(): Promise<Response> {
     }
 
     const db = getDb()
+    const { searchParams } = new URL(request.url)
+    const statusFilter = searchParams.get('status')
 
-    // Get all matches where user is a participant
-    const userMatches = await db
-      .select({ id: matches.id })
+    // Build query
+    let query = db
+      .select({
+        id: matches.id,
+        status: matches.status,
+        player1Id: matches.player1Id,
+        player2Id: matches.player2Id,
+        venueId: matches.venueId,
+        createdAt: matches.createdAt,
+      })
       .from(matches)
       .where(or(eq(matches.player1Id, session.user.id), eq(matches.player2Id, session.user.id)))
       .orderBy(desc(matches.createdAt))
       .limit(20)
+      .$dynamic()
+
+    // Apply status filter if provided
+    if (statusFilter) {
+      const statuses = statusFilter.split(',').map((s) => s.trim())
+      query = query.where(
+        or(
+          eq(matches.player1Id, session.user.id),
+          eq(matches.player2Id, session.user.id)
+        )
+      )
+      // Re-apply with status filter
+      const userMatches = await db
+        .select({
+          id: matches.id,
+          status: matches.status,
+          player1Id: matches.player1Id,
+          player2Id: matches.player2Id,
+          venueId: matches.venueId,
+          createdAt: matches.createdAt,
+        })
+        .from(matches)
+        .where(
+          or(eq(matches.player1Id, session.user.id), eq(matches.player2Id, session.user.id))
+        )
+        .orderBy(desc(matches.createdAt))
+        .limit(20)
+
+      const filteredMatches = userMatches.filter((m) => statuses.includes(m.status))
+
+      // Get full details with opponent info
+      const matchDetails = await Promise.all(
+        filteredMatches.map(async (m) => {
+          const fullMatch = await getMatchById(db, m.id)
+          if (!fullMatch) return null
+
+          const isChallenger = m.player1Id === session.user.id
+          const opponent = isChallenger ? fullMatch.player2 : fullMatch.player1
+
+          // Get venue name
+          const [venue] = await db
+            .select({ name: venues.name })
+            .from(venues)
+            .where(eq(venues.id, m.venueId))
+            .limit(1)
+
+          return {
+            id: m.id,
+            status: m.status,
+            venueName: venue?.name || 'Unknown Venue',
+            isChallenger,
+            opponent: {
+              id: opponent.id,
+              name: opponent.name,
+              avatar: opponent.avatar,
+            },
+            createdAt: m.createdAt,
+          }
+        })
+      )
+
+      return NextResponse.json({ matches: matchDetails.filter(Boolean) })
+    }
+
+    // No filter - return all matches
+    const userMatches = await query
 
     // Get full details for each match
     const matchDetails = await Promise.all(userMatches.map(async (m) => getMatchById(db, m.id)))

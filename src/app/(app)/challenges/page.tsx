@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGeolocation } from '@/lib/hooks/useGeolocation'
+import Image from 'next/image'
 
 interface ChallengeVenue {
   id: string
@@ -14,18 +15,30 @@ interface ChallengeVenue {
   activePlayerCount: number
 }
 
+interface PendingMatch {
+  id: string
+  status: string
+  venueName: string
+  isChallenger: boolean
+  opponent: {
+    id: string
+    name: string | null
+    avatar: { imageUrl: string | null }
+  }
+  createdAt: string
+}
+
 export default function ChallengesPage(): JSX.Element {
   const router = useRouter()
   const { latitude, longitude } = useGeolocation()
 
   const [venues, setVenues] = useState<ChallengeVenue[]>([])
+  const [pendingMatches, setPendingMatches] = useState<PendingMatch[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [respondingTo, setRespondingTo] = useState<string | null>(null)
 
   const fetchVenues = useCallback(async (): Promise<void> => {
-    setIsLoading(true)
-    setError(null)
-
     try {
       let url = '/api/challenges/venues'
       if (latitude && longitude) {
@@ -42,14 +55,53 @@ export default function ChallengesPage(): JSX.Element {
       setVenues(json.venues)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setIsLoading(false)
     }
   }, [latitude, longitude])
 
+  const fetchPendingMatches = useCallback(async (): Promise<void> => {
+    try {
+      const response = await fetch('/api/matches?status=pending,accepted,in_progress')
+      if (response.ok) {
+        const json = await response.json()
+        setPendingMatches(json.matches || [])
+      }
+    } catch {
+      // Silently fail for pending matches
+    }
+  }, [])
+
   useEffect(() => {
-    fetchVenues()
-  }, [fetchVenues])
+    const loadData = async () => {
+      setIsLoading(true)
+      await Promise.all([fetchVenues(), fetchPendingMatches()])
+      setIsLoading(false)
+    }
+    loadData()
+  }, [fetchVenues, fetchPendingMatches])
+
+  const handleRespond = async (matchId: string, accept: boolean) => {
+    setRespondingTo(matchId)
+    try {
+      const response = await fetch(`/api/challenges/1v1/${matchId}/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accept }),
+      })
+
+      if (response.ok) {
+        if (accept) {
+          router.push(`/challenges/1v1/${matchId}/ready`)
+        } else {
+          // Refresh the list
+          fetchPendingMatches()
+        }
+      }
+    } catch {
+      // Handle error
+    } finally {
+      setRespondingTo(null)
+    }
+  }
 
   const navigateToVenue = (venueId: string): void => {
     router.push(`/challenges/venue/${venueId}`)
@@ -74,6 +126,13 @@ export default function ChallengesPage(): JSX.Element {
     )
   }
 
+  // Filter matches by type
+  const receivedChallenges = pendingMatches.filter((m) => !m.isChallenger && m.status === 'pending')
+  const sentChallenges = pendingMatches.filter((m) => m.isChallenger && m.status === 'pending')
+  const activeMatches = pendingMatches.filter(
+    (m) => m.status === 'accepted' || m.status === 'in_progress'
+  )
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="max-w-lg mx-auto p-4 space-y-4">
@@ -85,11 +144,159 @@ export default function ChallengesPage(): JSX.Element {
           <h1 className="text-xl font-bold text-gray-900 flex-1">Challenges</h1>
         </div>
 
-        {/* Instruction */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-blue-800 text-sm">
-            Select a venue to see available challenges. Venues are sorted by distance.
-          </p>
+        {/* Received Challenges */}
+        {receivedChallenges.length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              Challenge Requests
+            </h2>
+            {receivedChallenges.map((match) => (
+              <div
+                key={match.id}
+                className="bg-orange-50 border border-orange-200 rounded-xl p-4 shadow"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                    {match.opponent.avatar?.imageUrl ? (
+                      <Image
+                        src={match.opponent.avatar.imageUrl}
+                        alt={match.opponent.name || 'Opponent'}
+                        width={48}
+                        height={48}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-2xl">
+                        👤
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">
+                      {match.opponent.name || 'Player'} challenged you!
+                    </p>
+                    <p className="text-sm text-gray-500">{match.venueName}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => handleRespond(match.id, true)}
+                    disabled={respondingTo === match.id}
+                    className="flex-1 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors"
+                  >
+                    {respondingTo === match.id ? '...' : 'Accept'}
+                  </button>
+                  <button
+                    onClick={() => handleRespond(match.id, false)}
+                    disabled={respondingTo === match.id}
+                    className="flex-1 py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Sent Challenges (Waiting) */}
+        {sentChallenges.length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              Waiting for Response
+            </h2>
+            {sentChallenges.map((match) => (
+              <div
+                key={match.id}
+                onClick={() => router.push(`/challenges/1v1/${match.id}/pending`)}
+                className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow cursor-pointer active:scale-[0.98] transition-transform"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                    {match.opponent.avatar?.imageUrl ? (
+                      <Image
+                        src={match.opponent.avatar.imageUrl}
+                        alt={match.opponent.name || 'Opponent'}
+                        width={48}
+                        height={48}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-2xl">
+                        👤
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">
+                      Challenge to {match.opponent.name || 'Player'}
+                    </p>
+                    <p className="text-sm text-yellow-600">Waiting for response...</p>
+                  </div>
+                  <span className="text-gray-400">→</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Active Matches */}
+        {activeMatches.length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              Active Matches
+            </h2>
+            {activeMatches.map((match) => (
+              <div
+                key={match.id}
+                onClick={() =>
+                  router.push(
+                    `/challenges/1v1/${match.id}/${match.status === 'accepted' ? 'ready' : 'record'}`
+                  )
+                }
+                className="bg-green-50 border border-green-200 rounded-xl p-4 shadow cursor-pointer active:scale-[0.98] transition-transform"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                    {match.opponent.avatar?.imageUrl ? (
+                      <Image
+                        src={match.opponent.avatar.imageUrl}
+                        alt={match.opponent.name || 'Opponent'}
+                        width={48}
+                        height={48}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-2xl">
+                        👤
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">
+                      vs {match.opponent.name || 'Player'}
+                    </p>
+                    <p className="text-sm text-green-600">
+                      {match.status === 'accepted' ? 'Ready to play!' : 'In progress'}
+                    </p>
+                  </div>
+                  <span className="text-green-500 font-bold">GO →</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Solo Challenges Section */}
+        <div className="pt-2">
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
+            Solo Challenges
+          </h2>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+            <p className="text-blue-800 text-sm">
+              Select a venue to see available challenges. Venues are sorted by distance.
+            </p>
+          </div>
         </div>
 
         {/* Venue List */}

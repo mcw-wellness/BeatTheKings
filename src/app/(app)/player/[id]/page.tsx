@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 
+interface UserVenue {
+  venueId: string
+  venueName: string
+}
+
 interface TrumpCardData {
   player: {
     id: string
@@ -52,6 +57,30 @@ export default function PlayerPage(): JSX.Element {
   const [data, setData] = useState<TrumpCardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [userVenue, setUserVenue] = useState<UserVenue | null>(null)
+  const [isChallengeSending, setIsChallengeSending] = useState(false)
+  const [challengeError, setChallengeError] = useState<string | null>(null)
+
+  // Fetch user's current venue (if checked in)
+  useEffect(() => {
+    const fetchUserVenue = async () => {
+      try {
+        const res = await fetch('/api/users/profile')
+        if (res.ok) {
+          const profile = await res.json()
+          if (profile.user?.activeVenueId) {
+            setUserVenue({
+              venueId: profile.user.activeVenueId,
+              venueName: profile.user.activeVenueName || 'Current Venue',
+            })
+          }
+        }
+      } catch {
+        // Silently fail - user may not be checked in
+      }
+    }
+    fetchUserVenue()
+  }, [])
 
   useEffect(() => {
     if (!userId) return
@@ -79,6 +108,41 @@ export default function PlayerPage(): JSX.Element {
 
   const isKing =
     data?.crowns.isKingOfCourt || data?.crowns.isKingOfCity || data?.crowns.isKingOfCountry
+
+  const handleChallenge = async () => {
+    if (!userVenue) {
+      setChallengeError('Check in to a venue first to challenge players')
+      return
+    }
+
+    setIsChallengeSending(true)
+    setChallengeError(null)
+
+    try {
+      const res = await fetch('/api/challenges/1v1/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          opponentId: userId,
+          venueId: userVenue.venueId,
+        }),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        setChallengeError(json.error || 'Failed to send challenge')
+        setIsChallengeSending(false)
+        return
+      }
+
+      // Navigate to pending page
+      router.push(`/challenges/1v1/${json.matchId}/pending`)
+    } catch {
+      setChallengeError('Failed to send challenge')
+      setIsChallengeSending(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -197,6 +261,34 @@ export default function PlayerPage(): JSX.Element {
             <p className="text-gray-600 font-semibold">3P Shooting Championship</p>
             <p className="text-gray-400 text-sm">sponsored by K1</p>
           </div>
+        </div>
+
+        {/* Challenge Button */}
+        <div className="mt-6 space-y-3">
+          {challengeError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-600 text-sm">{challengeError}</p>
+            </div>
+          )}
+          <button
+            onClick={handleChallenge}
+            disabled={isChallengeSending}
+            className="w-full py-4 bg-[#4361EE] hover:bg-[#3651DE] disabled:bg-gray-400 text-white text-lg font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            {isChallengeSending ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+            ) : (
+              <>
+                <span>🏀</span>
+                <span>Challenge to 1v1</span>
+              </>
+            )}
+          </button>
+          {!userVenue && (
+            <p className="text-center text-gray-500 text-sm">
+              Check in to a venue to challenge this player
+            </p>
+          )}
         </div>
       </div>
     </main>

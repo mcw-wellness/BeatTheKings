@@ -26,8 +26,14 @@ vi.mock('@/db', () => ({
 }))
 
 // Import after mocking
+import { NextRequest } from 'next/server'
 import { GET as GET_MATCHES, POST as POST_MATCH } from '@/app/api/matches/route'
 import { GET as GET_MATCH } from '@/app/api/matches/[matchId]/route'
+
+// Helper to create mock request
+function createMockRequest(url: string = 'http://localhost/api/matches'): NextRequest {
+  return new NextRequest(url)
+}
 import { POST as POST_READY } from '@/app/api/matches/[matchId]/ready/route'
 import { POST as POST_SCORE } from '@/app/api/matches/[matchId]/score/route'
 import { POST as POST_AGREE } from '@/app/api/matches/[matchId]/agree/route'
@@ -94,7 +100,7 @@ describe('Matches API Integration Tests', () => {
     it('should return 401 when not authenticated', async () => {
       mockGetSession.mockResolvedValue(null)
 
-      const response = await GET_MATCHES()
+      const response = await GET_MATCHES(createMockRequest())
 
       expect(response.status).toBe(401)
     })
@@ -106,7 +112,7 @@ describe('Matches API Integration Tests', () => {
 
       mockGetSession.mockResolvedValue({ user: { id: user.id, email: user.email } })
 
-      const response = await GET_MATCHES()
+      const response = await GET_MATCHES(createMockRequest())
 
       expect(response.status).toBe(200)
       const body = await response.json()
@@ -125,7 +131,7 @@ describe('Matches API Integration Tests', () => {
 
       mockGetSession.mockResolvedValue({ user: { id: user1.id, email: user1.email } })
 
-      const response = await GET_MATCHES()
+      const response = await GET_MATCHES(createMockRequest())
 
       expect(response.status).toBe(200)
       const body = await response.json()
