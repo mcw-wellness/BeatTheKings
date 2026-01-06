@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { getChallengeVenues } from '@/lib/challenges'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: Request): Promise<Response> {
   try {

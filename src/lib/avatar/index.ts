@@ -247,7 +247,7 @@ export async function getDefaultItems(db: Database) {
 }
 
 /**
- * Unlock default items for a user
+ * Unlock default items for a user (skips if already unlocked)
  */
 export async function unlockDefaultItems(db: Database, userId: string) {
   const defaultItems = await getDefaultItems(db)
@@ -262,7 +262,11 @@ export async function unlockDefaultItems(db: Database, userId: string) {
     unlockedVia: 'default' as const,
   }))
 
-  return db.insert(userUnlockedItems).values(unlockRecords).returning()
+  return db
+    .insert(userUnlockedItems)
+    .values(unlockRecords)
+    .onConflictDoNothing({ target: [userUnlockedItems.userId, userUnlockedItems.itemId] })
+    .returning()
 }
 
 /**

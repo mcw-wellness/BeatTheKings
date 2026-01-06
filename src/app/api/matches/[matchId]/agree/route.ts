@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { agreeToMatchResult } from '@/lib/matches'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 interface RouteParams {
   params: Promise<{ matchId: string }>

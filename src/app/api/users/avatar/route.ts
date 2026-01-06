@@ -20,7 +20,7 @@ import {
 } from '@/lib/avatar'
 import { generateAvatarImage } from '@/lib/avatar/generator'
 import { uploadAvatar } from '@/lib/azure-storage'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Get user's gender from database

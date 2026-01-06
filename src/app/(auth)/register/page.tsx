@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Logo } from '@/components/layout/Logo'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 interface Country {
   id: string

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { getTrumpCardData } from '@/lib/trump-card'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * GET /api/players/me/trump-card

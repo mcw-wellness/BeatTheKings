@@ -8,7 +8,7 @@ import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { getVenueChallenges, getVenueOpponents } from '@/lib/challenges'
 import { getVenueById } from '@/lib/venues'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 interface RouteParams {
   params: Promise<{ venueId: string }>

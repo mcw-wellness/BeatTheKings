@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
-import { buildUserAvatarPrompt } from '../src/lib/avatar/prompts'
+import { buildAvatarPrompt } from '../src/lib/avatar/prompts'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
@@ -8,7 +8,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 async function test() {
   console.log('Testing Gemini 2.5 Flash Image generation...\n')
 
-  const prompt = buildUserAvatarPrompt({
+  const prompt = buildAvatarPrompt({
     gender: 'male',
     skinTone: 'medium',
     hairStyle: 'short',

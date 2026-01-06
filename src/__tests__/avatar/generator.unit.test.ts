@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { buildUserAvatarPrompt } from '@/lib/avatar/prompts'
+import { buildAvatarPrompt } from '@/lib/avatar/prompts'
 
 // We test the prompt building and mock the entire generator module
 // since the Gemini client is initialized at module load time
@@ -16,7 +16,7 @@ describe('Avatar Generator', () => {
     })
 
     it('should build correct prompt for user avatar', () => {
-      const prompt = buildUserAvatarPrompt({
+      const prompt = buildAvatarPrompt({
         gender: 'male',
         skinTone: 'medium',
         hairStyle: 'short',
@@ -31,7 +31,7 @@ describe('Avatar Generator', () => {
     })
 
     it('should build correct prompt with soccer sport', () => {
-      const prompt = buildUserAvatarPrompt({
+      const prompt = buildAvatarPrompt({
         gender: 'female',
         skinTone: 'dark',
         hairStyle: 'braids',
@@ -47,7 +47,7 @@ describe('Avatar Generator', () => {
     })
 
     it('should include base style in prompt', () => {
-      const prompt = buildUserAvatarPrompt({
+      const prompt = buildAvatarPrompt({
         gender: 'male',
         skinTone: 'light',
         hairStyle: 'afro',
@@ -63,7 +63,7 @@ describe('Avatar Generator', () => {
       const skinTones = ['light', 'medium-light', 'medium', 'medium-dark', 'dark']
 
       skinTones.forEach((skinTone) => {
-        const prompt = buildUserAvatarPrompt({
+        const prompt = buildAvatarPrompt({
           gender: 'male',
           skinTone,
           hairStyle: 'short',
@@ -77,7 +77,7 @@ describe('Avatar Generator', () => {
       const hairStyles = ['short', 'medium', 'long', 'bald', 'afro', 'braids', 'dreads', 'mohawk']
 
       hairStyles.forEach((hairStyle) => {
-        const prompt = buildUserAvatarPrompt({
+        const prompt = buildAvatarPrompt({
           gender: 'female',
           skinTone: 'medium',
           hairStyle,
@@ -91,7 +91,7 @@ describe('Avatar Generator', () => {
       const hairColors = ['black', 'brown', 'blonde', 'red', 'gray', 'white']
 
       hairColors.forEach((hairColor) => {
-        const prompt = buildUserAvatarPrompt({
+        const prompt = buildAvatarPrompt({
           gender: 'male',
           skinTone: 'medium',
           hairStyle: 'short',

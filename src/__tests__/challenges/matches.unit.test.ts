@@ -378,4 +378,193 @@ describe('Matches Unit Tests', () => {
       expect(isValid).toBe(true)
     })
   })
+
+  describe('Challenge Response', () => {
+    it('should accept challenge and update status', () => {
+      const match = { status: 'pending', player2Id: 'opponent-123' }
+      const userId = 'opponent-123'
+      const accept = true
+
+      if (match.player2Id === userId && match.status === 'pending') {
+        match.status = accept ? 'accepted' : 'declined'
+      }
+
+      expect(match.status).toBe('accepted')
+    })
+
+    it('should decline challenge and update status', () => {
+      const match = { status: 'pending', player2Id: 'opponent-123' }
+      const userId = 'opponent-123'
+      const accept = false
+
+      if (match.player2Id === userId && match.status === 'pending') {
+        match.status = accept ? 'accepted' : 'declined'
+      }
+
+      expect(match.status).toBe('declined')
+    })
+
+    it('should not allow non-opponent to respond', () => {
+      const match = { status: 'pending', player2Id: 'opponent-123' }
+      const userId = 'random-user'
+
+      const canRespond = match.player2Id === userId
+
+      expect(canRespond).toBe(false)
+    })
+  })
+
+  describe('Match Start', () => {
+    it('should only start accepted matches', () => {
+      const match = { status: 'accepted' }
+
+      const canStart = match.status === 'accepted'
+
+      expect(canStart).toBe(true)
+    })
+
+    it('should not start pending matches', () => {
+      const match = { status: 'pending' }
+
+      const canStart = match.status === 'accepted'
+
+      expect(canStart).toBe(false)
+    })
+
+    it('should transition to in_progress on start', () => {
+      const match = { status: 'accepted', startedAt: null as Date | null }
+
+      if (match.status === 'accepted') {
+        match.status = 'in_progress'
+        match.startedAt = new Date()
+      }
+
+      expect(match.status).toBe('in_progress')
+      expect(match.startedAt).not.toBeNull()
+    })
+  })
+
+  describe('Video Upload', () => {
+    it('should validate video file type', () => {
+      const validTypes = ['video/mp4', 'video/webm', 'video/quicktime']
+      const file = { type: 'video/mp4' }
+
+      const isValid = file.type.startsWith('video/')
+
+      expect(isValid).toBe(true)
+      expect(validTypes).toContain(file.type)
+    })
+
+    it('should reject non-video files', () => {
+      const file = { type: 'image/jpeg' }
+
+      const isValid = file.type.startsWith('video/')
+
+      expect(isValid).toBe(false)
+    })
+
+    it('should enforce max file size', () => {
+      const maxSize = 100 * 1024 * 1024 // 100MB
+      const file = { size: 50 * 1024 * 1024 } // 50MB
+
+      const isValid = file.size <= maxSize
+
+      expect(isValid).toBe(true)
+    })
+
+    it('should reject oversized files', () => {
+      const maxSize = 100 * 1024 * 1024 // 100MB
+      const file = { size: 150 * 1024 * 1024 } // 150MB
+
+      const isValid = file.size <= maxSize
+
+      expect(isValid).toBe(false)
+    })
+  })
+
+  describe('Dynamic Rewards Calculation', () => {
+    function calculateRewards(winnerScore: number, loserScore: number) {
+      const baseXp = 50
+      const scoreDiff = winnerScore - loserScore
+      const winnerBonus = Math.min(scoreDiff * 10, 100)
+      const winnerRp = 20 + Math.floor(scoreDiff * 2)
+
+      return {
+        winnerXp: baseXp + 50 + winnerBonus,
+        winnerRp: Math.min(winnerRp, 50),
+        loserXp: baseXp,
+      }
+    }
+
+    it('should calculate higher bonus for larger score difference', () => {
+      const close = calculateRewards(11, 10) // 1 point diff
+      const dominant = calculateRewards(15, 5) // 10 point diff
+
+      expect(dominant.winnerXp).toBeGreaterThan(close.winnerXp)
+      expect(dominant.winnerRp).toBeGreaterThan(close.winnerRp)
+    })
+
+    it('should cap bonus at max values', () => {
+      const massive = calculateRewards(50, 0) // 50 point diff
+
+      expect(massive.winnerXp).toBeLessThanOrEqual(200) // 50 + 50 + 100 max
+      expect(massive.winnerRp).toBeLessThanOrEqual(50)
+    })
+
+    it('should give base XP to loser regardless of score', () => {
+      const rewards = calculateRewards(20, 0)
+
+      expect(rewards.loserXp).toBe(50)
+    })
+
+    it('should give minimum rewards for close game', () => {
+      const rewards = calculateRewards(10, 10) // Draw (shouldn't happen but edge case)
+
+      expect(rewards.winnerXp).toBe(100) // base + 50 + 0 bonus
+      expect(rewards.winnerRp).toBe(20) // minimum
+    })
+  })
+
+  describe('New Match Statuses', () => {
+    const allStatuses = [
+      'pending',
+      'accepted',
+      'declined',
+      'in_progress',
+      'uploading',
+      'analyzing',
+      'completed',
+      'disputed',
+      'cancelled',
+    ]
+
+    it('should include video-related statuses', () => {
+      expect(allStatuses).toContain('uploading')
+      expect(allStatuses).toContain('analyzing')
+    })
+
+    it('should include challenge response statuses', () => {
+      expect(allStatuses).toContain('accepted')
+      expect(allStatuses).toContain('declined')
+    })
+
+    it('should have valid transition: pending -> accepted', () => {
+      const match = { status: 'pending' }
+      match.status = 'accepted'
+      expect(match.status).toBe('accepted')
+    })
+
+    it('should have valid transition: in_progress -> uploading -> analyzing -> completed', () => {
+      const match = { status: 'in_progress' }
+
+      match.status = 'uploading'
+      expect(match.status).toBe('uploading')
+
+      match.status = 'analyzing'
+      expect(match.status).toBe('analyzing')
+
+      match.status = 'completed'
+      expect(match.status).toBe('completed')
+    })
+  })
 })

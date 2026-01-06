@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/db'
 import { countries } from '@/db/schema'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * GET /api/locations/states

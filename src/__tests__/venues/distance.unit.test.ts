@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateDistance, formatDistance, isWithinDistance } from '@/lib/distance'
+import { calculateDistance, formatDistance, isWithinDistance } from '@/lib/utils/distance'
 
 describe('Distance Utilities', () => {
   describe('calculateDistance', () => {

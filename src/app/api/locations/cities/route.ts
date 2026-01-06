@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { getDb } from '@/db'
 import { cities } from '@/db/schema'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * GET /api/locations/cities?countryId=xxx

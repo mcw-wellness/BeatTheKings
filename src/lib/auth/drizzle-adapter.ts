@@ -43,7 +43,7 @@ export async function createUserFromOAuth(
   const [user] = await db
     .insert(users)
     .values({
-      id: randomUUID(), 
+      id: randomUUID(),
       email: data.email,
       name: data.name || null,
       hasCreatedAvatar: false,

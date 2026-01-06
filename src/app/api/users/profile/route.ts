@@ -7,7 +7,7 @@ import {
   getUserProfile,
   cityExists,
 } from '@/lib/auth'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * GET /api/users/profile

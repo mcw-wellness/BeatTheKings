@@ -15,7 +15,7 @@ import {
   type RankingsResponse,
   type RankedPlayer,
 } from '@/lib/rankings'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * GET /api/rankings

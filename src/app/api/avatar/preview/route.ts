@@ -7,7 +7,7 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { generateAvatarImage } from '@/lib/avatar/generator'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 interface PreviewRequest {
   gender: string
@@ -28,7 +28,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     const body: PreviewRequest = await request.json()
-    const { gender, skinTone, hairStyle, hairColor, sport = 'basketball', ageGroup, jerseyNumber } = body
+    const {
+      gender,
+      skinTone,
+      hairStyle,
+      hairColor,
+      sport = 'basketball',
+      ageGroup,
+      jerseyNumber,
+    } = body
 
     // Validate required fields
     if (!gender || !skinTone || !hairStyle || !hairColor) {

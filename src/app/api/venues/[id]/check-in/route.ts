@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { checkInToVenue, checkOutFromVenue } from '@/lib/venues'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 interface RouteParams {
   params: Promise<{ id: string }>

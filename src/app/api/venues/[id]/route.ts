@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { getVenueById, getActivePlayersAtVenue, getVenueChallenges } from '@/lib/venues'
-import { formatDistance } from '@/lib/distance'
-import { logger } from '@/lib/logger'
+import { formatDistance } from '@/lib/utils/distance'
+import { logger } from '@/lib/utils/logger'
 
 interface RouteParams {
   params: Promise<{ id: string }>

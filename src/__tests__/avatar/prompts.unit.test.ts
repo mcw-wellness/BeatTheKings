@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import {
-  buildUserAvatarPrompt,
+  buildAvatarPrompt,
   buildDefaultAvatarPrompt,
   DEFAULT_AVATARS,
   type AvatarPromptInput,
 } from '@/lib/avatar/prompts'
 
 describe('Avatar Prompts', () => {
-  describe('buildUserAvatarPrompt', () => {
+  describe('buildAvatarPrompt', () => {
     it('should build prompt with all required fields', () => {
       const input: AvatarPromptInput = {
         gender: 'male',
@@ -16,7 +16,7 @@ describe('Avatar Prompts', () => {
         hairColor: 'black',
       }
 
-      const prompt = buildUserAvatarPrompt(input)
+      const prompt = buildAvatarPrompt(input)
 
       expect(prompt).toContain('male')
       expect(prompt).toContain('athlete')
@@ -33,7 +33,7 @@ describe('Avatar Prompts', () => {
         hairColor: 'black',
       }
 
-      const prompt = buildUserAvatarPrompt(input)
+      const prompt = buildAvatarPrompt(input)
 
       expect(prompt).toContain('basketball jersey')
       expect(prompt).toContain('basketball shoes')
@@ -49,7 +49,7 @@ describe('Avatar Prompts', () => {
         sport: 'soccer',
       }
 
-      const prompt = buildUserAvatarPrompt(input)
+      const prompt = buildAvatarPrompt(input)
 
       expect(prompt).toContain('soccer jersey')
       expect(prompt).toContain('cleats')
@@ -64,7 +64,7 @@ describe('Avatar Prompts', () => {
         hairColor: 'black',
       }
 
-      const prompt = buildUserAvatarPrompt(input)
+      const prompt = buildAvatarPrompt(input)
 
       expect(prompt.toLowerCase()).toContain('cartoon')
       expect(prompt).toContain('card style')
@@ -76,7 +76,7 @@ describe('Avatar Prompts', () => {
       const skinTones = ['light', 'medium-light', 'medium', 'medium-dark', 'dark']
 
       skinTones.forEach((skinTone) => {
-        const prompt = buildUserAvatarPrompt({
+        const prompt = buildAvatarPrompt({
           gender: 'male',
           skinTone,
           hairStyle: 'short',
@@ -91,7 +91,7 @@ describe('Avatar Prompts', () => {
       const hairStyles = ['short', 'medium', 'long', 'bald', 'afro', 'braids', 'dreads', 'mohawk']
 
       hairStyles.forEach((hairStyle) => {
-        const prompt = buildUserAvatarPrompt({
+        const prompt = buildAvatarPrompt({
           gender: 'female',
           skinTone: 'medium',
           hairStyle,
@@ -106,7 +106,7 @@ describe('Avatar Prompts', () => {
       const hairColors = ['black', 'brown', 'blonde', 'red', 'gray', 'white']
 
       hairColors.forEach((hairColor) => {
-        const prompt = buildUserAvatarPrompt({
+        const prompt = buildAvatarPrompt({
           gender: 'male',
           skinTone: 'medium',
           hairStyle: 'short',

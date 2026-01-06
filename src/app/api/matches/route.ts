@@ -9,7 +9,7 @@ import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { createMatch, getMatchById } from '@/lib/matches'
 import { matches } from '@/db/schema'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(): Promise<Response> {
   try {

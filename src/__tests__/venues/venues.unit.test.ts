@@ -13,19 +13,8 @@ vi.mock('@/lib/azure-storage', () => ({
     `https://test.blob.core.windows.net/avatar/default/basketball_${gender || 'male'}.png`,
 }))
 
-// Mock distance module
-vi.mock('@/lib/distance', () => ({
-  calculateDistance: vi.fn((lat1, lng1, lat2, lng2) => {
-    // Simple mock: return sum of differences for predictable testing
-    return Math.abs(lat2 - lat1) + Math.abs(lng2 - lng1)
-  }),
-  formatDistance: vi.fn((km: number) => {
-    if (km < 1) return `${Math.round(km * 1000)} m`
-    return `${km.toFixed(1)} km`
-  }),
-}))
-
-import { calculateDistance } from '@/lib/distance'
+// Import the real distance functions (no mocking needed for pure functions)
+import { calculateDistance } from '@/lib/utils/distance'
 
 describe('Venues Unit Tests', () => {
   beforeEach(() => {
@@ -42,8 +31,9 @@ describe('Venues Unit Tests', () => {
 
       const distance = calculateDistance(userLat, userLng, venueLat, venueLng)
 
+      // Distance between these points should be roughly 1.8km
       expect(distance).toBeGreaterThan(0)
-      expect(calculateDistance).toHaveBeenCalledWith(userLat, userLng, venueLat, venueLng)
+      expect(distance).toBeLessThan(5) // Sanity check
     })
 
     it('should return 0 for same location', () => {

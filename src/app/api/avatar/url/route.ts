@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDefaultAvatarSasUrl, getUserAvatarSasUrl } from '@/lib/azure-storage'
 import { getSession } from '@/lib/auth'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: Request): Promise<NextResponse> {
   try {
