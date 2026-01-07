@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useGeolocation } from '@/lib/hooks/useGeolocation'
+import { useLocation } from '@/context/LocationContext'
 import Image from 'next/image'
 
 interface ChallengeVenue {
@@ -30,7 +30,7 @@ interface PendingMatch {
 
 export default function ChallengesPage(): JSX.Element {
   const router = useRouter()
-  const { latitude, longitude } = useGeolocation()
+  const { latitude, longitude } = useLocation()
 
   const [venues, setVenues] = useState<ChallengeVenue[]>([])
   const [pendingMatches, setPendingMatches] = useState<PendingMatch[]>([])

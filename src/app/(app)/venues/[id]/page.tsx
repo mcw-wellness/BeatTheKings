@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
-import { useGeolocation } from '@/lib/hooks/useGeolocation'
+import { useLocation } from '@/context/LocationContext'
 
 interface VenueDetail {
   id: string
@@ -49,7 +49,7 @@ export default function VenueDetailPage(): JSX.Element {
   const router = useRouter()
   const params = useParams()
   const venueId = params.id as string
-  const { latitude, longitude } = useGeolocation()
+  const { latitude, longitude } = useLocation()
 
   const [data, setData] = useState<VenueData | null>(null)
   const [isLoading, setIsLoading] = useState(true)

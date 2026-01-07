@@ -78,11 +78,12 @@ function AvatarPageContent(): JSX.Element {
         const profileRes = await fetch('/api/users/profile')
         if (profileRes.ok) {
           const profileData = await profileRes.json()
-          if (profileData.gender) {
-            setGender(profileData.gender as Gender)
+          const user = profileData.user || profileData // Handle both structures
+          if (user.gender) {
+            setGender(user.gender as Gender)
           }
-          if (profileData.dateOfBirth) {
-            const dob = profileData.dateOfBirth.split('T')[0] // Format as YYYY-MM-DD
+          if (user.dateOfBirth) {
+            const dob = user.dateOfBirth.split('T')[0] // Format as YYYY-MM-DD
             setDateOfBirth(dob)
             const [year, month, day] = dob.split('-')
             setDobYear(year)

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 
-interface GeolocationState {
+interface LocationState {
   latitude: number | null
   longitude: number | null
   error: string | null
@@ -10,37 +10,33 @@ interface GeolocationState {
   permission: 'granted' | 'denied' | 'prompt' | 'unknown'
 }
 
-interface UseGeolocationOptions {
-  enableHighAccuracy?: boolean
-  timeout?: number
-  maximumAge?: number
+interface LocationContextType extends LocationState {
+  requestPermission: () => void
+  refresh: () => void
 }
 
-const defaultOptions: UseGeolocationOptions = {
+const LocationContext = createContext<LocationContextType | null>(null)
+
+const defaultOptions = {
   enableHighAccuracy: true,
   timeout: 10000,
-  maximumAge: 60000, // Cache location for 1 minute
+  maximumAge: 60000,
 }
 
-export function useGeolocation(options: UseGeolocationOptions = {}): GeolocationState & {
-  refresh: () => void
-  requestPermission: () => void
-} {
-  const [state, setState] = useState<GeolocationState>({
+export function LocationProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<LocationState>({
     latitude: null,
     longitude: null,
     error: null,
-    loading: false, // Don't auto-load, wait for user action on mobile
+    loading: false,
     permission: 'unknown',
   })
 
-  const opts = { ...defaultOptions, ...options }
-
   const getLocation = useCallback(() => {
-    if (!navigator.geolocation) {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
       setState((prev) => ({
         ...prev,
-        error: 'Geolocation is not supported by your browser',
+        error: 'Geolocation is not supported',
         loading: false,
       }))
       return
@@ -60,7 +56,7 @@ export function useGeolocation(options: UseGeolocationOptions = {}): Geolocation
       },
       (error) => {
         let errorMessage: string
-        let permission: 'granted' | 'denied' | 'prompt' | 'unknown' = 'unknown'
+        let permission: LocationState['permission'] = 'unknown'
 
         switch (error.code) {
           case error.PERMISSION_DENIED:
@@ -68,7 +64,7 @@ export function useGeolocation(options: UseGeolocationOptions = {}): Geolocation
             permission = 'denied'
             break
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable'
+            errorMessage = 'Location unavailable'
             break
           case error.TIMEOUT:
             errorMessage = 'Location request timed out'
@@ -85,27 +81,24 @@ export function useGeolocation(options: UseGeolocationOptions = {}): Geolocation
           permission,
         })
       },
-      {
-        enableHighAccuracy: opts.enableHighAccuracy,
-        timeout: opts.timeout,
-        maximumAge: opts.maximumAge,
-      }
+      defaultOptions
     )
-  }, [opts.enableHighAccuracy, opts.timeout, opts.maximumAge])
+  }, [])
 
-  // Check permission status on mount (without triggering prompt)
+  // Check permission on mount (without triggering prompt)
   useEffect(() => {
-    // Check if permissions API is supported (not on Safari/iOS)
+    if (typeof window === 'undefined') return
+
     if (navigator.permissions && navigator.permissions.query) {
       navigator.permissions
         .query({ name: 'geolocation' })
         .then((result) => {
           setState((prev) => ({
             ...prev,
-            permission: result.state as 'granted' | 'denied' | 'prompt',
+            permission: result.state as LocationState['permission'],
           }))
 
-          // Auto-get location ONLY if already granted
+          // Auto-get location if already granted
           if (result.state === 'granted') {
             getLocation()
           }
@@ -114,7 +107,7 @@ export function useGeolocation(options: UseGeolocationOptions = {}): Geolocation
           result.onchange = () => {
             setState((prev) => ({
               ...prev,
-              permission: result.state as 'granted' | 'denied' | 'prompt',
+              permission: result.state as LocationState['permission'],
             }))
             if (result.state === 'granted') {
               getLocation()
@@ -122,25 +115,36 @@ export function useGeolocation(options: UseGeolocationOptions = {}): Geolocation
           }
         })
         .catch(() => {
-          // Permissions API query failed - don't auto-request, wait for user click
           setState((prev) => ({ ...prev, permission: 'prompt' }))
         })
     } else {
-      // Safari/iOS: Permissions API not supported - don't auto-request
-      // User must click "Enable Location" button to trigger prompt
+      // Safari/iOS - don't auto-request
       setState((prev) => ({ ...prev, permission: 'prompt' }))
     }
   }, [getLocation])
 
-  // Explicit permission request (for user-triggered actions)
   const requestPermission = useCallback(() => {
     setState((prev) => ({ ...prev, loading: true }))
     getLocation()
   }, [getLocation])
 
-  return {
-    ...state,
-    refresh: getLocation,
-    requestPermission,
+  return (
+    <LocationContext.Provider
+      value={{
+        ...state,
+        requestPermission,
+        refresh: getLocation,
+      }}
+    >
+      {children}
+    </LocationContext.Provider>
+  )
+}
+
+export function useLocation() {
+  const context = useContext(LocationContext)
+  if (!context) {
+    throw new Error('useLocation must be used within LocationProvider')
   }
+  return context
 }

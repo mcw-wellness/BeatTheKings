@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
-import { useGeolocation } from '@/lib/hooks/useGeolocation'
+import { useLocation } from '@/context/LocationContext'
 
 interface VenueItem {
   id: string
@@ -52,7 +52,7 @@ export default function MapPage(): JSX.Element {
     error: geoError,
     permission,
     requestPermission,
-  } = useGeolocation()
+  } = useLocation()
 
   const [venues, setVenues] = useState<VenueItem[]>([])
   const [selectedVenue, setSelectedVenue] = useState<VenueItem | null>(null)
@@ -168,24 +168,25 @@ export default function MapPage(): JSX.Element {
         <div className="text-sm text-center">
           {geoLoading ? (
             <p className="text-gray-500">Getting your location...</p>
-          ) : geoError || permission === 'denied' ? (
-            <div className="space-y-2">
-              <p className="text-yellow-600">📍 Location unavailable - showing Vienna area</p>
-              {permission === 'denied' && (
-                <p className="text-xs text-gray-500">
-                  Enable location in your browser/phone settings
-                </p>
-              )}
-            </div>
-          ) : !latitude && permission === 'prompt' ? (
-            <button
-              onClick={requestPermission}
-              className="px-4 py-2 bg-[#4361EE] text-white text-sm font-medium rounded-lg hover:bg-[#3651DE] transition-colors"
-            >
-              📍 Enable Location
-            </button>
           ) : latitude ? (
             <p className="text-green-600">📍 Showing venues near you</p>
+          ) : permission === 'denied' ? (
+            <div className="space-y-2">
+              <p className="text-yellow-600">📍 Location access denied</p>
+              <p className="text-xs text-gray-500">
+                Enable Location Services in your phone settings, then allow this site to access location
+              </p>
+            </div>
+          ) : geoError ? (
+            <div className="space-y-2">
+              <p className="text-yellow-600">📍 {geoError}</p>
+              <button
+                onClick={requestPermission}
+                className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
           ) : (
             <button
               onClick={requestPermission}
