@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Logo } from '@/components/layout/Logo'
-import { Button } from '@/components/ui/Button'
 import { useApp } from '@/context/AppContext'
 
 export default function PhotoPage() {
@@ -39,11 +39,6 @@ export default function PhotoPage() {
       completeOnboarding()
       router.push('/welcome')
     }, 1000)
-  }
-
-  const handleSkip = () => {
-    completeOnboarding()
-    router.push('/welcome')
   }
 
   return (
@@ -110,11 +105,13 @@ export default function PhotoPage() {
             <>
               {/* Preview */}
               <div className="flex justify-center">
-                <div className="relative">
-                  <img
+                <div className="relative w-64 h-64">
+                  <Image
                     src={preview}
                     alt="Profile preview"
-                    className="w-64 h-64 object-cover rounded-xl shadow-lg"
+                    fill
+                    className="object-cover rounded-xl shadow-lg"
+                    unoptimized
                   />
                 </div>
               </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Image from 'next/image'
 
 interface MatchDetails {
   id: string
@@ -61,7 +62,13 @@ export default function MatchDetailsPage() {
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-start gap-2">
             <div className="w-12 h-12 flex-shrink-0">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <Image
+                src="/logo.png"
+                alt="Logo"
+                width={48}
+                height={48}
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Match Details</h1>
@@ -211,7 +218,7 @@ export default function MatchDetailsPage() {
                 </p>
                 <p className="text-xs text-yellow-800">
                   Our AI is analyzing your match recording to verify players, track points, and
-                  determine the winner. This usually takes 1-2 minutes. You'll receive a
+                  determine the winner. This usually takes 1-2 minutes. You will receive a
                   notification when verification is complete.
                 </p>
               </div>
@@ -235,7 +242,7 @@ export default function MatchDetailsPage() {
               <div>
                 <p className="text-sm font-semibold text-red-900 mb-1">Match Under Review</p>
                 <p className="text-xs text-red-800">
-                  This match has been disputed and is currently under review by our team. We'll
+                  This match has been disputed and is currently under review by our team. We will
                   resolve the dispute within 24 hours and notify both players of the decision.
                 </p>
               </div>

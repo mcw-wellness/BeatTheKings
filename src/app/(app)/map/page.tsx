@@ -174,7 +174,8 @@ export default function MapPage(): JSX.Element {
             <div className="space-y-2">
               <p className="text-yellow-600">📍 Location access denied</p>
               <p className="text-xs text-gray-500">
-                Enable Location Services in your phone settings, then allow this site to access location
+                Enable Location Services in your phone settings, then allow this site to access
+                location
               </p>
             </div>
           ) : geoError ? (

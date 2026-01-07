@@ -10,7 +10,7 @@ import React, {
 } from 'react'
 import type { User, Avatar, PlayerStats, SportType } from '@/types'
 import { calculateAgeGroup } from '@/lib/utils'
-import { mockUser, mockPlayerStats, mockAvatars } from '@/lib/mockData'
+import { mockUser } from '@/lib/mockData'
 
 interface AppContextType {
   // User data
@@ -22,7 +22,12 @@ interface AppContextType {
 
   // Avatar data
   avatar: Avatar | null
-  createAvatar: (hairColor: string, hairStyle: string, jerseyNumber: number, items: any) => void
+  createAvatar: (
+    hairColor: string,
+    hairStyle: string,
+    jerseyNumber: number,
+    items: Avatar['equippedItems']
+  ) => void
 
   // Stats
   stats: PlayerStats | null
@@ -113,8 +118,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const createAvatar = useCallback(
-    (hairColor: string, hairStyle: string, jerseyNumber: number, items: any) => {
-      const now = new Date().toISOString()
+    (
+      hairColor: string,
+      hairStyle: string,
+      jerseyNumber: number,
+      items: Avatar['equippedItems']
+    ) => {
+      const now = new Date()
       const newAvatar: Avatar = {
         id: 'avatar-current',
         userId: user.id || 'user-1',
@@ -122,8 +132,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         hairStyle,
         jerseyNumber,
         equippedItems: items,
-        createdAt: now as any,
-        updatedAt: now as any,
+        createdAt: now,
+        updatedAt: now,
       }
 
       console.log('Creating avatar:', newAvatar)
@@ -136,7 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       // Initialize stats when avatar is created
-      const newStats = {
+      const newStats: PlayerStats = {
         id: 'stats-current',
         userId: user.id || 'user-1',
         totalXp: 0,
@@ -144,7 +154,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         totalChallenges: 0,
         sportType: selectedSport,
         venueStatsJson: {},
-        updatedAt: now as any,
+        updatedAt: now,
       }
       setStats(newStats)
     },

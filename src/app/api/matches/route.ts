@@ -8,8 +8,54 @@ import { eq, or, desc } from 'drizzle-orm'
 import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { createMatch, getMatchById } from '@/lib/matches'
-import { matches, venues } from '@/db/schema'
+import { matches } from '@/db/schema'
 import { logger } from '@/lib/utils/logger'
+
+/**
+ * Response format for match list (per PRD_MATCHES_PAGE.md)
+ */
+interface MatchListItem {
+  id: string
+  status: string
+  venueName: string
+  isChallenger: boolean
+  opponent: {
+    id: string
+    name: string | null
+    avatar: { imageUrl: string | null }
+  }
+  player1Score: number | null
+  player2Score: number | null
+  winnerId: string | null
+  createdAt: string
+}
+
+/**
+ * Transform match detail to list item format
+ */
+function transformMatch(
+  fullMatch: NonNullable<Awaited<ReturnType<typeof getMatchById>>>,
+  userId: string
+): MatchListItem {
+  const isChallenger = fullMatch.player1.id === userId
+  const opponent = isChallenger ? fullMatch.player2 : fullMatch.player1
+
+  return {
+    id: fullMatch.id,
+    status: fullMatch.status,
+    venueName: fullMatch.venueName,
+    isChallenger,
+    opponent: {
+      id: opponent.id,
+      name: opponent.name,
+      avatar: { imageUrl: opponent.avatar.imageUrl },
+    },
+    player1Score: fullMatch.player1.score,
+    player2Score: fullMatch.player2.score,
+    winnerId: fullMatch.winnerId,
+    createdAt: fullMatch.createdAt,
+  }
+}
 
 export async function GET(request: NextRequest): Promise<Response> {
   try {
@@ -22,87 +68,36 @@ export async function GET(request: NextRequest): Promise<Response> {
     const db = getDb()
     const { searchParams } = new URL(request.url)
     const statusFilter = searchParams.get('status')
+    const statuses = statusFilter ? statusFilter.split(',').map((s) => s.trim()) : null
 
-    // Build query
-    let query = db
+    // Fetch user's matches
+    const userMatches = await db
       .select({
         id: matches.id,
         status: matches.status,
         player1Id: matches.player1Id,
-        player2Id: matches.player2Id,
-        venueId: matches.venueId,
-        createdAt: matches.createdAt,
       })
       .from(matches)
       .where(or(eq(matches.player1Id, session.user.id), eq(matches.player2Id, session.user.id)))
       .orderBy(desc(matches.createdAt))
       .limit(20)
-      .$dynamic()
 
     // Apply status filter if provided
-    if (statusFilter) {
-      const statuses = statusFilter.split(',').map((s) => s.trim())
-      query = query.where(
-        or(eq(matches.player1Id, session.user.id), eq(matches.player2Id, session.user.id))
-      )
-      // Re-apply with status filter
-      const userMatches = await db
-        .select({
-          id: matches.id,
-          status: matches.status,
-          player1Id: matches.player1Id,
-          player2Id: matches.player2Id,
-          venueId: matches.venueId,
-          createdAt: matches.createdAt,
-        })
-        .from(matches)
-        .where(or(eq(matches.player1Id, session.user.id), eq(matches.player2Id, session.user.id)))
-        .orderBy(desc(matches.createdAt))
-        .limit(20)
+    const filteredMatches = statuses
+      ? userMatches.filter((m) => statuses.includes(m.status))
+      : userMatches
 
-      const filteredMatches = userMatches.filter((m) => statuses.includes(m.status))
+    // Get full details and transform to list format
+    const matchDetails: MatchListItem[] = []
 
-      // Get full details with opponent info
-      const matchDetails = await Promise.all(
-        filteredMatches.map(async (m) => {
-          const fullMatch = await getMatchById(db, m.id)
-          if (!fullMatch) return null
-
-          const isChallenger = m.player1Id === session.user.id
-          const opponent = isChallenger ? fullMatch.player2 : fullMatch.player1
-
-          // Get venue name
-          const [venue] = await db
-            .select({ name: venues.name })
-            .from(venues)
-            .where(eq(venues.id, m.venueId))
-            .limit(1)
-
-          return {
-            id: m.id,
-            status: m.status,
-            venueName: venue?.name || 'Unknown Venue',
-            isChallenger,
-            opponent: {
-              id: opponent.id,
-              name: opponent.name,
-              avatar: opponent.avatar,
-            },
-            createdAt: m.createdAt,
-          }
-        })
-      )
-
-      return NextResponse.json({ matches: matchDetails.filter(Boolean) })
+    for (const m of filteredMatches) {
+      const fullMatch = await getMatchById(db, m.id)
+      if (fullMatch) {
+        matchDetails.push(transformMatch(fullMatch, session.user.id))
+      }
     }
 
-    // No filter - return all matches
-    const userMatches = await query
-
-    // Get full details for each match
-    const matchDetails = await Promise.all(userMatches.map(async (m) => getMatchById(db, m.id)))
-
-    return NextResponse.json({ matches: matchDetails.filter(Boolean) })
+    return NextResponse.json({ matches: matchDetails })
   } catch (error) {
     logger.error({ error }, 'Failed to get matches')
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

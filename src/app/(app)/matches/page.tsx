@@ -2,107 +2,225 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useApp } from '@/context/AppContext'
+import Image from 'next/image'
+
+type MatchStatus =
+  | 'pending'
+  | 'accepted'
+  | 'in_progress'
+  | 'uploading'
+  | 'analyzing'
+  | 'completed'
+  | 'disputed'
+  | 'cancelled'
+  | 'declined'
 
 interface Match {
   id: string
-  opponentName: string
-  opponentId: string
-  venue: string
-  date: Date
-  status: 'pending' | 'verified' | 'disputed'
-  result?: {
-    winner: 'you' | 'opponent'
-    yourScore: number
-    opponentScore: number
-    xpEarned: number
+  status: MatchStatus
+  venueName: string
+  isChallenger: boolean
+  opponent: {
+    id: string
+    name: string | null
+    avatar: { imageUrl: string | null }
   }
-  canDispute: boolean
+  player1Score: number | null
+  player2Score: number | null
+  winnerId: string | null
+  createdAt: string
 }
+
+type FilterType = 'all' | 'active' | 'completed' | 'disputed'
 
 export default function MatchesPage() {
   const router = useRouter()
-  const { user } = useApp()
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'verified' | 'disputed'>('all')
+  const [filter, setFilter] = useState<FilterType>('all')
 
   useEffect(() => {
-    // Fetch matches
-    fetch('/api/matches')
-      .then((res) => res.json())
-      .then((data) => setMatches(data))
-      .catch((err) => console.error('Failed to fetch matches:', err))
-      .finally(() => setIsLoading(false))
+    fetchMatches()
   }, [])
 
-  const handleDispute = (matchId: string) => {
-    router.push(`/matches/${matchId}/dispute`)
-  }
-
-  const handleViewDetails = (matchId: string) => {
-    router.push(`/matches/${matchId}`)
-  }
-
-  const filteredMatches = filter === 'all' ? matches : matches.filter((m) => m.status === filter)
-
-  const getStatusBadge = (status: Match['status']) => {
-    if (status === 'pending') {
-      return (
-        <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded">
-          ⏳ Verifying
-        </span>
-      )
+  const fetchMatches = async () => {
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/matches')
+      if (res.ok) {
+        const data = await res.json()
+        setMatches(data.matches || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch matches:', err)
+    } finally {
+      setIsLoading(false)
     }
-    if (status === 'disputed') {
-      return (
-        <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded">
-          ⚠️ Disputed
-        </span>
-      )
-    }
-    return (
-      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
-        ✓ Verified
-      </span>
-    )
   }
+
+  const getFilteredMatches = () => {
+    switch (filter) {
+      case 'active':
+        return matches.filter((m) =>
+          ['pending', 'accepted', 'in_progress', 'uploading', 'analyzing'].includes(m.status)
+        )
+      case 'completed':
+        return matches.filter((m) => m.status === 'completed')
+      case 'disputed':
+        return matches.filter((m) => m.status === 'disputed')
+      default:
+        return matches
+    }
+  }
+
+  const getStatusBadge = (status: MatchStatus) => {
+    switch (status) {
+      case 'pending':
+        return (
+          <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded">
+            Waiting
+          </span>
+        )
+      case 'accepted':
+        return (
+          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+            Ready
+          </span>
+        )
+      case 'in_progress':
+        return (
+          <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded">
+            In Progress
+          </span>
+        )
+      case 'uploading':
+      case 'analyzing':
+        return (
+          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
+            Analyzing
+          </span>
+        )
+      case 'completed':
+        return (
+          <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
+            Completed
+          </span>
+        )
+      case 'disputed':
+        return (
+          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded">
+            Disputed
+          </span>
+        )
+      case 'cancelled':
+      case 'declined':
+        return (
+          <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-semibold rounded">
+            {status === 'declined' ? 'Declined' : 'Cancelled'}
+          </span>
+        )
+      default:
+        return null
+    }
+  }
+
+  const getMatchAction = (match: Match) => {
+    switch (match.status) {
+      case 'pending':
+        return match.isChallenger ? 'View' : 'Respond'
+      case 'accepted':
+        return 'Start Match'
+      case 'in_progress':
+        return 'Continue'
+      case 'uploading':
+      case 'analyzing':
+        return 'View Progress'
+      case 'completed':
+      case 'disputed':
+        return 'View Results'
+      default:
+        return 'View'
+    }
+  }
+
+  const handleMatchClick = (match: Match) => {
+    switch (match.status) {
+      case 'pending':
+        if (match.isChallenger) {
+          router.push(`/challenges/1v1/${match.id}/pending`)
+        } else {
+          router.push(`/challenges`)
+        }
+        break
+      case 'accepted':
+        router.push(`/challenges/1v1/${match.id}/ready`)
+        break
+      case 'in_progress':
+        router.push(`/challenges/1v1/${match.id}/record`)
+        break
+      case 'uploading':
+        router.push(`/challenges/1v1/${match.id}/upload`)
+        break
+      case 'analyzing':
+      case 'completed':
+      case 'disputed':
+        router.push(`/challenges/1v1/${match.id}/results`)
+        break
+      default:
+        router.push(`/matches/${match.id}`)
+    }
+  }
+
+  const getUserScore = (match: Match) => {
+    if (match.player1Score === null || match.player2Score === null) return null
+    return match.isChallenger ? match.player1Score : match.player2Score
+  }
+
+  const getOpponentScore = (match: Match) => {
+    if (match.player1Score === null || match.player2Score === null) return null
+    return match.isChallenger ? match.player2Score : match.player1Score
+  }
+
+  const isWinner = (match: Match) => {
+    if (!match.winnerId) return null
+    const myScore = getUserScore(match)
+    const oppScore = getOpponentScore(match)
+    if (myScore === null || oppScore === null) return null
+    return myScore > oppScore
+  }
+
+  const filteredMatches = getFilteredMatches()
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="w-full max-w-4xl mx-auto p-4 md:p-8 space-y-4">
-        {/* Header with Logo */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-start gap-2">
-            <div className="w-12 h-12 flex-shrink-0">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">My Matches</h1>
-              <p className="text-sm text-gray-500">1v1 Challenge History</p>
-            </div>
-          </div>
+    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <div className="max-w-lg mx-auto p-4 space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <button
             onClick={() => router.push('/welcome')}
-            className="text-blue-600 text-sm font-medium flex-shrink-0 mt-1"
+            className="text-gray-600 hover:text-gray-900"
           >
             ← Back
           </button>
+          <h1 className="text-xl font-bold text-gray-900">My Matches</h1>
+          <div className="w-12" />
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-white rounded-xl p-1 shadow">
           {[
             { id: 'all', label: 'All' },
-            { id: 'pending', label: 'Pending' },
-            { id: 'verified', label: 'Verified' },
+            { id: 'active', label: 'Active' },
+            { id: 'completed', label: 'Done' },
             { id: 'disputed', label: 'Disputed' },
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setFilter(tab.id as any)}
-              className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                filter === tab.id ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600'
+              onClick={() => setFilter(tab.id as FilterType)}
+              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                filter === tab.id
+                  ? 'bg-[#4361EE] text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
               {tab.label}
@@ -113,105 +231,134 @@ export default function MatchesPage() {
         {/* Matches List */}
         <div className="space-y-3">
           {isLoading ? (
-            <div className="text-center py-8 text-gray-500">Loading matches...</div>
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent mx-auto" />
+              <p className="text-gray-500 mt-4">Loading matches...</p>
+            </div>
           ) : filteredMatches.length === 0 ? (
-            <div className="text-center py-8">
+            <div className="text-center py-12 bg-white rounded-xl shadow">
               <p className="text-gray-500 mb-4">
                 {filter === 'all' ? 'No matches yet' : `No ${filter} matches`}
               </p>
               <button
                 onClick={() => router.push('/challenges')}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                className="bg-[#4361EE] hover:bg-[#3651DE] text-white font-semibold py-3 px-6 rounded-xl transition-colors"
               >
-                Start a Challenge
+                Find a Challenge
               </button>
             </div>
           ) : (
             filteredMatches.map((match) => (
               <div
                 key={match.id}
-                className="bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-colors"
+                onClick={() => handleMatchClick(match)}
+                className="bg-white rounded-xl shadow p-4 cursor-pointer active:scale-[0.98] transition-transform"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
+                {/* Header Row */}
+                <div className="flex items-center gap-3 mb-3">
+                  {/* Opponent Avatar */}
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                    {match.opponent.avatar?.imageUrl ? (
+                      <Image
+                        src={match.opponent.avatar.imageUrl}
+                        alt={match.opponent.name || 'Opponent'}
+                        width={48}
+                        height={48}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-2xl">
+                        👤
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Match Info */}
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-gray-900">vs {match.opponentName}</h3>
+                      <h3 className="font-bold text-gray-900 truncate">
+                        vs {match.opponent.name || 'Player'}
+                      </h3>
                       {getStatusBadge(match.status)}
                     </div>
-                    <p className="text-xs text-gray-500">
-                      📍 {match.venue} •{' '}
-                      {new Date(match.date).toLocaleDateString('en-US', {
+                    <p className="text-xs text-gray-500 truncate">
+                      📍 {match.venueName} •{' '}
+                      {new Date(match.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
                       })}
                     </p>
                   </div>
+
+                  {/* Action Arrow */}
+                  <div className="text-gray-400">→</div>
                 </div>
 
-                {/* Match Result */}
-                {match.result && match.status === 'verified' && (
-                  <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-gray-600 mb-1">Result</p>
-                        <p className="text-sm font-bold text-gray-900">
-                          You {match.result.yourScore} - {match.result.opponentScore}{' '}
-                          {match.opponentName}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-600 mb-1">XP</p>
-                        <p
-                          className={`text-lg font-bold ${
-                            match.result.winner === 'you' ? 'text-green-600' : 'text-gray-600'
+                {/* Score Display (for completed matches) */}
+                {match.status === 'completed' &&
+                  match.player1Score !== null &&
+                  match.player2Score !== null && (
+                    <div
+                      className={`rounded-lg p-3 ${isWinner(match) ? 'bg-green-50' : 'bg-gray-50'}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-gray-900">{getUserScore(match)}</p>
+                          <p className="text-xs text-gray-500">You</p>
+                        </div>
+                        <div className="text-gray-400 text-lg font-bold">-</div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-gray-900">
+                            {getOpponentScore(match)}
+                          </p>
+                          <p className="text-xs text-gray-500">{match.opponent.name || 'Opp'}</p>
+                        </div>
+                        <div
+                          className={`px-3 py-1 rounded-full text-sm font-bold ${
+                            isWinner(match)
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-300 text-gray-700'
                           }`}
                         >
-                          {match.result.winner === 'you' ? '+' : ''}
-                          {match.result.xpEarned}
-                        </p>
+                          {isWinner(match) ? 'WIN' : 'LOSS'}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Pending Status */}
-                {match.status === 'pending' && (
-                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3">
-                    <p className="text-xs text-yellow-800">
-                      AI is currently verifying the match recording. This usually takes 1-2 minutes.
-                    </p>
-                  </div>
-                )}
-
-                {/* Disputed Status */}
-                {match.status === 'disputed' && (
-                  <div className="bg-red-50 border-l-4 border-red-400 p-3 mb-3">
-                    <p className="text-xs text-red-800">
-                      This match is under review. Our team will resolve the dispute within 24 hours.
-                    </p>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleViewDetails(match.id)}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
-                  >
-                    View Details
-                  </button>
-                  {match.status === 'verified' && match.canDispute && (
-                    <button
-                      onClick={() => handleDispute(match.id)}
-                      className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
-                    >
-                      Dispute Result
-                    </button>
                   )}
-                </div>
+
+                {/* Status Messages */}
+                {match.status === 'pending' && (
+                  <div className="bg-yellow-50 rounded-lg p-3 text-sm text-yellow-800">
+                    {match.isChallenger
+                      ? 'Waiting for opponent to respond...'
+                      : 'You have a challenge request!'}
+                  </div>
+                )}
+
+                {match.status === 'accepted' && (
+                  <div className="bg-blue-50 rounded-lg p-3 text-sm text-blue-800">
+                    Match accepted! Ready to start recording.
+                  </div>
+                )}
+
+                {(match.status === 'uploading' || match.status === 'analyzing') && (
+                  <div className="bg-purple-50 rounded-lg p-3 text-sm text-purple-800 flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-500 border-t-transparent" />
+                    AI is analyzing the match video...
+                  </div>
+                )}
+
+                {match.status === 'disputed' && (
+                  <div className="bg-red-50 rounded-lg p-3 text-sm text-red-800">
+                    This match is under review.
+                  </div>
+                )}
+
+                {/* Action Button */}
+                <button className="w-full mt-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg transition-colors text-sm">
+                  {getMatchAction(match)}
+                </button>
               </div>
             ))
           )}

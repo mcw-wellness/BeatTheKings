@@ -91,10 +91,10 @@ describe('Profile API Integration Tests', () => {
 
       expect(response.status).toBe(200)
       const body = await response.json()
-      expect(body.name).toBe('Test User')
-      expect(body.email).toBe('test@example.com')
-      expect(body.gender).toBe('Male')
-      expect(body.city.name).toBe('Vienna')
+      expect(body.user.name).toBe('Test User')
+      expect(body.user.email).toBe('test@example.com')
+      expect(body.user.gender).toBe('Male')
+      expect(body.user.city.name).toBe('Vienna')
     })
   })
 

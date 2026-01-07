@@ -5,7 +5,7 @@ import {
   testFactories,
   type TestDatabase,
 } from '@/db/test-utils'
-import { users, countries, cities, sports } from '@/db/schema'
+import { users } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 
 describe('Database Schema Tests', () => {

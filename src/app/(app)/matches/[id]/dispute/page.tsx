@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Image from 'next/image'
 
 export default function DisputeMatchPage() {
   const router = useRouter()
@@ -67,7 +68,13 @@ export default function DisputeMatchPage() {
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-start gap-2">
             <div className="w-12 h-12 flex-shrink-0">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <Image
+                src="/logo.png"
+                alt="Logo"
+                width={48}
+                height={48}
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Dispute Match</h1>
@@ -156,7 +163,7 @@ export default function DisputeMatchPage() {
               </div>
               <div className="flex items-start gap-2">
                 <span className="font-bold">2.</span>
-                <p>We'll investigate the issue you reported</p>
+                <p>We will investigate the issue you reported</p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="font-bold">3.</span>

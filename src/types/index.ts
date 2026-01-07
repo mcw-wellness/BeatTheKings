@@ -53,7 +53,7 @@ export interface Challenge {
     requiredShots?: number
     timeLimit?: number
     distance?: string
-    [key: string]: any
+    [key: string]: string | number | undefined
   }
   xpReward: number
   difficulty: Difficulty
@@ -72,7 +72,7 @@ export interface ChallengeSubmission {
     shotsAttempted?: number
     timeTaken?: number
     distance?: number
-    [key: string]: any
+    [key: string]: string | number | undefined
   }
   verificationStatus: VerificationStatus
   verifiedAt?: Date

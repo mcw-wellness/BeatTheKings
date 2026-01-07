@@ -4,7 +4,6 @@ import type {
   Challenge,
   PlayerStats,
   Avatar,
-  ChallengeSubmission,
   UserChallengeStatus,
   PlayerWithStats,
 } from '@/types'

@@ -137,6 +137,136 @@ describe('Matches API Integration Tests', () => {
       const body = await response.json()
       expect(body.matches).toHaveLength(1)
     })
+
+    it('should return matches with correct response format (PRD_MATCHES_PAGE)', async () => {
+      const country = await createCountry()
+      const city = await createCity('Vienna', country.id)
+      const user1 = await createUser('test1@test.com', 'Player 1', city.id)
+      const user2 = await createUser('test2@test.com', 'Player 2', city.id)
+      const venue = await createVenue('Test Park', city.id)
+      const sport = await createSport()
+
+      // Create a completed match with scores
+      await testDb.insert(matches).values({
+        player1Id: user1.id,
+        player2Id: user2.id,
+        venueId: venue.id,
+        sportId: sport.id,
+        status: 'completed',
+        player1Score: 21,
+        player2Score: 15,
+        winnerId: user1.id,
+      })
+
+      mockGetSession.mockResolvedValue({ user: { id: user1.id, email: user1.email } })
+
+      const response = await GET_MATCHES(createMockRequest())
+
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expect(body.matches).toHaveLength(1)
+
+      const match = body.matches[0]
+      // Verify response format per PRD
+      expect(match.id).toBeDefined()
+      expect(match.status).toBe('completed')
+      expect(match.venueName).toBe('Test Park')
+      expect(match.isChallenger).toBe(true) // user1 is player1 (challenger)
+      expect(match.opponent).toEqual({
+        id: user2.id,
+        name: 'Player 2',
+        avatar: expect.objectContaining({ imageUrl: expect.any(String) }),
+      })
+      expect(match.player1Score).toBe(21)
+      expect(match.player2Score).toBe(15)
+      expect(match.winnerId).toBe(user1.id)
+      expect(match.createdAt).toBeDefined()
+    })
+
+    it('should filter matches by status correctly', async () => {
+      const country = await createCountry()
+      const city = await createCity('Vienna', country.id)
+      const user1 = await createUser('test1@test.com', 'Player 1', city.id)
+      const user2 = await createUser('test2@test.com', 'Player 2', city.id)
+      const venue = await createVenue('Test Park', city.id)
+      const sport = await createSport()
+
+      // Create matches with different statuses
+      await testDb.insert(matches).values([
+        {
+          player1Id: user1.id,
+          player2Id: user2.id,
+          venueId: venue.id,
+          sportId: sport.id,
+          status: 'pending',
+        },
+        {
+          player1Id: user1.id,
+          player2Id: user2.id,
+          venueId: venue.id,
+          sportId: sport.id,
+          status: 'accepted',
+        },
+        {
+          player1Id: user1.id,
+          player2Id: user2.id,
+          venueId: venue.id,
+          sportId: sport.id,
+          status: 'completed',
+        },
+        {
+          player1Id: user1.id,
+          player2Id: user2.id,
+          venueId: venue.id,
+          sportId: sport.id,
+          status: 'disputed',
+        },
+      ])
+
+      mockGetSession.mockResolvedValue({ user: { id: user1.id, email: user1.email } })
+
+      // Test filtering for pending,accepted
+      const response = await GET_MATCHES(
+        createMockRequest('http://localhost/api/matches?status=pending,accepted')
+      )
+
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expect(body.matches).toHaveLength(2)
+      expect(body.matches.map((m: { status: string }) => m.status).sort()).toEqual([
+        'accepted',
+        'pending',
+      ])
+    })
+
+    it('should show isChallenger=false when user is player2', async () => {
+      const country = await createCountry()
+      const city = await createCity('Vienna', country.id)
+      const user1 = await createUser('test1@test.com', 'Player 1', city.id)
+      const user2 = await createUser('test2@test.com', 'Player 2', city.id)
+      const venue = await createVenue('Test Park', city.id)
+      const sport = await createSport()
+
+      // user1 challenges user2
+      await testDb.insert(matches).values({
+        player1Id: user1.id,
+        player2Id: user2.id,
+        venueId: venue.id,
+        sportId: sport.id,
+        status: 'pending',
+      })
+
+      // Query as user2 (the challenged player)
+      mockGetSession.mockResolvedValue({ user: { id: user2.id, email: user2.email } })
+
+      const response = await GET_MATCHES(createMockRequest())
+
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expect(body.matches).toHaveLength(1)
+      expect(body.matches[0].isChallenger).toBe(false)
+      expect(body.matches[0].opponent.id).toBe(user1.id)
+    })
   })
 
   describe('POST /api/matches', () => {
