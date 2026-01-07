@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { eq, or, desc, inArray } from 'drizzle-orm'
+import { eq, or, desc } from 'drizzle-orm'
 import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { createMatch, getMatchById } from '@/lib/matches'
@@ -43,10 +43,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     if (statusFilter) {
       const statuses = statusFilter.split(',').map((s) => s.trim())
       query = query.where(
-        or(
-          eq(matches.player1Id, session.user.id),
-          eq(matches.player2Id, session.user.id)
-        )
+        or(eq(matches.player1Id, session.user.id), eq(matches.player2Id, session.user.id))
       )
       // Re-apply with status filter
       const userMatches = await db
@@ -59,9 +56,7 @@ export async function GET(request: NextRequest): Promise<Response> {
           createdAt: matches.createdAt,
         })
         .from(matches)
-        .where(
-          or(eq(matches.player1Id, session.user.id), eq(matches.player2Id, session.user.id))
-        )
+        .where(or(eq(matches.player1Id, session.user.id), eq(matches.player2Id, session.user.id)))
         .orderBy(desc(matches.createdAt))
         .limit(20)
 

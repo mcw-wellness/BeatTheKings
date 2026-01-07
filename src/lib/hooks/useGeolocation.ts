@@ -24,12 +24,13 @@ const defaultOptions: UseGeolocationOptions = {
 
 export function useGeolocation(options: UseGeolocationOptions = {}): GeolocationState & {
   refresh: () => void
+  requestPermission: () => void
 } {
   const [state, setState] = useState<GeolocationState>({
     latitude: null,
     longitude: null,
     error: null,
-    loading: true,
+    loading: false, // Don't auto-load, wait for user action on mobile
     permission: 'unknown',
   })
 
@@ -92,12 +93,52 @@ export function useGeolocation(options: UseGeolocationOptions = {}): Geolocation
     )
   }, [opts.enableHighAccuracy, opts.timeout, opts.maximumAge])
 
+  // Check permission status on mount (without triggering prompt)
   useEffect(() => {
+    if (navigator.permissions) {
+      navigator.permissions
+        .query({ name: 'geolocation' })
+        .then((result) => {
+          setState((prev) => ({
+            ...prev,
+            permission: result.state as 'granted' | 'denied' | 'prompt',
+          }))
+
+          // Auto-get location if already granted
+          if (result.state === 'granted') {
+            getLocation()
+          }
+
+          // Listen for permission changes
+          result.onchange = () => {
+            setState((prev) => ({
+              ...prev,
+              permission: result.state as 'granted' | 'denied' | 'prompt',
+            }))
+            if (result.state === 'granted') {
+              getLocation()
+            }
+          }
+        })
+        .catch(() => {
+          // Permissions API not supported (Safari), try getting location directly
+          getLocation()
+        })
+    } else {
+      // Permissions API not supported, try getting location directly
+      getLocation()
+    }
+  }, [getLocation])
+
+  // Explicit permission request (for user-triggered actions)
+  const requestPermission = useCallback(() => {
+    setState((prev) => ({ ...prev, loading: true }))
     getLocation()
   }, [getLocation])
 
   return {
     ...state,
     refresh: getLocation,
+    requestPermission,
   }
 }

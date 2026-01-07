@@ -52,6 +52,9 @@ function AvatarPageContent(): JSX.Element {
   // User profile fields (collected on this page)
   const [gender, setGender] = useState<Gender>('male')
   const [dateOfBirth, setDateOfBirth] = useState<string>('')
+  const [dobDay, setDobDay] = useState<string>('')
+  const [dobMonth, setDobMonth] = useState<string>('')
+  const [dobYear, setDobYear] = useState<string>('')
 
   // Avatar customization fields
   const [skinTone, setSkinTone] = useState<SkinTone>('medium')
@@ -66,7 +69,6 @@ function AvatarPageContent(): JSX.Element {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null)
   const [isNewPreview, setIsNewPreview] = useState(false)
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState(true)
 
   // Fetch user's existing profile and avatar data
   useEffect(() => {
@@ -80,8 +82,12 @@ function AvatarPageContent(): JSX.Element {
             setGender(profileData.gender as Gender)
           }
           if (profileData.dateOfBirth) {
-            setDateOfBirth(profileData.dateOfBirth.split('T')[0]) // Format as YYYY-MM-DD
-            setIsFirstTimeUser(false)
+            const dob = profileData.dateOfBirth.split('T')[0] // Format as YYYY-MM-DD
+            setDateOfBirth(dob)
+            const [year, month, day] = dob.split('-')
+            setDobYear(year)
+            setDobMonth(month)
+            setDobDay(day)
           }
         }
 
@@ -96,7 +102,6 @@ function AvatarPageContent(): JSX.Element {
             if (avatar.skinTone) setSkinTone(avatar.skinTone)
             if (avatar.hairStyle) setHairStyle(avatar.hairStyle)
             if (avatar.hairColor) setHairColor(avatar.hairColor)
-            setIsFirstTimeUser(false)
 
             // Load jersey number from equipment
             const equipment = data.equipment
@@ -120,6 +125,17 @@ function AvatarPageContent(): JSX.Element {
     }
     fetchUserData()
   }, [])
+
+  // Combine DOB parts into dateOfBirth string
+  useEffect(() => {
+    if (dobYear && dobMonth && dobDay) {
+      const paddedMonth = dobMonth.padStart(2, '0')
+      const paddedDay = dobDay.padStart(2, '0')
+      setDateOfBirth(`${dobYear}-${paddedMonth}-${paddedDay}`)
+    } else {
+      setDateOfBirth('')
+    }
+  }, [dobDay, dobMonth, dobYear])
 
   // Get default avatar URL with SAS token
   const defaultAvatarUrl = useAvatarUrl({ type: 'default', gender })
@@ -406,15 +422,59 @@ function AvatarPageContent(): JSX.Element {
                 Date of Birth
                 <span className="text-red-500 ml-1">*</span>
               </label>
-              <input
-                type="date"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none text-gray-700"
-              />
+              <div className="grid grid-cols-3 gap-2">
+                {/* Day */}
+                <div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Day"
+                    value={dobDay}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 2)
+                      const num = parseInt(val)
+                      if (val === '' || (num >= 1 && num <= 31)) {
+                        setDobDay(val)
+                      }
+                    }}
+                    className="w-full px-3 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none text-gray-700 text-center"
+                  />
+                </div>
+                {/* Month */}
+                <div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Month"
+                    value={dobMonth}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 2)
+                      const num = parseInt(val)
+                      if (val === '' || (num >= 1 && num <= 12)) {
+                        setDobMonth(val)
+                      }
+                    }}
+                    className="w-full px-3 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none text-gray-700 text-center"
+                  />
+                </div>
+                {/* Year */}
+                <div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Year"
+                    value={dobYear}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 4)
+                      setDobYear(val)
+                    }}
+                    className="w-full px-3 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none text-gray-700 text-center"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mt-2 text-center">DD / MM / YYYY</p>
               {dateOfBirth && (
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-1">
                   Age Group: <span className="font-medium">{ageGroup}</span>
                 </p>
               )}

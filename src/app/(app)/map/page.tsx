@@ -2,19 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
 import { useGeolocation } from '@/lib/hooks/useGeolocation'
-
-// Dynamically import map components (Leaflet doesn't work with SSR)
-const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), {
-  ssr: false,
-})
-const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), {
-  ssr: false,
-})
-const Marker = dynamic(() => import('react-leaflet').then((mod) => mod.Marker), { ssr: false })
-const Popup = dynamic(() => import('react-leaflet').then((mod) => mod.Popup), { ssr: false })
 
 interface VenueItem {
   id: string
@@ -46,20 +36,36 @@ interface VenueDetailData {
   activePlayers: ActivePlayer[]
 }
 
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%',
+}
+
+const defaultCenter = { lat: 48.2082, lng: 16.3738 } // Vienna
+
 export default function MapPage(): JSX.Element {
   const router = useRouter()
-  const { latitude, longitude, loading: geoLoading, error: geoError } = useGeolocation()
+  const {
+    latitude,
+    longitude,
+    loading: geoLoading,
+    error: geoError,
+    permission,
+    requestPermission,
+  } = useGeolocation()
 
   const [venues, setVenues] = useState<VenueItem[]>([])
   const [selectedVenue, setSelectedVenue] = useState<VenueItem | null>(null)
   const [activePlayers, setActivePlayers] = useState<ActivePlayer[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingDetails, setIsLoadingDetails] = useState(false)
-  const [mapReady, setMapReady] = useState(false)
+  const [infoWindowVenue, setInfoWindowVenue] = useState<VenueItem | null>(null)
 
-  // Default center (Vienna)
-  const defaultCenter: [number, number] = [48.2082, 16.3738]
-  const userCenter: [number, number] = latitude && longitude ? [latitude, longitude] : defaultCenter
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+  })
+
+  const userCenter = latitude && longitude ? { lat: latitude, lng: longitude } : defaultCenter
 
   // Fetch venues list
   const fetchVenues = useCallback(async (): Promise<void> => {
@@ -112,29 +118,33 @@ export default function MapPage(): JSX.Element {
     }
   }, [geoLoading, fetchVenues])
 
-  // Load Leaflet CSS
-  useEffect(() => {
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-    document.head.appendChild(link)
-    setMapReady(true)
-    return () => {
-      document.head.removeChild(link)
-    }
-  }, [])
-
   const openPlayerCard = (playerId: string): void => {
     router.push(`/player/${playerId}`)
   }
 
-  const handleVenueClick = (venue: VenueItem): void => {
+  const handleMarkerClick = (venue: VenueItem): void => {
+    setInfoWindowVenue(venue)
+  }
+
+  const handleVenueSelect = (venue: VenueItem): void => {
+    setInfoWindowVenue(null)
     fetchVenueDetails(venue.id)
   }
 
   const closePanel = (): void => {
     setSelectedVenue(null)
     setActivePlayers([])
+  }
+
+  if (loadError) {
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Failed to load Google Maps</p>
+          <p className="text-gray-500 text-sm">Please check your API key configuration</p>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -158,43 +168,108 @@ export default function MapPage(): JSX.Element {
         <div className="text-sm text-center">
           {geoLoading ? (
             <p className="text-gray-500">Getting your location...</p>
-          ) : geoError ? (
-            <p className="text-yellow-600">📍 Location unavailable - showing Vienna area</p>
-          ) : (
+          ) : geoError || permission === 'denied' ? (
+            <div className="space-y-2">
+              <p className="text-yellow-600">📍 Location unavailable - showing Vienna area</p>
+              {permission === 'denied' && (
+                <p className="text-xs text-gray-500">
+                  Enable location in your browser/phone settings
+                </p>
+              )}
+            </div>
+          ) : !latitude && permission === 'prompt' ? (
+            <button
+              onClick={requestPermission}
+              className="px-4 py-2 bg-[#4361EE] text-white text-sm font-medium rounded-lg hover:bg-[#3651DE] transition-colors"
+            >
+              📍 Enable Location
+            </button>
+          ) : latitude ? (
             <p className="text-green-600">📍 Showing venues near you</p>
+          ) : (
+            <button
+              onClick={requestPermission}
+              className="px-4 py-2 bg-[#4361EE] text-white text-sm font-medium rounded-lg hover:bg-[#3651DE] transition-colors"
+            >
+              📍 Enable Location
+            </button>
           )}
         </div>
 
         {/* Map */}
         <div className="bg-white rounded-xl md:rounded-2xl shadow overflow-hidden h-[350px] md:h-[450px]">
-          {mapReady && !isLoading ? (
-            <MapContainer center={userCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+          {isLoaded && !isLoading ? (
+            <GoogleMap
+              mapContainerStyle={mapContainerStyle}
+              center={userCenter}
+              zoom={13}
+              options={{
+                disableDefaultUI: false,
+                zoomControl: true,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
+              }}
+            >
+              {/* User location marker */}
+              {latitude && longitude && (
+                <Marker
+                  position={{ lat: latitude, lng: longitude }}
+                  icon={{
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 8,
+                    fillColor: '#4361EE',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2,
+                  }}
+                  title="Your location"
+                />
+              )}
+
+              {/* Venue markers */}
               {venues
                 .filter((v) => v.latitude && v.longitude)
                 .map((venue) => (
                   <Marker
                     key={venue.id}
-                    position={[venue.latitude!, venue.longitude!]}
-                    eventHandlers={{
-                      click: () => handleVenueClick(venue),
+                    position={{ lat: venue.latitude!, lng: venue.longitude! }}
+                    onClick={() => handleMarkerClick(venue)}
+                    icon={{
+                      url: venue.king
+                        ? 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+                        : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
                     }}
-                  >
-                    <Popup>
-                      <div className="text-center">
-                        <p className="font-semibold">{venue.name}</p>
-                        <p className="text-sm text-gray-500">👥 {venue.activePlayerCount} active</p>
-                        {venue.distanceFormatted && (
-                          <p className="text-xs text-blue-600">{venue.distanceFormatted}</p>
-                        )}
-                      </div>
-                    </Popup>
-                  </Marker>
+                  />
                 ))}
-            </MapContainer>
+
+              {/* Info Window */}
+              {infoWindowVenue && infoWindowVenue.latitude && infoWindowVenue.longitude && (
+                <InfoWindow
+                  position={{ lat: infoWindowVenue.latitude, lng: infoWindowVenue.longitude }}
+                  onCloseClick={() => setInfoWindowVenue(null)}
+                >
+                  <div className="p-2 min-w-[150px]">
+                    <p className="font-semibold text-gray-900">{infoWindowVenue.name}</p>
+                    <p className="text-sm text-gray-500">
+                      👥 {infoWindowVenue.activePlayerCount} active
+                    </p>
+                    {infoWindowVenue.distanceFormatted && (
+                      <p className="text-xs text-blue-600">{infoWindowVenue.distanceFormatted}</p>
+                    )}
+                    {infoWindowVenue.king && (
+                      <p className="text-xs text-yellow-600 mt-1">👑 Has King</p>
+                    )}
+                    <button
+                      onClick={() => handleVenueSelect(infoWindowVenue)}
+                      className="mt-2 w-full py-1 px-2 bg-[#4361EE] text-white text-sm rounded hover:bg-[#3651DE]"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </InfoWindow>
+              )}
+            </GoogleMap>
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent" />
@@ -244,7 +319,7 @@ export default function MapPage(): JSX.Element {
               </div>
             )}
 
-            {/* Active Players - Avatar + Rank only, no names */}
+            {/* Active Players */}
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-2">
                 Active Players ({activePlayers.length})
@@ -294,7 +369,7 @@ export default function MapPage(): JSX.Element {
           </div>
         )}
 
-        {/* Venue List - Sorted by Distance */}
+        {/* Venue List */}
         <div>
           <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
             Nearby Venues ({venues.length})
@@ -312,14 +387,17 @@ export default function MapPage(): JSX.Element {
               {venues.map((venue) => (
                 <div
                   key={venue.id}
-                  onClick={() => handleVenueClick(venue)}
+                  onClick={() => handleVenueSelect(venue)}
                   className={`bg-white rounded-xl md:rounded-2xl shadow p-4 md:p-5 cursor-pointer active:scale-[0.98] transition-transform ${
                     selectedVenue?.id === venue.id ? 'ring-2 ring-[#4361EE]' : ''
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h4 className="text-gray-900 font-semibold">{venue.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-gray-900 font-semibold">{venue.name}</h4>
+                        {venue.king && <span className="text-yellow-500">👑</span>}
+                      </div>
                       {venue.district && <p className="text-gray-500 text-sm">{venue.district}</p>}
                     </div>
                     <div className="flex items-center gap-3">

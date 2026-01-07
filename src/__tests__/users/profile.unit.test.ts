@@ -269,10 +269,10 @@ describe('Profile Adapter Functions', () => {
       const profile = await getUserProfile(db, user.id)
 
       expect(profile).toBeDefined()
-      expect(profile?.name).toBe('Profile User')
-      expect(profile?.email).toBe('profile@example.com')
-      expect(profile?.gender).toBe('female') // Stored as lowercase
-      expect(profile?.city?.name).toBe('Vienna')
+      expect(profile?.user?.name).toBe('Profile User')
+      expect(profile?.user?.email).toBe('profile@example.com')
+      expect(profile?.user?.gender).toBe('female') // Stored as lowercase
+      expect(profile?.user?.city?.name).toBe('Vienna')
     })
 
     it('should return null for non-existent user', async () => {

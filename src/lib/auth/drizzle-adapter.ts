@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 import { randomUUID } from 'crypto'
-import { users, cities } from '@/db/schema'
+import { users, cities, activePlayers, venues } from '@/db/schema'
 import type { Database } from '@/db'
 import { calculateAge, getAgeGroup } from '@/lib/utils/date'
 
@@ -229,7 +229,27 @@ export async function getUserProfile(db: Database, userId: string) {
     .where(eq(users.id, userId))
     .limit(1)
 
-  return result || null
+  if (!result) return null
+
+  // Get user's active venue (most recent check-in)
+  const [activeVenue] = await db
+    .select({
+      venueId: activePlayers.venueId,
+      venueName: venues.name,
+    })
+    .from(activePlayers)
+    .innerJoin(venues, eq(activePlayers.venueId, venues.id))
+    .where(eq(activePlayers.userId, userId))
+    .orderBy(desc(activePlayers.lastSeenAt))
+    .limit(1)
+
+  return {
+    user: {
+      ...result,
+      activeVenueId: activeVenue?.venueId || null,
+      activeVenueName: activeVenue?.venueName || null,
+    },
+  }
 }
 
 /**
