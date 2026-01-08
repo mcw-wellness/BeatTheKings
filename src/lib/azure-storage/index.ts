@@ -194,3 +194,24 @@ export function getMatchVideoSasUrl(matchId: string, filename: string): string {
 
   return generateSasUrl(blobPath)
 }
+
+/**
+ * Save match analysis JSON to Azure Blob Storage
+ * Path: matches/{matchId}/analysis.json
+ */
+export async function saveMatchAnalysis(matchId: string, analysis: object): Promise<string> {
+  const container = getContainerClient()
+  const blobPath = `matches/${matchId}/analysis.json`
+  const blockBlobClient = container.getBlockBlobClient(blobPath)
+
+  const jsonContent = JSON.stringify(analysis, null, 2)
+  const buffer = Buffer.from(jsonContent, 'utf-8')
+
+  await blockBlobClient.upload(buffer, buffer.length, {
+    blobHTTPHeaders: { blobContentType: 'application/json' },
+  })
+
+  logger.info({ matchId, blobPath }, 'Match analysis saved to Azure Blob Storage')
+
+  return generateSasUrl(blobPath)
+}

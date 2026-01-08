@@ -447,6 +447,10 @@ export const matches = pgTable(
     startedAt: timestamp('startedAt'),
     completedAt: timestamp('completedAt'),
 
+    // Recording lock (only one player can record at a time)
+    recordingBy: uuid('recordingBy').references(() => users.id),
+    recordingStartedAt: timestamp('recordingStartedAt'),
+
     // Dispute fields (nullable)
     disputeReason: varchar('disputeReason', { length: 50 }),
     disputeDetails: text('disputeDetails'),

@@ -28,6 +28,8 @@ export interface MatchDetail {
   player1: MatchPlayer
   player2: MatchPlayer
   winnerId: string | null
+  videoUrl: string | null
+  recordingBy: string | null
   createdAt: string
   startedAt: string | null
   completedAt: string | null
@@ -203,6 +205,8 @@ export async function getMatchById(db: Database, matchId: string): Promise<Match
       agreed: match.player2Agreed,
     },
     winnerId: match.winnerId,
+    videoUrl: match.videoUrl,
+    recordingBy: match.recordingBy,
     createdAt: match.createdAt.toISOString(),
     startedAt: match.startedAt?.toISOString() || null,
     completedAt: match.completedAt?.toISOString() || null,
@@ -510,16 +514,93 @@ export async function startMatch(
     return { success: false, message: 'Not a participant in this match' }
   }
 
-  if (match.status !== 'accepted') {
-    return { success: false, message: 'Match not ready to start' }
+  // Check if match is in accepted state (first to start)
+  if (match.status === 'accepted') {
+    await db
+      .update(matches)
+      .set({
+        status: 'in_progress',
+        startedAt: new Date(),
+        recordingBy: userId,
+        recordingStartedAt: new Date(),
+      })
+      .where(eq(matches.id, matchId))
+
+    return { success: true, message: 'Match started. You are recording.' }
   }
 
+  // Match already in progress - check if someone else is recording
+  if (match.status === 'in_progress') {
+    if (match.recordingBy && match.recordingBy !== userId) {
+      return {
+        success: false,
+        message: 'Other player is already recording this match',
+      }
+    }
+
+    // User is already the recorder or no one is recording (shouldn't happen)
+    if (match.recordingBy === userId) {
+      return { success: true, message: 'You are already recording this match' }
+    }
+
+    // No one is recording (edge case) - take over
+    await db
+      .update(matches)
+      .set({
+        recordingBy: userId,
+        recordingStartedAt: new Date(),
+      })
+      .where(eq(matches.id, matchId))
+
+    return { success: true, message: 'Match started. You are recording.' }
+  }
+
+  return { success: false, message: 'Match not ready to start' }
+}
+
+/**
+ * Cancel recording (release lock so other player can record)
+ */
+export async function cancelRecording(
+  db: Database,
+  matchId: string,
+  userId: string
+): Promise<MatchResult> {
+  const [match] = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1)
+
+  if (!match) {
+    return { success: false, message: 'Match not found' }
+  }
+
+  if (match.player1Id !== userId && match.player2Id !== userId) {
+    return { success: false, message: 'Not a participant in this match' }
+  }
+
+  if (match.status !== 'in_progress') {
+    return { success: false, message: 'Match is not in progress' }
+  }
+
+  if (match.recordingBy !== userId) {
+    return { success: false, message: 'You are not the one recording' }
+  }
+
+  // Video already uploaded - can't cancel
+  if (match.videoUrl) {
+    return { success: false, message: 'Video already uploaded, cannot cancel' }
+  }
+
+  // Release the recording lock, revert to accepted state
   await db
     .update(matches)
-    .set({ status: 'in_progress', startedAt: new Date() })
+    .set({
+      status: 'accepted',
+      recordingBy: null,
+      recordingStartedAt: null,
+      startedAt: null,
+    })
     .where(eq(matches.id, matchId))
 
-  return { success: true, message: 'Match started' }
+  return { success: true, message: 'Recording cancelled. Other player can now record.' }
 }
 
 /**

@@ -3,7 +3,7 @@ import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { getMatchById, saveMatchVideo, saveMatchResults, updateMatchStatus } from '@/lib/matches'
 import { analyzeMatchVideo, calculateRewards } from '@/lib/gemini'
-import { uploadMatchVideo } from '@/lib/azure-storage'
+import { uploadMatchVideo, saveMatchAnalysis } from '@/lib/azure-storage'
 import { logger } from '@/lib/utils/logger'
 
 interface RouteParams {
@@ -39,6 +39,22 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
 
     if (match.status !== 'in_progress') {
       return NextResponse.json({ error: 'Match not in progress' }, { status: 400 })
+    }
+
+    // Check if video was already uploaded (prevent duplicate analysis)
+    if (match.videoUrl) {
+      return NextResponse.json(
+        { error: 'Video already uploaded. Analysis in progress or completed.' },
+        { status: 400 }
+      )
+    }
+
+    // Verify uploader is the one with recording lock
+    if (match.recordingBy && match.recordingBy !== session.user.id) {
+      return NextResponse.json(
+        { error: 'Only the recording player can upload the video' },
+        { status: 403 }
+      )
     }
 
     // Get video from form data
@@ -98,6 +114,22 @@ async function analyzeAndSaveResults(
 
   try {
     const analysis = await analyzeMatchVideo(videoUrl)
+
+    // Save raw analysis to Azure Blob for debugging/audit
+    const analysisData = {
+      matchId,
+      videoUrl,
+      player1Id,
+      player2Id,
+      analyzedAt: new Date().toISOString(),
+      rawAnalysis: analysis,
+    }
+
+    try {
+      await saveMatchAnalysis(matchId, analysisData)
+    } catch (blobError) {
+      logger.error({ blobError, matchId }, 'Failed to save analysis to blob, continuing...')
+    }
 
     if (!analysis) {
       logger.error({ matchId }, 'Analysis returned null')
