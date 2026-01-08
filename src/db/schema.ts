@@ -446,6 +446,13 @@ export const matches = pgTable(
 
     startedAt: timestamp('startedAt'),
     completedAt: timestamp('completedAt'),
+
+    // Dispute fields (nullable)
+    disputeReason: varchar('disputeReason', { length: 50 }),
+    disputeDetails: text('disputeDetails'),
+    disputedBy: uuid('disputedBy').references(() => users.id),
+    disputedAt: timestamp('disputedAt'),
+
     createdAt: timestamp('createdAt').defaultNow().notNull(),
   },
   (table) => [

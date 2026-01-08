@@ -7,7 +7,7 @@ import {
 import { logger } from '@/lib/utils/logger'
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
-const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || 'avatar'
+const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || 'uploads'
 
 let blobServiceClient: BlobServiceClient | null = null
 let containerClient: ReturnType<BlobServiceClient['getContainerClient']> | null = null
@@ -47,7 +47,7 @@ function initializeClients(): void {
 }
 
 /**
- * Get or create the blob container client
+ * Get the container client
  */
 function getContainerClient() {
   initializeClients()
@@ -56,11 +56,11 @@ function getContainerClient() {
 
 /**
  * Upload avatar image to Azure Blob Storage
- * Path: users/{userId}/avatar.png
+ * Path: avatars/users/{userId}/avatar.png
  */
 export async function uploadAvatar(userId: string, imageBuffer: Buffer): Promise<string> {
   const container = getContainerClient()
-  const blobPath = `users/${userId}/avatar.png`
+  const blobPath = `avatars/users/${userId}/avatar.png`
   const blockBlobClient = container.getBlockBlobClient(blobPath)
 
   await blockBlobClient.upload(imageBuffer, imageBuffer.length, {
@@ -106,7 +106,7 @@ export function generateSasUrl(blobPath: string, expiresInHours: number = 24): s
  */
 export function getDefaultAvatarSasUrl(gender: string, sport: string = 'basketball'): string {
   const genderKey = gender?.toLowerCase() === 'female' ? 'female' : 'male'
-  const blobPath = `default/${sport}_${genderKey}.png`
+  const blobPath = `avatars/default/${sport}_${genderKey}.png`
 
   // In test environment or when Azure isn't configured, return placeholder
   if (!connectionString) {
@@ -120,11 +120,11 @@ export function getDefaultAvatarSasUrl(gender: string, sport: string = 'basketba
  * Get the SAS URL for a user's avatar
  */
 export function getUserAvatarSasUrl(userId: string): string {
-  const blobPath = `users/${userId}/avatar.png`
+  const blobPath = `avatars/users/${userId}/avatar.png`
 
   // In test environment or when Azure isn't configured, return a placeholder URL
   if (!connectionString) {
-    return `https://placeholder.blob.core.windows.net/avatar/${blobPath}`
+    return `https://placeholder.blob.core.windows.net/${containerName}/${blobPath}`
   }
 
   return generateSasUrl(blobPath)
@@ -136,7 +136,7 @@ export function getUserAvatarSasUrl(userId: string): string {
 export async function avatarExists(userId: string): Promise<boolean> {
   try {
     const container = getContainerClient()
-    const blobPath = `users/${userId}/avatar.png`
+    const blobPath = `avatars/users/${userId}/avatar.png`
     const blockBlobClient = container.getBlockBlobClient(blobPath)
     return await blockBlobClient.exists()
   } catch (error) {
@@ -151,7 +151,7 @@ export async function avatarExists(userId: string): Promise<boolean> {
 export async function deleteAvatar(userId: string): Promise<boolean> {
   try {
     const container = getContainerClient()
-    const blobPath = `users/${userId}/avatar.png`
+    const blobPath = `avatars/users/${userId}/avatar.png`
     const blockBlobClient = container.getBlockBlobClient(blobPath)
     await blockBlobClient.deleteIfExists()
     logger.info({ userId }, 'Avatar deleted from Azure Blob Storage')
@@ -189,7 +189,7 @@ export function getMatchVideoSasUrl(matchId: string, filename: string): string {
   const blobPath = `matches/${matchId}/${filename}`
 
   if (!connectionString) {
-    return `https://placeholder.blob.core.windows.net/avatar/${blobPath}`
+    return `https://placeholder.blob.core.windows.net/${containerName}/${blobPath}`
   }
 
   return generateSasUrl(blobPath)

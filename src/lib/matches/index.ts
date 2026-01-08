@@ -356,7 +356,9 @@ export async function agreeToMatchResult(
 export async function disputeMatchResult(
   db: Database,
   matchId: string,
-  userId: string
+  userId: string,
+  reason?: string,
+  details?: string
 ): Promise<MatchResult> {
   const [match] = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1)
 
@@ -368,7 +370,16 @@ export async function disputeMatchResult(
     return { success: false, message: 'You are not a participant in this match' }
   }
 
-  await db.update(matches).set({ status: 'disputed' }).where(eq(matches.id, matchId))
+  await db
+    .update(matches)
+    .set({
+      status: 'disputed',
+      disputeReason: reason || null,
+      disputeDetails: details || null,
+      disputedBy: userId,
+      disputedAt: new Date(),
+    })
+    .where(eq(matches.id, matchId))
 
   return { success: true, message: 'Match disputed. An admin will review.' }
 }

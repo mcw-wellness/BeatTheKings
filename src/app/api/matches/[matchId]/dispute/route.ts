@@ -13,6 +13,11 @@ interface RouteParams {
   params: Promise<{ matchId: string }>
 }
 
+interface DisputeBody {
+  reason?: string
+  details?: string
+}
+
 export async function POST(request: Request, { params }: RouteParams): Promise<Response> {
   try {
     const session = await getSession()
@@ -24,7 +29,21 @@ export async function POST(request: Request, { params }: RouteParams): Promise<R
     const { matchId } = await params
     const db = getDb()
 
-    const result = await disputeMatchResult(db, matchId, session.user.id)
+    // Parse request body for reason and details
+    let body: DisputeBody = {}
+    try {
+      body = await request.json()
+    } catch {
+      // Body is optional, continue without it
+    }
+
+    const result = await disputeMatchResult(
+      db,
+      matchId,
+      session.user.id,
+      body.reason,
+      body.details
+    )
 
     if (!result.success) {
       return NextResponse.json({ error: result.message }, { status: 400 })
