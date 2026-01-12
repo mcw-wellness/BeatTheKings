@@ -37,13 +37,7 @@ export async function POST(request: Request, { params }: RouteParams): Promise<R
       // Body is optional, continue without it
     }
 
-    const result = await disputeMatchResult(
-      db,
-      matchId,
-      session.user.id,
-      body.reason,
-      body.details
-    )
+    const result = await disputeMatchResult(db, matchId, session.user.id, body.reason, body.details)
 
     if (!result.success) {
       return NextResponse.json({ error: result.message }, { status: 400 })

@@ -152,7 +152,7 @@ async function createTables(db: TestDatabase): Promise<void> {
       "name" VARCHAR(255) NOT NULL,
       "itemType" VARCHAR(50) NOT NULL,
       "sportId" UUID REFERENCES "Sport"("id"),
-      "imageUrl" VARCHAR(500) NOT NULL,
+      "imageUrl" VARCHAR(500),
       "requiredMatches" INTEGER,
       "requiredChallenges" INTEGER,
       "requiredInvites" INTEGER,
@@ -260,6 +260,12 @@ async function createTables(db: TestDatabase): Promise<void> {
       "loserXp" INTEGER DEFAULT 0 NOT NULL,
       "startedAt" TIMESTAMP,
       "completedAt" TIMESTAMP,
+      "recordingBy" UUID REFERENCES "User"("id"),
+      "recordingStartedAt" TIMESTAMP,
+      "disputeReason" VARCHAR(100),
+      "disputeDetails" TEXT,
+      "disputedBy" UUID REFERENCES "User"("id"),
+      "disputedAt" TIMESTAMP,
       "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL
     )
   `)

@@ -20,13 +20,41 @@ type HairStyle = (typeof VALID_HAIR_STYLES)[number]
 type HairColor = (typeof VALID_HAIR_COLORS)[number]
 type Gender = 'male' | 'female'
 
+interface ProgressValue {
+  current: number
+  required: number
+}
+
+interface UnlockProgress {
+  matches: ProgressValue | null
+  challenges: ProgressValue | null
+  invites: ProgressValue | null
+  xp: ProgressValue | null
+}
+
 interface AvatarItem {
   id: string
   name: string
   itemType: string
-  imageUrl: string
-  isLocked: boolean
-  unlockRequirement?: string
+  imageUrl: string | null
+  isUnlocked: boolean
+  unlockedVia: 'default' | 'achievement' | 'purchase' | null
+  canUnlock: boolean
+  canPurchase: boolean
+  requiredMatches: number | null
+  requiredChallenges: number | null
+  requiredInvites: number | null
+  requiredXp: number | null
+  rpCost: number | null
+  progress: UnlockProgress
+}
+
+interface UserStats {
+  matchesPlayed: number
+  challengesCompleted: number
+  usersInvited: number
+  totalXp: number
+  availableRp: number
 }
 
 export default function AvatarPage(): JSX.Element {
@@ -147,44 +175,60 @@ function AvatarPageContent(): JSX.Element {
   // Priority: new preview > saved avatar > default
   const displayAvatarUrl = previewImage || savedAvatarUrl || defaultAvatarUrl
 
-  // Mock equipment items - will be fetched from API
-  const [items] = useState<AvatarItem[]>([
-    { id: '1', name: 'Blue Jersey', itemType: 'jersey', imageUrl: '', isLocked: false },
-    {
-      id: '2',
-      name: 'Red Jersey',
-      itemType: 'jersey',
-      imageUrl: '',
-      isLocked: true,
-      unlockRequirement: '10 Matches',
-    },
-    {
-      id: '3',
-      name: 'Gold Jersey',
-      itemType: 'jersey',
-      imageUrl: '',
-      isLocked: true,
-      unlockRequirement: '25 Matches',
-    },
-    { id: '4', name: 'Blue Shorts', itemType: 'shorts', imageUrl: '', isLocked: false },
-    {
-      id: '5',
-      name: 'Black Shorts',
-      itemType: 'shorts',
-      imageUrl: '',
-      isLocked: true,
-      unlockRequirement: '5 Challenges',
-    },
-    { id: '6', name: 'Black Shoes', itemType: 'shoes', imageUrl: '', isLocked: false },
-    {
-      id: '7',
-      name: 'Red Shoes',
-      itemType: 'shoes',
-      imageUrl: '',
-      isLocked: true,
-      unlockRequirement: '3 Invites',
-    },
-  ])
+  // Equipment items fetched from API
+  const [items, setItems] = useState<AvatarItem[]>([])
+  const [userStats, setUserStats] = useState<UserStats | null>(null)
+  const [isLoadingItems, setIsLoadingItems] = useState(true)
+
+  // Fetch items and user stats
+  useEffect(() => {
+    const fetchItems = async (): Promise<void> => {
+      try {
+        const res = await fetch('/api/items')
+        if (res.ok) {
+          const data = await res.json()
+          setItems(data.items || [])
+          setUserStats(data.stats || null)
+        }
+      } catch (error) {
+        console.error('Error fetching items:', error)
+      } finally {
+        setIsLoadingItems(false)
+      }
+    }
+    fetchItems()
+  }, [])
+
+  // Unlock or purchase an item
+  const handleUnlockItem = async (
+    itemId: string,
+    method: 'achievement' | 'purchase'
+  ): Promise<void> => {
+    try {
+      const res = await fetch(`/api/items/${itemId}/unlock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        // Refresh items to get updated unlock status
+        const itemsRes = await fetch('/api/items')
+        if (itemsRes.ok) {
+          const itemsData = await itemsRes.json()
+          setItems(itemsData.items || [])
+          setUserStats(itemsData.stats || null)
+        }
+      } else {
+        setError(data.error || 'Failed to unlock item')
+      }
+    } catch (error) {
+      console.error('Error unlocking item:', error)
+      setError('Failed to unlock item')
+    }
+  }
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
@@ -543,37 +587,82 @@ function AvatarPageContent(): JSX.Element {
 
             {/* Equipment Section */}
             <div className="bg-white rounded-xl shadow p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Equipment</h3>
-
-              {/* Jersey */}
-              <div className="mb-3">
-                <span className="text-xs text-gray-500 mb-1 block">Jersey</span>
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {getItemsByType('jersey').map((item) => (
-                    <ItemButton key={item.id} item={item} />
-                  ))}
-                </div>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-semibold text-gray-700">Equipment</h3>
+                {userStats && (
+                  <span className="text-xs text-amber-600 font-medium">
+                    {userStats.availableRp} RP
+                  </span>
+                )}
               </div>
 
-              {/* Shorts */}
-              <div className="mb-3">
-                <span className="text-xs text-gray-500 mb-1 block">Shorts</span>
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {getItemsByType('shorts').map((item) => (
-                    <ItemButton key={item.id} item={item} />
-                  ))}
-                </div>
-              </div>
+              {isLoadingItems ? (
+                <div className="text-center py-4 text-gray-400 text-sm">Loading items...</div>
+              ) : items.length === 0 ? (
+                <div className="text-center py-4 text-gray-400 text-sm">No items available</div>
+              ) : (
+                <>
+                  {/* Jersey */}
+                  {getItemsByType('jersey').length > 0 && (
+                    <div className="mb-3">
+                      <span className="text-xs text-gray-500 mb-1 block">Jersey</span>
+                      <div className="flex gap-2 overflow-x-auto pb-2">
+                        {getItemsByType('jersey').map((item) => (
+                          <ItemButton key={item.id} item={item} onUnlock={handleUnlockItem} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              {/* Shoes */}
-              <div>
-                <span className="text-xs text-gray-500 mb-1 block">Shoes</span>
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {getItemsByType('shoes').map((item) => (
-                    <ItemButton key={item.id} item={item} />
-                  ))}
-                </div>
-              </div>
+                  {/* Shorts */}
+                  {getItemsByType('shorts').length > 0 && (
+                    <div className="mb-3">
+                      <span className="text-xs text-gray-500 mb-1 block">Shorts</span>
+                      <div className="flex gap-2 overflow-x-auto pb-2">
+                        {getItemsByType('shorts').map((item) => (
+                          <ItemButton key={item.id} item={item} onUnlock={handleUnlockItem} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Shoes */}
+                  {getItemsByType('shoes').length > 0 && (
+                    <div className="mb-3">
+                      <span className="text-xs text-gray-500 mb-1 block">Shoes</span>
+                      <div className="flex gap-2 overflow-x-auto pb-2">
+                        {getItemsByType('shoes').map((item) => (
+                          <ItemButton key={item.id} item={item} onUnlock={handleUnlockItem} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hair */}
+                  {getItemsByType('hair').length > 0 && (
+                    <div className="mb-3">
+                      <span className="text-xs text-gray-500 mb-1 block">Hair</span>
+                      <div className="flex gap-2 overflow-x-auto pb-2">
+                        {getItemsByType('hair').map((item) => (
+                          <ItemButton key={item.id} item={item} onUnlock={handleUnlockItem} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Accessory */}
+                  {getItemsByType('accessory').length > 0 && (
+                    <div>
+                      <span className="text-xs text-gray-500 mb-1 block">Accessory</span>
+                      <div className="flex gap-2 overflow-x-auto pb-2">
+                        {getItemsByType('accessory').map((item) => (
+                          <ItemButton key={item.id} item={item} onUnlock={handleUnlockItem} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -605,39 +694,134 @@ function AvatarPageContent(): JSX.Element {
   )
 }
 
-function ItemButton({ item }: { item: AvatarItem }): JSX.Element {
-  return (
-    <button
-      disabled={item.isLocked}
-      className={`relative flex-shrink-0 w-16 h-16 rounded-lg border-2 flex items-center justify-center transition-all ${
-        item.isLocked
-          ? 'border-gray-200 bg-gray-100 cursor-not-allowed'
-          : 'border-blue-500 bg-blue-50 hover:bg-blue-100'
-      }`}
-      title={item.isLocked ? `Unlock: ${item.unlockRequirement}` : item.name}
-    >
-      {item.isLocked ? (
-        <div className="text-center">
-          <svg
-            className="w-5 h-5 mx-auto text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+interface ItemButtonProps {
+  item: AvatarItem
+  onUnlock: (itemId: string, method: 'achievement' | 'purchase') => Promise<void>
+}
+
+function ItemButton({ item, onUnlock }: ItemButtonProps): JSX.Element {
+  const [isUnlocking, setIsUnlocking] = useState(false)
+
+  // Get the primary progress for display
+  const getProgressText = (): string => {
+    if (item.progress.matches) {
+      return `${item.progress.matches.current}/${item.progress.matches.required}`
+    }
+    if (item.progress.challenges) {
+      return `${item.progress.challenges.current}/${item.progress.challenges.required}`
+    }
+    if (item.progress.invites) {
+      return `${item.progress.invites.current}/${item.progress.invites.required}`
+    }
+    if (item.progress.xp) {
+      return `${item.progress.xp.current}/${item.progress.xp.required}`
+    }
+    return ''
+  }
+
+  const getProgressLabel = (): string => {
+    if (item.progress.matches) return 'matches'
+    if (item.progress.challenges) return 'challenges'
+    if (item.progress.invites) return 'invites'
+    if (item.progress.xp) return 'XP'
+    return ''
+  }
+
+  const handleUnlock = async (method: 'achievement' | 'purchase'): Promise<void> => {
+    setIsUnlocking(true)
+    await onUnlock(item.id, method)
+    setIsUnlocking(false)
+  }
+
+  // UNLOCKED item
+  if (item.isUnlocked) {
+    return (
+      <button
+        className="relative flex-shrink-0 w-16 h-16 rounded-lg border-2 border-blue-500 bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all"
+        title={item.name}
+      >
+        <span className="text-xs font-medium text-blue-700 text-center px-1">{item.name}</span>
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
             <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
             />
           </svg>
-          <span className="text-[8px] text-gray-400 mt-0.5 block leading-tight">
-            {item.unlockRequirement}
-          </span>
         </div>
-      ) : (
-        <span className="text-xs font-medium text-blue-700 text-center px-1">{item.name}</span>
+      </button>
+    )
+  }
+
+  // CAN UNLOCK (requirements met)
+  if (item.canUnlock) {
+    return (
+      <button
+        onClick={() => handleUnlock('achievement')}
+        disabled={isUnlocking}
+        className="relative flex-shrink-0 w-16 h-16 rounded-lg border-2 border-green-500 bg-green-50 hover:bg-green-100 flex flex-col items-center justify-center transition-all"
+        title={`Unlock ${item.name}`}
+      >
+        {isUnlocking ? (
+          <div className="animate-spin w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full" />
+        ) : (
+          <>
+            <span className="text-[10px] font-bold text-green-600">Ready!</span>
+            <span className="text-[8px] text-green-600 mt-0.5">Unlock</span>
+          </>
+        )}
+      </button>
+    )
+  }
+
+  // CAN PURCHASE
+  if (item.canPurchase && item.rpCost) {
+    return (
+      <button
+        onClick={() => handleUnlock('purchase')}
+        disabled={isUnlocking}
+        className="relative flex-shrink-0 w-16 h-16 rounded-lg border-2 border-amber-500 bg-amber-50 hover:bg-amber-100 flex flex-col items-center justify-center transition-all"
+        title={`Buy ${item.name} for ${item.rpCost} RP`}
+      >
+        {isUnlocking ? (
+          <div className="animate-spin w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full" />
+        ) : (
+          <>
+            <span className="text-[10px] font-bold text-amber-600">{item.rpCost} RP</span>
+            <span className="text-[8px] text-amber-600 mt-0.5">Buy</span>
+          </>
+        )}
+      </button>
+    )
+  }
+
+  // LOCKED with progress
+  const progressText = getProgressText()
+  const progressLabel = getProgressLabel()
+
+  return (
+    <div
+      className="relative flex-shrink-0 w-16 h-16 rounded-lg border-2 border-gray-200 bg-gray-100 flex flex-col items-center justify-center cursor-not-allowed"
+      title={item.name}
+    >
+      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+        />
+      </svg>
+      {progressText && (
+        <>
+          <span className="text-[9px] text-gray-500 font-medium mt-0.5">{progressText}</span>
+          <span className="text-[7px] text-gray-400 leading-tight">{progressLabel}</span>
+        </>
       )}
-    </button>
+      {item.rpCost && !progressText && (
+        <span className="text-[8px] text-gray-400 mt-0.5">{item.rpCost} RP</span>
+      )}
+    </div>
   )
 }
