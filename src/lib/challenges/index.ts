@@ -17,6 +17,8 @@ import {
 import type { Database } from '@/db'
 import { calculateDistance, formatDistance } from '@/lib/utils/distance'
 import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage'
+import { checkAndUnlockEligibleItems } from '@/lib/avatar/unlock'
+import { logger } from '@/lib/utils/logger'
 
 // ===========================================
 // TYPES
@@ -59,6 +61,12 @@ export interface ChallengeListItem {
   completed: boolean
 }
 
+export interface UnlockedItem {
+  id: string
+  name: string
+  itemType: string
+}
+
 export interface AttemptResult {
   success: boolean
   xpEarned: number
@@ -66,6 +74,7 @@ export interface AttemptResult {
   newTotalXp: number
   newTotalRp: number
   message: string
+  newlyUnlockedItems?: UnlockedItem[]
 }
 
 // ===========================================
@@ -415,6 +424,18 @@ export async function recordChallengeAttempt(
     })
   }
 
+  // Check for newly unlocked items
+  const { newlyUnlocked } = await checkAndUnlockEligibleItems(db, userId, challenge.sportId)
+  const newlyUnlockedItems = newlyUnlocked.map((item) => ({
+    id: item.id,
+    name: item.name,
+    itemType: item.itemType,
+  }))
+
+  if (newlyUnlockedItems.length > 0) {
+    logger.info({ userId, count: newlyUnlockedItems.length }, 'Items unlocked after challenge')
+  }
+
   const accuracy = maxValue > 0 ? Math.round((scoreValue / maxValue) * 100) : 0
 
   return {
@@ -424,6 +445,7 @@ export async function recordChallengeAttempt(
     newTotalXp,
     newTotalRp,
     message: `${accuracy}% accuracy! Earned ${xpEarned} XP${rpEarned > 0 ? ` and ${rpEarned} RP` : ''}`,
+    newlyUnlockedItems: newlyUnlockedItems.length > 0 ? newlyUnlockedItems : undefined,
   }
 }
 

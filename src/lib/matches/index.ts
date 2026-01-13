@@ -7,6 +7,8 @@ import { eq, and, or } from 'drizzle-orm'
 import { matches, playerStats, users, avatars, venues, sports } from '@/db/schema'
 import type { Database } from '@/db'
 import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage'
+import { checkAndUnlockEligibleItems } from '@/lib/avatar/unlock'
+import { logger } from '@/lib/utils/logger'
 
 // ===========================================
 // TYPES
@@ -35,11 +37,18 @@ export interface MatchDetail {
   completedAt: string | null
 }
 
+export interface UnlockedItem {
+  id: string
+  name: string
+  itemType: string
+}
+
 export interface MatchResult {
   success: boolean
   message: string
   xpEarned?: number
   rpEarned?: number
+  newlyUnlockedItems?: UnlockedItem[]
 }
 
 // ===========================================
@@ -342,12 +351,31 @@ export async function agreeToMatchResult(
     // Update player stats
     await updateMatchStats(db, match)
 
+    // Check for newly unlocked items for both players
+    const [player1Unlocks, player2Unlocks] = await Promise.all([
+      checkAndUnlockEligibleItems(db, match.player1Id, match.sportId),
+      checkAndUnlockEligibleItems(db, match.player2Id, match.sportId),
+    ])
+
+    // Get unlocks for current user
+    const userUnlocks = userId === match.player1Id ? player1Unlocks : player2Unlocks
+    const newlyUnlockedItems = userUnlocks.newlyUnlocked.map((item) => ({
+      id: item.id,
+      name: item.name,
+      itemType: item.itemType,
+    }))
+
+    if (newlyUnlockedItems.length > 0) {
+      logger.info({ userId, count: newlyUnlockedItems.length }, 'Items unlocked after match')
+    }
+
     const isWinner = match.winnerId === userId
     return {
       success: true,
       message: 'Match completed!',
       xpEarned: isWinner ? MATCH_REWARDS.winnerXp : MATCH_REWARDS.loserXp,
       rpEarned: isWinner ? MATCH_REWARDS.winnerRp : 0,
+      newlyUnlockedItems: newlyUnlockedItems.length > 0 ? newlyUnlockedItems : undefined,
     }
   }
 
@@ -663,7 +691,12 @@ export async function submitAgreement(
   matchId: string,
   userId: string,
   agree: boolean
-): Promise<{ success: boolean; bothAgreed: boolean; message: string }> {
+): Promise<{
+  success: boolean
+  bothAgreed: boolean
+  message: string
+  newlyUnlockedItems?: UnlockedItem[]
+}> {
   const [match] = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1)
 
   if (!match) {
@@ -698,7 +731,31 @@ export async function submitAgreement(
   const otherAgreed = isPlayer1 ? match.player2Agreed : match.player1Agreed
   if (otherAgreed) {
     await updateMatchStats(db, match)
-    return { success: true, bothAgreed: true, message: 'Match finalized' }
+
+    // Check for newly unlocked items for both players
+    const [player1Unlocks, player2Unlocks] = await Promise.all([
+      checkAndUnlockEligibleItems(db, match.player1Id, match.sportId),
+      checkAndUnlockEligibleItems(db, match.player2Id, match.sportId),
+    ])
+
+    // Get unlocks for current user
+    const userUnlocks = userId === match.player1Id ? player1Unlocks : player2Unlocks
+    const newlyUnlockedItems = userUnlocks.newlyUnlocked.map((item) => ({
+      id: item.id,
+      name: item.name,
+      itemType: item.itemType,
+    }))
+
+    if (newlyUnlockedItems.length > 0) {
+      logger.info({ userId, count: newlyUnlockedItems.length }, 'Items unlocked after match agreement')
+    }
+
+    return {
+      success: true,
+      bothAgreed: true,
+      message: 'Match finalized',
+      newlyUnlockedItems: newlyUnlockedItems.length > 0 ? newlyUnlockedItems : undefined,
+    }
   }
 
   return { success: true, bothAgreed: false, message: 'Waiting for opponent' }

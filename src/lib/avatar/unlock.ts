@@ -3,7 +3,7 @@
  * Handles checking unlock eligibility, unlocking items, and purchasing with RP
  */
 
-import { eq, and } from 'drizzle-orm'
+import { eq, and, or, isNull } from 'drizzle-orm'
 import { avatarItems, userUnlockedItems, playerStats } from '@/db/schema'
 import { logger } from '@/lib/utils/logger'
 
@@ -138,9 +138,9 @@ export async function getItemsWithStatus(
   // Get user's stats
   const stats = await getUserStats(db, userId, sportId)
 
-  // Get all active items
+  // Get all active items (sport-specific + universal items with null sportId)
   const itemConditions = sportId
-    ? and(eq(avatarItems.isActive, true), eq(avatarItems.sportId, sportId))
+    ? and(eq(avatarItems.isActive, true), or(eq(avatarItems.sportId, sportId), isNull(avatarItems.sportId)))
     : eq(avatarItems.isActive, true)
 
   const items = await db.select().from(avatarItems).where(itemConditions)
