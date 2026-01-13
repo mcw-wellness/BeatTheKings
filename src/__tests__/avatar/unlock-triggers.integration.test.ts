@@ -69,10 +69,7 @@ describe('Auto-Unlock Triggers Integration Tests', () => {
   }
 
   async function createVenue(name: string, cityId: string) {
-    const [venue] = await testDb
-      .insert(venues)
-      .values({ name, cityId, isActive: true })
-      .returning()
+    const [venue] = await testDb.insert(venues).values({ name, cityId, isActive: true }).returning()
     return venue
   }
 

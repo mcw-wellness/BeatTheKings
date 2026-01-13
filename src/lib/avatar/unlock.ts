@@ -140,7 +140,10 @@ export async function getItemsWithStatus(
 
   // Get all active items (sport-specific + universal items with null sportId)
   const itemConditions = sportId
-    ? and(eq(avatarItems.isActive, true), or(eq(avatarItems.sportId, sportId), isNull(avatarItems.sportId)))
+    ? and(
+        eq(avatarItems.isActive, true),
+        or(eq(avatarItems.sportId, sportId), isNull(avatarItems.sportId))
+      )
     : eq(avatarItems.isActive, true)
 
   const items = await db.select().from(avatarItems).where(itemConditions)

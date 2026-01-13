@@ -747,7 +747,10 @@ export async function submitAgreement(
     }))
 
     if (newlyUnlockedItems.length > 0) {
-      logger.info({ userId, count: newlyUnlockedItems.length }, 'Items unlocked after match agreement')
+      logger.info(
+        { userId, count: newlyUnlockedItems.length },
+        'Items unlocked after match agreement'
+      )
     }
 
     return {

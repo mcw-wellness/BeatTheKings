@@ -4,7 +4,7 @@
  */
 
 import { eq, desc, and } from 'drizzle-orm'
-import { users, avatars, playerStats, sports } from '@/db/schema'
+import { users, avatars, playerStats, sports, cities, countries } from '@/db/schema'
 import type { Database } from '@/db'
 import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage'
 
@@ -142,6 +142,112 @@ export async function isKingOfSport(
 }
 
 /**
+ * Check if player is King of their City (highest XP in city for sport + age group)
+ */
+export async function isKingOfCity(
+  db: Database,
+  userId: string,
+  sportId: string
+): Promise<{ isKing: boolean; cityName: string | null }> {
+  // Get user's city and age group
+  const [user] = await db
+    .select({ cityId: users.cityId, ageGroup: users.ageGroup })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1)
+
+  if (!user?.cityId || !user?.ageGroup) {
+    return { isKing: false, cityName: null }
+  }
+
+  // Get city name
+  const [city] = await db
+    .select({ name: cities.name })
+    .from(cities)
+    .where(eq(cities.id, user.cityId))
+    .limit(1)
+
+  // Get highest XP player in this city for this sport and age group
+  const [topPlayer] = await db
+    .select({ userId: playerStats.userId })
+    .from(playerStats)
+    .innerJoin(users, eq(users.id, playerStats.userId))
+    .where(
+      and(
+        eq(playerStats.sportId, sportId),
+        eq(users.cityId, user.cityId),
+        eq(users.ageGroup, user.ageGroup)
+      )
+    )
+    .orderBy(desc(playerStats.totalXp))
+    .limit(1)
+
+  return {
+    isKing: topPlayer?.userId === userId,
+    cityName: city?.name || null,
+  }
+}
+
+/**
+ * Check if player is King of their Country (highest XP in country for sport + age group)
+ */
+export async function isKingOfCountry(
+  db: Database,
+  userId: string,
+  sportId: string
+): Promise<{ isKing: boolean; countryName: string | null }> {
+  // Get user's city and age group
+  const [user] = await db
+    .select({ cityId: users.cityId, ageGroup: users.ageGroup })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1)
+
+  if (!user?.cityId || !user?.ageGroup) {
+    return { isKing: false, countryName: null }
+  }
+
+  // Get country via city
+  const [city] = await db
+    .select({ countryId: cities.countryId })
+    .from(cities)
+    .where(eq(cities.id, user.cityId))
+    .limit(1)
+
+  if (!city?.countryId) {
+    return { isKing: false, countryName: null }
+  }
+
+  // Get country name
+  const [country] = await db
+    .select({ name: countries.name })
+    .from(countries)
+    .where(eq(countries.id, city.countryId))
+    .limit(1)
+
+  // Get highest XP player in this country for this sport and age group
+  const [topPlayer] = await db
+    .select({ userId: playerStats.userId })
+    .from(playerStats)
+    .innerJoin(users, eq(users.id, playerStats.userId))
+    .innerJoin(cities, eq(cities.id, users.cityId))
+    .where(
+      and(
+        eq(playerStats.sportId, sportId),
+        eq(cities.countryId, city.countryId),
+        eq(users.ageGroup, user.ageGroup)
+      )
+    )
+    .orderBy(desc(playerStats.totalXp))
+    .limit(1)
+
+  return {
+    isKing: topPlayer?.userId === userId,
+    countryName: country?.name || null,
+  }
+}
+
+/**
  * Get Trump Card data for a player
  */
 export async function getTrumpCardData(
@@ -234,8 +340,10 @@ export async function getTrumpCardData(
   // Calculate rank
   const rank = await getPlayerRank(db, userId, sport.id)
 
-  // Check if King
-  const isKing = rank === 1
+  // Check King status at all levels
+  const isKingGlobal = rank === 1
+  const cityKingStatus = await isKingOfCity(db, userId, sport.id)
+  const countryKingStatus = await isKingOfCountry(db, userId, sport.id)
 
   // Calculate XP progress
   const xpProgress = calculateXpProgress(stats?.totalXp || 0)
@@ -276,12 +384,12 @@ export async function getTrumpCardData(
       totalChallenges: TOTAL_CHALLENGES,
     },
     crowns: {
-      isKingOfCourt: isKing, // Simplified for now
-      isKingOfCity: false,
-      isKingOfCountry: false,
-      courtName: isKing ? 'Current Venue' : null,
-      cityName: null,
-      countryName: null,
+      isKingOfCourt: isKingGlobal, // Global rank #1 for the sport
+      isKingOfCity: cityKingStatus.isKing,
+      isKingOfCountry: countryKingStatus.isKing,
+      courtName: isKingGlobal ? 'Global' : null,
+      cityName: cityKingStatus.cityName,
+      countryName: countryKingStatus.countryName,
     },
     detailedStats: {
       threePointAccuracy,
