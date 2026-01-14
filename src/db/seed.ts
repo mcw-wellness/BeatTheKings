@@ -5,7 +5,7 @@
 
 import 'dotenv/config'
 import { randomUUID } from 'crypto'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
 import { getDb } from './index'
 import {
   sports,
@@ -18,6 +18,8 @@ import {
   challenges,
   activePlayers,
   avatarItems,
+  userUnlockedItems,
+  avatarEquipments,
 } from './schema'
 
 // Austria cities (all major cities and district capitals)
@@ -84,17 +86,256 @@ async function seed() {
     .onConflictDoNothing()
   console.log('✅ Sports added')
 
-  // Seed default avatar items
-  console.log('Adding default avatar items...')
-  await db
-    .insert(avatarItems)
-    .values([
-      { id: randomUUID(), name: 'Default Jersey', itemType: 'jersey', isDefault: true },
-      { id: randomUUID(), name: 'Default Shorts', itemType: 'shorts', isDefault: true },
-      { id: randomUUID(), name: 'Default Shoes', itemType: 'shoes', isDefault: true },
-    ])
-    .onConflictDoNothing()
-  console.log('✅ Default avatar items added')
+  // Clean up duplicate avatar items (one-time cleanup)
+  console.log('Checking for duplicate avatar items...')
+  const allItems = await db
+    .select({
+      id: avatarItems.id,
+      name: avatarItems.name,
+      itemType: avatarItems.itemType,
+      createdAt: avatarItems.createdAt,
+    })
+    .from(avatarItems)
+    .orderBy(avatarItems.name, avatarItems.itemType, avatarItems.createdAt)
+
+  // Group items by (name, itemType) to find duplicates
+  const itemGroups = new Map<string, typeof allItems>()
+  for (const item of allItems) {
+    const key = `${item.name}:${item.itemType}`
+    if (!itemGroups.has(key)) {
+      itemGroups.set(key, [])
+    }
+    itemGroups.get(key)!.push(item)
+  }
+
+  // Find groups with duplicates
+  let duplicatesRemoved = 0
+  for (const [, items] of itemGroups) {
+    if (items.length > 1) {
+      // Keep the oldest item (first by createdAt)
+      const itemToKeep = items[0]
+      const itemsToDelete = items.slice(1)
+      const idsToDelete = itemsToDelete.map((i) => i.id)
+
+      console.log(
+        `  Found ${items.length} duplicates of "${items[0].name}" (${items[0].itemType}), keeping oldest, removing ${idsToDelete.length}`
+      )
+
+      // Update foreign key references to point to the kept item
+      for (const oldId of idsToDelete) {
+        // Update userUnlockedItems
+        await db
+          .update(userUnlockedItems)
+          .set({ itemId: itemToKeep.id })
+          .where(eq(userUnlockedItems.itemId, oldId))
+
+        // Update avatarEquipments for all item slots
+        await db
+          .update(avatarEquipments)
+          .set({ jerseyItemId: itemToKeep.id })
+          .where(eq(avatarEquipments.jerseyItemId, oldId))
+
+        await db
+          .update(avatarEquipments)
+          .set({ shortsItemId: itemToKeep.id })
+          .where(eq(avatarEquipments.shortsItemId, oldId))
+
+        await db
+          .update(avatarEquipments)
+          .set({ shoesItemId: itemToKeep.id })
+          .where(eq(avatarEquipments.shoesItemId, oldId))
+
+        await db
+          .update(avatarEquipments)
+          .set({ accessoryItemId: itemToKeep.id })
+          .where(eq(avatarEquipments.accessoryItemId, oldId))
+      }
+
+      // Now safe to delete duplicates
+      await db.delete(avatarItems).where(inArray(avatarItems.id, idsToDelete))
+      duplicatesRemoved += idsToDelete.length
+    }
+  }
+
+  if (duplicatesRemoved > 0) {
+    console.log(`✅ Removed ${duplicatesRemoved} duplicate avatar items`)
+  } else {
+    console.log('✅ No duplicate avatar items found')
+  }
+
+  // Seed avatar items catalog
+  console.log('Adding avatar items catalog...')
+
+  const avatarItemsCatalog = [
+    // ===========================================
+    // DEFAULT ITEMS (Always available)
+    // ===========================================
+    { name: 'Default Jersey', itemType: 'jersey', isDefault: true },
+    { name: 'Default Shorts', itemType: 'shorts', isDefault: true },
+    { name: 'Default Shoes', itemType: 'shoes', isDefault: true },
+
+    // ===========================================
+    // JERSEYS - Unlockable
+    // ===========================================
+    {
+      name: 'Pro Jersey',
+      itemType: 'jersey',
+      requiredMatches: 10,
+    },
+    {
+      name: 'Elite Jersey',
+      itemType: 'jersey',
+      requiredMatches: 25,
+    },
+    {
+      name: 'Champion Jersey',
+      itemType: 'jersey',
+      requiredMatches: 50,
+    },
+    {
+      name: 'Golden Jersey',
+      itemType: 'jersey',
+      requiredChallenges: 13,
+    },
+    {
+      name: 'Legend Jersey',
+      itemType: 'jersey',
+      requiredXp: 2500,
+    },
+    {
+      name: 'Premium Jersey',
+      itemType: 'jersey',
+      rpCost: 500,
+    },
+
+    // ===========================================
+    // SHORTS - Unlockable
+    // ===========================================
+    {
+      name: 'Pro Shorts',
+      itemType: 'shorts',
+      requiredMatches: 10,
+    },
+    {
+      name: 'Elite Shorts',
+      itemType: 'shorts',
+      requiredMatches: 25,
+    },
+    {
+      name: 'Champion Shorts',
+      itemType: 'shorts',
+      requiredMatches: 50,
+    },
+    {
+      name: 'Golden Shorts',
+      itemType: 'shorts',
+      requiredChallenges: 13,
+    },
+    {
+      name: 'Legend Shorts',
+      itemType: 'shorts',
+      requiredXp: 2500,
+    },
+    {
+      name: 'Premium Shorts',
+      itemType: 'shorts',
+      rpCost: 500,
+    },
+
+    // ===========================================
+    // SHOES - Unlockable
+    // ===========================================
+    {
+      name: 'Pro Shoes',
+      itemType: 'shoes',
+      requiredMatches: 10,
+    },
+    {
+      name: 'Elite Shoes',
+      itemType: 'shoes',
+      requiredMatches: 25,
+    },
+    {
+      name: 'Champion Shoes',
+      itemType: 'shoes',
+      requiredMatches: 50,
+    },
+    {
+      name: 'Golden Shoes',
+      itemType: 'shoes',
+      requiredChallenges: 5,
+    },
+    {
+      name: 'Diamond Shoes',
+      itemType: 'shoes',
+      requiredChallenges: 13,
+    },
+    {
+      name: 'Legend Shoes',
+      itemType: 'shoes',
+      requiredXp: 2500,
+    },
+    {
+      name: 'Premium Shoes',
+      itemType: 'shoes',
+      rpCost: 500,
+    },
+
+    // ===========================================
+    // SPECIAL UNLOCK ITEMS
+    // ===========================================
+    {
+      name: 'Recruiter Jersey',
+      itemType: 'jersey',
+      requiredInvites: 1,
+    },
+    {
+      name: 'Ambassador Jersey',
+      itemType: 'jersey',
+      requiredInvites: 3,
+    },
+    {
+      name: 'Influencer Jersey',
+      itemType: 'jersey',
+      requiredInvites: 10,
+    },
+    {
+      name: 'Starter Shoes',
+      itemType: 'shoes',
+      requiredChallenges: 1,
+    },
+    {
+      name: 'Challenger Shorts',
+      itemType: 'shorts',
+      requiredChallenges: 5,
+    },
+  ]
+
+  // Get existing items to avoid duplicates
+  const existingItems = await db
+    .select({ name: avatarItems.name, itemType: avatarItems.itemType })
+    .from(avatarItems)
+
+  const existingSet = new Set(existingItems.map((item) => `${item.name}:${item.itemType}`))
+
+  // Filter out items that already exist
+  const newItems = avatarItemsCatalog.filter(
+    (item) => !existingSet.has(`${item.name}:${item.itemType}`)
+  )
+
+  if (newItems.length > 0) {
+    await db.insert(avatarItems).values(
+      newItems.map((item) => ({
+        id: randomUUID(),
+        ...item,
+      }))
+    )
+    console.log(
+      `✅ ${newItems.length} new avatar items added (${existingItems.length} already exist)`
+    )
+  } else {
+    console.log(`✅ All ${existingItems.length} avatar items already exist, skipping`)
+  }
 
   // Seed Austria
   console.log('Adding Austria...')
