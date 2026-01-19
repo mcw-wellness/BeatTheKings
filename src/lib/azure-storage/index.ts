@@ -73,6 +73,42 @@ export async function uploadAvatar(userId: string, imageBuffer: Buffer): Promise
 }
 
 /**
+ * Upload profile picture to Azure Blob Storage
+ * Path: profiles/{userId}/photo.{ext}
+ */
+export async function uploadProfilePicture(
+  userId: string,
+  imageBuffer: Buffer,
+  contentType: string = 'image/jpeg'
+): Promise<string> {
+  const container = getContainerClient()
+  const ext = contentType.split('/')[1] || 'jpg'
+  const blobPath = `profiles/${userId}/photo.${ext}`
+  const blockBlobClient = container.getBlockBlobClient(blobPath)
+
+  await blockBlobClient.upload(imageBuffer, imageBuffer.length, {
+    blobHTTPHeaders: { blobContentType: contentType },
+  })
+
+  logger.info({ userId, blobPath }, 'Profile picture uploaded to Azure Blob Storage')
+
+  return blobPath
+}
+
+/**
+ * Get the SAS URL for a user's profile picture
+ */
+export function getProfilePictureSasUrl(userId: string, ext: string = 'jpeg'): string {
+  const blobPath = `profiles/${userId}/photo.${ext}`
+
+  if (!connectionString) {
+    return `https://placeholder.blob.core.windows.net/${containerName}/${blobPath}`
+  }
+
+  return generateSasUrl(blobPath)
+}
+
+/**
  * Generate a SAS URL for a blob (valid for 24 hours)
  */
 export function generateSasUrl(blobPath: string, expiresInHours: number = 24): string {
@@ -102,18 +138,13 @@ export function generateSasUrl(blobPath: string, expiresInHours: number = 24): s
 }
 
 /**
- * Get the SAS URL for a default avatar from Azure Blob Storage
+ * Get the URL for a default avatar placeholder
+ * Uses DiceBear API since we don't have pre-uploaded default avatars
  */
 export function getDefaultAvatarSasUrl(gender: string, sport: string = 'basketball'): string {
   const genderKey = gender?.toLowerCase() === 'female' ? 'female' : 'male'
-  const blobPath = `avatars/default/${sport}_${genderKey}.png`
-
-  // In test environment or when Azure isn't configured, return placeholder
-  if (!connectionString) {
-    return `https://api.dicebear.com/7.x/avataaars/png?seed=${genderKey}&size=128`
-  }
-
-  return generateSasUrl(blobPath)
+  // Use DiceBear placeholder for default avatars
+  return `https://api.dicebear.com/7.x/avataaars/png?seed=${sport}_${genderKey}&size=512`
 }
 
 /**
