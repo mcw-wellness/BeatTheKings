@@ -9,7 +9,7 @@ import { logger } from '@/lib/utils/logger'
 interface Country {
   id: string
   name: string
-  nameGerman: string
+  code?: string
 }
 
 interface City {
@@ -18,16 +18,16 @@ interface City {
 }
 
 interface FormData {
-  name: string
-  dateOfBirth: string
+  nickname: string
+  age: string
   gender: string
   countryId: string
   cityId: string
 }
 
 interface FormErrors {
-  name?: string
-  dateOfBirth?: string
+  nickname?: string
+  age?: string
   gender?: string
   countryId?: string
   cityId?: string
@@ -44,18 +44,18 @@ export default function RegisterPage(): JSX.Element {
 
 function RegisterPageSkeleton(): JSX.Element {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-white">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-transparent">
       <div className="w-full max-w-sm sm:max-w-md space-y-6 animate-pulse">
         <div className="flex justify-center">
-          <div className="w-48 h-48 bg-gray-200 rounded-full" />
+          <div className="w-36 h-36 bg-white/10 rounded-full" />
         </div>
         <div className="space-y-4">
-          <div className="h-12 bg-gray-200 rounded-lg" />
-          <div className="h-12 bg-gray-200 rounded-lg" />
-          <div className="h-12 bg-gray-200 rounded-lg" />
-          <div className="h-12 bg-gray-200 rounded-lg" />
-          <div className="h-12 bg-gray-200 rounded-lg" />
-          <div className="h-14 bg-gray-200 rounded-lg" />
+          <div className="h-12 bg-white/10 rounded-lg" />
+          <div className="h-12 bg-white/10 rounded-lg" />
+          <div className="h-12 bg-white/10 rounded-lg" />
+          <div className="h-12 bg-white/10 rounded-lg" />
+          <div className="h-12 bg-white/10 rounded-lg" />
+          <div className="h-14 bg-white/10 rounded-lg" />
         </div>
       </div>
     </main>
@@ -64,11 +64,11 @@ function RegisterPageSkeleton(): JSX.Element {
 
 function RegisterPageContent(): JSX.Element {
   const router = useRouter()
-  const { status } = useSession()
+  const { status, update } = useSession()
 
   const [formData, setFormData] = useState<FormData>({
-    name: '',
-    dateOfBirth: '',
+    nickname: '',
+    age: '',
     gender: '',
     countryId: '',
     cityId: '',
@@ -80,21 +80,19 @@ function RegisterPageContent(): JSX.Element {
   const [isLoadingCountries, setIsLoadingCountries] = useState(true)
   const [isLoadingCities, setIsLoadingCities] = useState(false)
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
     }
   }, [status, router])
 
-  // Fetch countries on mount
   useEffect(() => {
     async function fetchCountries(): Promise<void> {
       try {
-        const res = await fetch('/api/locations/states')
+        const res = await fetch('/api/locations/countries')
         if (!res.ok) throw new Error('Failed to fetch countries')
         const data = await res.json()
-        setCountries(data)
+        setCountries(data.countries || [])
       } catch (error) {
         logger.error({ error }, 'Failed to fetch countries')
         setErrors((prev) => ({ ...prev, _form: 'Failed to load countries. Please refresh.' }))
@@ -106,7 +104,6 @@ function RegisterPageContent(): JSX.Element {
     fetchCountries()
   }, [])
 
-  // Fetch cities when country changes
   useEffect(() => {
     async function fetchCities(): Promise<void> {
       if (!formData.countryId) {
@@ -116,10 +113,10 @@ function RegisterPageContent(): JSX.Element {
 
       setIsLoadingCities(true)
       try {
-        const res = await fetch(`/api/locations/cities?state=${formData.countryId}`)
+        const res = await fetch(`/api/locations/cities?countryId=${formData.countryId}`)
         if (!res.ok) throw new Error('Failed to fetch cities')
         const data = await res.json()
-        setCities(data)
+        setCities(data.cities || [])
       } catch (error) {
         logger.error({ error }, 'Failed to fetch cities')
         setErrors((prev) => ({ ...prev, _form: 'Failed to load cities. Please try again.' }))
@@ -134,22 +131,20 @@ function RegisterPageContent(): JSX.Element {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required'
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters'
+    if (!formData.nickname.trim()) {
+      newErrors.nickname = 'Nickname is required'
+    } else if (formData.nickname.trim().length < 2) {
+      newErrors.nickname = 'Nickname must be at least 2 characters'
+    } else if (formData.nickname.trim().length > 50) {
+      newErrors.nickname = 'Nickname must be less than 50 characters'
     }
 
-    if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = 'Date of birth is required'
+    if (!formData.age) {
+      newErrors.age = 'Age is required'
     } else {
-      const dob = new Date(formData.dateOfBirth)
-      const today = new Date()
-      const age = Math.floor((today.getTime() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-      if (age < 5) {
-        newErrors.dateOfBirth = 'Must be at least 5 years old'
-      } else if (age > 120) {
-        newErrors.dateOfBirth = 'Invalid date of birth'
+      const ageNum = parseInt(formData.age)
+      if (isNaN(ageNum) || ageNum < 5 || ageNum > 120) {
+        newErrors.age = 'Age must be between 5 and 120'
       }
     }
 
@@ -182,10 +177,11 @@ function RegisterPageContent(): JSX.Element {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name.trim(),
-          dateOfBirth: formData.dateOfBirth,
+          nickname: formData.nickname.trim(),
+          age: parseInt(formData.age),
           gender: formData.gender,
           cityId: formData.cityId,
+          hasCompletedProfile: true,
         }),
       })
 
@@ -200,8 +196,11 @@ function RegisterPageContent(): JSX.Element {
         return
       }
 
-      // Success - redirect to avatar creation
-      router.push('/avatar')
+      // Refresh session to get updated flags
+      await update()
+
+      // Success - redirect to photo upload
+      router.push('/photo')
     } catch (error) {
       logger.error({ error }, 'Failed to submit profile')
       setErrors({ _form: 'An unexpected error occurred. Please try again.' })
@@ -210,36 +209,36 @@ function RegisterPageContent(): JSX.Element {
     }
   }
 
-  // Show loading while checking auth
   if (status === 'loading') {
     return <RegisterPageSkeleton />
   }
 
-  // Don't render if not authenticated (will redirect)
   if (status === 'unauthenticated') {
     return <RegisterPageSkeleton />
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-white">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-transparent">
       <div className="w-full max-w-sm sm:max-w-md space-y-6">
         {/* Logo */}
         <div className="flex justify-center mb-4">
-          <div className="w-36 h-36 sm:w-48 sm:h-48">
+          <div className="w-28 h-28 sm:w-36 sm:h-36">
             <Logo size="lg" pulsing />
           </div>
         </div>
 
         {/* Title */}
         <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Complete Your Profile</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">Tell us a bit about yourself</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Rule the Game</h1>
+          <p className="text-sm sm:text-base text-white/60 mt-2">
+            Join the ultimate sports competition.
+          </p>
         </div>
 
         {/* Form Error */}
         {errors._form && (
           <div
-            className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+            className="bg-red-500/20 border border-red-500/30 text-red-200 px-4 py-3 rounded-lg text-sm"
             role="alert"
           >
             {errors._form}
@@ -248,125 +247,128 @@ function RegisterPageContent(): JSX.Element {
 
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name Field */}
+          {/* Nickname Field */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Name
+            <label htmlFor="nickname" className="block text-sm font-medium text-white/80 mb-1.5">
+              Nickname:
             </label>
             <input
-              id="name"
+              id="nickname"
               type="text"
-              placeholder="Your name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Nickname"
+              value={formData.nickname}
+              onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
               disabled={isSubmitting}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/40 focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
+            {errors.nickname && <p className="text-sm text-red-300 mt-1">{errors.nickname}</p>}
           </div>
 
-          {/* Date of Birth Field */}
+          {/* Age Field */}
           <div>
-            <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Date of Birth
+            <label htmlFor="age" className="block text-sm font-medium text-white/80 mb-1.5">
+              Age:
             </label>
             <input
-              id="dateOfBirth"
-              type="date"
-              value={formData.dateOfBirth}
-              onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+              id="age"
+              type="number"
+              placeholder="Your age"
+              min="5"
+              max="120"
+              value={formData.age}
+              onChange={(e) => setFormData({ ...formData, age: e.target.value })}
               disabled={isSubmitting}
-              max={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/40 focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            {errors.dateOfBirth && (
-              <p className="text-sm text-red-600 mt-1">{errors.dateOfBirth}</p>
-            )}
+            {errors.age && <p className="text-sm text-red-300 mt-1">{errors.age}</p>}
           </div>
 
           {/* Gender Field */}
           <div>
-            <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Gender
+            <label htmlFor="gender" className="block text-sm font-medium text-white/80 mb-1.5">
+              Gender:
             </label>
             <select
               id="gender"
               value={formData.gender}
               onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
               disabled={isSubmitting}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">Select...</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-            {errors.gender && <p className="text-sm text-red-600 mt-1">{errors.gender}</p>}
-          </div>
-
-          {/* Country Field */}
-          <div>
-            <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Country
-            </label>
-            <select
-              id="country"
-              value={formData.countryId}
-              onChange={(e) => {
-                setFormData({ ...formData, countryId: e.target.value, cityId: '' })
-                setErrors({ ...errors, countryId: '', cityId: '' })
-              }}
-              disabled={isSubmitting || isLoadingCountries}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              <option value="">{isLoadingCountries ? 'Loading...' : 'Select country...'}</option>
-              {countries.map((country) => (
-                <option key={country.id} value={country.id}>
-                  {country.name}
-                </option>
-              ))}
-            </select>
-            {errors.countryId && <p className="text-sm text-red-600 mt-1">{errors.countryId}</p>}
-          </div>
-
-          {/* City Field */}
-          <div>
-            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1.5">
-              City
-            </label>
-            <select
-              id="city"
-              value={formData.cityId}
-              onChange={(e) => {
-                setFormData({ ...formData, cityId: e.target.value })
-                setErrors({ ...errors, cityId: '' })
-              }}
-              disabled={isSubmitting || !formData.countryId || isLoadingCities}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              <option value="">
-                {!formData.countryId
-                  ? 'Select a country first'
-                  : isLoadingCities
-                    ? 'Loading...'
-                    : 'Select city...'}
+              <option value="" className="bg-dark-primary text-white">
+                Select...
               </option>
-              {cities.map((city) => (
-                <option key={city.id} value={city.id}>
-                  {city.name}
-                </option>
-              ))}
+              <option value="male" className="bg-dark-primary text-white">
+                Male
+              </option>
+              <option value="female" className="bg-dark-primary text-white">
+                Female
+              </option>
             </select>
-            {errors.cityId && <p className="text-sm text-red-600 mt-1">{errors.cityId}</p>}
+            {errors.gender && <p className="text-sm text-red-300 mt-1">{errors.gender}</p>}
+          </div>
+
+          {/* Location Field - Combined label like old layout */}
+          <div>
+            <label htmlFor="country" className="block text-sm font-medium text-white/80 mb-1.5">
+              Location:
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <select
+                id="country"
+                value={formData.countryId}
+                onChange={(e) => {
+                  setFormData({ ...formData, countryId: e.target.value, cityId: '' })
+                  setErrors({ ...errors, countryId: '', cityId: '' })
+                }}
+                disabled={isSubmitting || isLoadingCountries}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="" className="bg-dark-primary text-white">
+                  {isLoadingCountries ? 'Loading...' : 'Country'}
+                </option>
+                {countries.map((country) => (
+                  <option
+                    key={country.id}
+                    value={country.id}
+                    className="bg-dark-primary text-white"
+                  >
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                id="city"
+                value={formData.cityId}
+                onChange={(e) => {
+                  setFormData({ ...formData, cityId: e.target.value })
+                  setErrors({ ...errors, cityId: '' })
+                }}
+                disabled={isSubmitting || !formData.countryId || isLoadingCities}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="" className="bg-dark-primary text-white">
+                  {!formData.countryId ? 'City' : isLoadingCities ? 'Loading...' : 'City'}
+                </option>
+                {cities.map((city) => (
+                  <option key={city.id} value={city.id} className="bg-dark-primary text-white">
+                    {city.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {(errors.countryId || errors.cityId) && (
+              <p className="text-sm text-red-300 mt-1">{errors.countryId || errors.cityId}</p>
+            )}
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full min-h-[48px] bg-[#4361EE] hover:bg-[#3651DE] text-white font-semibold py-3 sm:py-4 px-6 rounded-lg transition-colors duration-200 mt-6 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full min-h-[48px] bg-white/20 hover:bg-white/30 text-white font-bold py-3 sm:py-4 px-6 rounded-lg transition-all duration-200 mt-6 border border-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Saving...' : 'Continue'}
+            {isSubmitting ? 'Saving...' : 'Get Started'}
           </button>
         </form>
       </div>

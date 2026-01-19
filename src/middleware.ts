@@ -8,17 +8,22 @@ import { getToken } from 'next-auth/jwt'
 const PUBLIC_PATHS = ['/login', '/api/auth']
 
 /**
- * Routes that require avatar to be created
- * Flow: Login → Avatar → Location → Welcome
+ * Onboarding routes in order
+ * Flow: Login → Register → Photo → Avatar → Welcome
  */
-const AVATAR_REQUIRED_PATHS = [
-  '/location',
+const ONBOARDING_PATHS = ['/register', '/photo', '/avatar']
+
+/**
+ * Routes that require full onboarding completion
+ */
+const PROTECTED_PATHS = [
   '/welcome',
   '/ranking',
   '/map',
   '/challenges',
   '/matches',
   '/player',
+  '/venues',
 ]
 
 /**
@@ -26,6 +31,20 @@ const AVATAR_REQUIRED_PATHS = [
  */
 function matchesPath(pathname: string, patterns: string[]): boolean {
   return patterns.some((pattern) => pathname === pattern || pathname.startsWith(`${pattern}/`))
+}
+
+/**
+ * Get the next step in the onboarding flow based on user status
+ */
+function getOnboardingRedirect(token: {
+  hasCompletedProfile?: boolean
+  hasUploadedPhoto?: boolean
+  hasCreatedAvatar?: boolean
+}): string {
+  if (!token.hasCompletedProfile) return '/register'
+  if (!token.hasUploadedPhoto) return '/photo'
+  if (!token.hasCreatedAvatar) return '/avatar'
+  return '/welcome'
 }
 
 export async function middleware(request: NextRequest) {
@@ -47,31 +66,53 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   })
 
-  // No token = not authenticated
+  // No token = not authenticated → redirect to login
   if (!token) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // User is authenticated - check avatar status
+  // Extract onboarding flags from token
+  const hasCompletedProfile = token.hasCompletedProfile as boolean
+  const hasUploadedPhoto = token.hasUploadedPhoto as boolean
   const hasCreatedAvatar = token.hasCreatedAvatar as boolean
 
-  // If user hasn't created avatar and tries to access avatar-required routes
-  if (!hasCreatedAvatar && matchesPath(pathname, AVATAR_REQUIRED_PATHS)) {
-    return NextResponse.redirect(new URL('/avatar', request.url))
-  }
+  // Determine where user should be in the flow
+  const expectedPath = getOnboardingRedirect({
+    hasCompletedProfile,
+    hasUploadedPhoto,
+    hasCreatedAvatar,
+  })
 
-  // If authenticated user visits login page, redirect to avatar or welcome
-  if (pathname === '/login') {
-    const redirectPath = hasCreatedAvatar ? '/welcome' : '/avatar'
-    return NextResponse.redirect(new URL(redirectPath, request.url))
-  }
-
-  // If user visits root, redirect to avatar or welcome
+  // If user visits root, redirect to their appropriate step
   if (pathname === '/') {
-    const redirectPath = hasCreatedAvatar ? '/welcome' : '/avatar'
-    return NextResponse.redirect(new URL(redirectPath, request.url))
+    return NextResponse.redirect(new URL(expectedPath, request.url))
+  }
+
+  // If authenticated user visits login page, redirect to appropriate step
+  if (pathname === '/login') {
+    return NextResponse.redirect(new URL(expectedPath, request.url))
+  }
+
+  // Handle onboarding paths - ensure user is at correct step
+  if (matchesPath(pathname, ONBOARDING_PATHS)) {
+    // User trying to access a later step than they should
+    if (pathname === '/photo' && !hasCompletedProfile) {
+      return NextResponse.redirect(new URL('/register', request.url))
+    }
+    if (pathname === '/avatar' && (!hasCompletedProfile || !hasUploadedPhoto)) {
+      return NextResponse.redirect(new URL(expectedPath, request.url))
+    }
+    // Allow access to current or previous steps
+    return NextResponse.next()
+  }
+
+  // Protected paths require full onboarding
+  if (matchesPath(pathname, PROTECTED_PATHS)) {
+    if (!hasCompletedProfile || !hasUploadedPhoto || !hasCreatedAvatar) {
+      return NextResponse.redirect(new URL(expectedPath, request.url))
+    }
   }
 
   // Allow the request

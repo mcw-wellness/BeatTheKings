@@ -9,9 +9,14 @@ import { calculateAge, getAgeGroup } from '@/lib/utils/date'
  */
 export interface ProfileUpdateInput {
   name?: string
+  nickname?: string
   dateOfBirth?: string
+  age?: number
   gender?: 'male' | 'female'
   cityId?: string
+  profilePictureUrl?: string
+  hasCompletedProfile?: boolean
+  hasUploadedPhoto?: boolean
 }
 
 /**
@@ -121,6 +126,30 @@ export function validateProfileInput(
     }
   }
 
+  // Nickname validation (if provided)
+  if (input.nickname !== undefined) {
+    if (typeof input.nickname !== 'string') {
+      errors.nickname = 'Nickname must be a string'
+    } else if (input.nickname.trim().length < 2) {
+      errors.nickname = 'Nickname must be at least 2 characters'
+    } else if (input.nickname.trim().length > 50) {
+      errors.nickname = 'Nickname must be less than 50 characters'
+    } else {
+      result.nickname = input.nickname.trim()
+    }
+  }
+
+  // Age validation (if provided)
+  if (input.age !== undefined) {
+    if (typeof input.age !== 'number') {
+      errors.age = 'Age must be a number'
+    } else if (input.age < 5 || input.age > 120) {
+      errors.age = 'Age must be between 5 and 120'
+    } else {
+      result.age = input.age
+    }
+  }
+
   // Date of birth validation (if provided)
   if (input.dateOfBirth !== undefined) {
     if (typeof input.dateOfBirth !== 'string') {
@@ -137,6 +166,7 @@ export function validateProfileInput(
           errors.dateOfBirth = 'Invalid date of birth'
         } else {
           result.dateOfBirth = input.dateOfBirth
+          result.age = age // Auto-calculate age from DOB
         }
       }
     }
@@ -163,6 +193,23 @@ export function validateProfileInput(
     }
   }
 
+  // Profile picture URL validation (if provided)
+  if (input.profilePictureUrl !== undefined) {
+    if (typeof input.profilePictureUrl !== 'string') {
+      errors.profilePictureUrl = 'Profile picture URL must be a string'
+    } else {
+      result.profilePictureUrl = input.profilePictureUrl
+    }
+  }
+
+  // Boolean flags
+  if (input.hasCompletedProfile !== undefined) {
+    result.hasCompletedProfile = Boolean(input.hasCompletedProfile)
+  }
+  if (input.hasUploadedPhoto !== undefined) {
+    result.hasUploadedPhoto = Boolean(input.hasUploadedPhoto)
+  }
+
   if (Object.keys(errors).length > 0) {
     return { valid: false, errors }
   }
@@ -186,6 +233,14 @@ export async function updateUserProfile(db: Database, userId: string, data: Prof
     updateData.name = data.name
   }
 
+  if (data.nickname !== undefined) {
+    updateData.nickname = data.nickname
+  }
+
+  if (data.age !== undefined) {
+    updateData.age = data.age
+  }
+
   if (data.dateOfBirth !== undefined) {
     updateData.dateOfBirth = data.dateOfBirth
     updateData.ageGroup = getAgeGroup(new Date(data.dateOfBirth))
@@ -197,6 +252,18 @@ export async function updateUserProfile(db: Database, userId: string, data: Prof
 
   if (data.cityId !== undefined) {
     updateData.cityId = data.cityId
+  }
+
+  if (data.profilePictureUrl !== undefined) {
+    updateData.profilePictureUrl = data.profilePictureUrl
+  }
+
+  if (data.hasCompletedProfile !== undefined) {
+    updateData.hasCompletedProfile = data.hasCompletedProfile
+  }
+
+  if (data.hasUploadedPhoto !== undefined) {
+    updateData.hasUploadedPhoto = data.hasUploadedPhoto
   }
 
   const [updated] = await db.update(users).set(updateData).where(eq(users.id, userId)).returning()
@@ -213,10 +280,15 @@ export async function getUserProfile(db: Database, userId: string) {
       id: users.id,
       email: users.email,
       name: users.name,
+      nickname: users.nickname,
       dateOfBirth: users.dateOfBirth,
+      age: users.age,
       ageGroup: users.ageGroup,
       gender: users.gender,
+      profilePictureUrl: users.profilePictureUrl,
       cityId: users.cityId,
+      hasCompletedProfile: users.hasCompletedProfile,
+      hasUploadedPhoto: users.hasUploadedPhoto,
       hasCreatedAvatar: users.hasCreatedAvatar,
       createdAt: users.createdAt,
       city: {

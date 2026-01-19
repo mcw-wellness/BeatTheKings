@@ -13,9 +13,6 @@ interface OAuthError {
   message: string
 }
 
-/**
- * Login page wrapper with Suspense for useSearchParams
- */
 export default function LoginPage(): JSX.Element {
   return (
     <Suspense fallback={<LoginPageSkeleton />}>
@@ -24,42 +21,34 @@ export default function LoginPage(): JSX.Element {
   )
 }
 
-/**
- * Loading skeleton for login page
- */
 function LoginPageSkeleton(): JSX.Element {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-[#F5F5F7]">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-transparent">
       <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8 animate-pulse">
         <div className="flex justify-center">
-          <div className="w-48 h-48 sm:w-64 sm:h-64 bg-gray-200 rounded-full" />
+          <div className="w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full" />
         </div>
         <div className="space-y-3">
-          <div className="h-12 bg-gray-200 rounded-lg" />
-          <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto" />
+          <div className="h-12 bg-white/10 rounded-lg" />
+          <div className="h-6 bg-white/10 rounded w-3/4 mx-auto" />
         </div>
         <div className="space-y-3">
-          <div className="h-12 bg-gray-200 rounded-lg" />
-          <div className="h-12 bg-gray-200 rounded-lg" />
+          <div className="h-12 bg-white/10 rounded-lg" />
+          <div className="h-12 bg-white/10 rounded-lg" />
         </div>
       </div>
     </main>
   )
 }
 
-/**
- * Main login page content
- */
 function LoginPageContent(): JSX.Element {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { isAuthenticated, isLoading: authLoading, hasCreatedAvatar } = useAuth()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
 
   const [isSigningIn, setIsSigningIn] = useState(false)
-  const [activeProvider, setActiveProvider] = useState<OAuthProvider | null>(null)
   const [error, setError] = useState<OAuthError | null>(null)
 
-  // Check for OAuth error from callback
   useEffect(() => {
     const errorParam = searchParams.get('error')
     if (errorParam) {
@@ -70,17 +59,14 @@ function LoginPageContent(): JSX.Element {
     }
   }, [searchParams])
 
-  // Redirect authenticated users based on avatar status
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      const redirectPath = hasCreatedAvatar ? '/welcome' : '/avatar'
-      router.push(redirectPath)
+      router.push('/')
     }
-  }, [isAuthenticated, authLoading, hasCreatedAvatar, router])
+  }, [isAuthenticated, authLoading, router])
 
   const handleSignIn = async (provider: OAuthProvider): Promise<void> => {
     setIsSigningIn(true)
-    setActiveProvider(provider)
     setError(null)
 
     try {
@@ -95,7 +81,6 @@ function LoginPageContent(): JSX.Element {
           message: getErrorMessage(result.error),
         })
         setIsSigningIn(false)
-        setActiveProvider(null)
       }
     } catch {
       setError({
@@ -103,19 +88,13 @@ function LoginPageContent(): JSX.Element {
         message: 'An unexpected error occurred. Please try again.',
       })
       setIsSigningIn(false)
-      setActiveProvider(null)
     }
   }
 
   const isButtonDisabled = isSigningIn || authLoading
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-[#F5F5F7] relative">
-      {/* Language Selector */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
-        <div className="text-sm font-semibold text-gray-900">EN / DE</div>
-      </div>
-
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-transparent">
       <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8">
         {/* Logo */}
         <div className="flex justify-center">
@@ -125,19 +104,25 @@ function LoginPageContent(): JSX.Element {
         </div>
 
         {/* Headline */}
-        <div className="text-center space-y-2 sm:space-y-3">
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-wide uppercase">
             Rule the Game
           </h1>
-          <p className="text-base sm:text-lg text-gray-600">
-            Join the ultimate sports competition platform
-          </p>
+
+          {/* Get Started Button */}
+          <button
+            onClick={() => handleSignIn('google')}
+            disabled={isButtonDisabled}
+            className="w-full max-w-xs mx-auto block min-h-[48px] bg-white/20 hover:bg-white/30 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 text-lg border border-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSigningIn ? 'Signing in...' : 'Get Started'}
+          </button>
         </div>
 
         {/* Error Message */}
         {error && (
           <div
-            className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+            className="bg-red-500/20 border border-red-500/30 text-red-200 px-4 py-3 rounded-lg text-sm"
             role="alert"
           >
             <p className="font-medium">Sign in failed</p>
@@ -145,38 +130,57 @@ function LoginPageContent(): JSX.Element {
           </div>
         )}
 
+        {/* Divider */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1 h-px bg-white/20" />
+          <span className="text-sm text-white/60">or continue with</span>
+          <div className="flex-1 h-px bg-white/20" />
+        </div>
+
         {/* OAuth Sign In Buttons */}
         <div className="space-y-3">
           <button
             onClick={() => handleSignIn('google')}
             disabled={isButtonDisabled}
-            aria-label="Sign in with Google"
-            className="w-full min-h-[48px] bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-colors duration-200 text-base border border-gray-300 flex items-center justify-center gap-3 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            aria-label="Login with Google"
+            className="w-full min-h-[48px] bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 text-base border border-white/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <GoogleIcon />
-            <span>
-              {activeProvider === 'google' && isSigningIn ? 'Signing in...' : 'Sign in with Google'}
-            </span>
+            <span>Login with Google</span>
+          </button>
+
+          <button
+            disabled={true}
+            aria-label="Login with X"
+            className="w-full min-h-[48px] bg-white/5 text-white/50 font-semibold py-3 px-4 rounded-lg text-base border border-white/10 flex items-center justify-center gap-3 cursor-not-allowed"
+          >
+            <XIcon />
+            <span>Login with X</span>
           </button>
 
           <button
             onClick={() => handleSignIn('azure-ad')}
             disabled={isButtonDisabled}
-            aria-label="Sign in with Microsoft"
-            className="w-full min-h-[48px] bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-colors duration-200 text-base border border-gray-300 flex items-center justify-center gap-3 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            aria-label="Login with Microsoft"
+            className="w-full min-h-[48px] bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 text-base border border-white/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <MicrosoftIcon />
-            <span>
-              {activeProvider === 'azure-ad' && isSigningIn
-                ? 'Signing in...'
-                : 'Sign in with Microsoft'}
-            </span>
+            <span>Login with Microsoft</span>
+          </button>
+
+          <button
+            disabled={true}
+            aria-label="Login with Facebook"
+            className="w-full min-h-[48px] bg-white/5 text-white/50 font-semibold py-3 px-4 rounded-lg text-base border border-white/10 flex items-center justify-center gap-3 cursor-not-allowed"
+          >
+            <FacebookIcon />
+            <span>Login with Facebook</span>
           </button>
         </div>
 
         {/* Info */}
-        <p className="text-center text-xs sm:text-sm text-gray-500">
-          Sign in to get started with Beat the Kingz
+        <p className="text-center text-xs sm:text-sm text-white/50">
+          We&apos;ll send you a one-time code.
         </p>
       </div>
     </main>
@@ -227,6 +231,25 @@ function MicrosoftIcon(): JSX.Element {
       <path fill="#81bc06" d="M12 1h10v10H12z" />
       <path fill="#05a6f0" d="M1 12h10v10H1z" />
       <path fill="#ffba08" d="M12 12h10v10H12z" />
+    </svg>
+  )
+}
+
+function XIcon(): JSX.Element {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  )
+}
+
+function FacebookIcon(): JSX.Element {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#1877F2"
+        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+      />
     </svg>
   )
 }

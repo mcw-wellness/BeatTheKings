@@ -66,17 +66,22 @@ export const users = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     email: varchar('email', { length: 255 }).notNull().unique(), // From OAuth provider
 
-    // Profile (filled during avatar creation)
+    // Profile (filled during registration)
     name: varchar('name', { length: 255 }),
+    nickname: varchar('nickname', { length: 50 }), // Custom display name chosen by user
     dateOfBirth: date('dateOfBirth'),
+    age: integer('age'), // User's age (calculated from DOB)
     ageGroup: varchar('ageGroup', { length: 50 }), // "Under-18", "18-30", "31+"
     gender: varchar('gender', { length: 50 }), // "Male", "Female", "Other"
+    profilePictureUrl: varchar('profilePictureUrl', { length: 500 }), // Uploaded photo URL (Azure Blob)
 
     // Location
     cityId: uuid('cityId').references(() => cities.id),
 
-    // Status
-    hasCreatedAvatar: boolean('hasCreatedAvatar').default(false).notNull(),
+    // Onboarding Status Flags
+    hasCompletedProfile: boolean('hasCompletedProfile').default(false).notNull(), // Register step done
+    hasUploadedPhoto: boolean('hasUploadedPhoto').default(false).notNull(), // Photo step done
+    hasCreatedAvatar: boolean('hasCreatedAvatar').default(false).notNull(), // Avatar step done
 
     createdAt: timestamp('createdAt').defaultNow().notNull(),
     updatedAt: timestamp('updatedAt'), // Nullable - set on update, not on create

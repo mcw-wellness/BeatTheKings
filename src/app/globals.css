@@ -3,12 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a1a;
+  --foreground: #ffffff;
+}
+
+html {
+  min-height: 100%;
 }
 
 body {
-  color: #171717;
-  background: var(--background);
+  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  /* Stadium Background */
+  background-color: #0a0f1a;
+  background-image: url('/backgrounds/stadium.png');
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }

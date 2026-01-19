@@ -58,7 +58,7 @@ export const authOptions: NextAuthOptions = {
       return baseUrl
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // Initial sign-in: add user data to token
       if (user) {
         token.id = user.id
@@ -66,18 +66,24 @@ export const authOptions: NextAuthOptions = {
         token.name = user.name
       }
 
-      // Always refresh hasCreatedAvatar from database
-      // This ensures it stays in sync across all sessions/browsers
-      if (token.id) {
+      // Always refresh onboarding flags from database
+      // This ensures they stay in sync across all sessions/browsers
+      // Also refresh on explicit update trigger
+      if (token.id || trigger === 'update') {
         try {
           const db = getDb()
           const dbUser = await findUserById(db, token.id as string)
-          token.hasCreatedAvatar = dbUser?.hasCreatedAvatar ?? false
-        } catch {
-          // Keep existing value on error
-          if (token.hasCreatedAvatar === undefined) {
-            token.hasCreatedAvatar = false
+          if (dbUser) {
+            token.hasCompletedProfile = dbUser.hasCompletedProfile ?? false
+            token.hasUploadedPhoto = dbUser.hasUploadedPhoto ?? false
+            token.hasCreatedAvatar = dbUser.hasCreatedAvatar ?? false
+            token.nickname = dbUser.nickname ?? null
           }
+        } catch {
+          // Keep existing values on error
+          if (token.hasCompletedProfile === undefined) token.hasCompletedProfile = false
+          if (token.hasUploadedPhoto === undefined) token.hasUploadedPhoto = false
+          if (token.hasCreatedAvatar === undefined) token.hasCreatedAvatar = false
         }
       }
 
@@ -90,6 +96,9 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.email = token.email as string
         session.user.name = token.name as string | null
+        session.user.nickname = token.nickname as string | null
+        session.user.hasCompletedProfile = token.hasCompletedProfile as boolean
+        session.user.hasUploadedPhoto = token.hasUploadedPhoto as boolean
         session.user.hasCreatedAvatar = token.hasCreatedAvatar as boolean
       }
       return session
@@ -113,13 +122,18 @@ declare module 'next-auth' {
       id: string
       email: string
       name?: string | null
+      nickname?: string | null
       image?: string | null
+      hasCompletedProfile: boolean
+      hasUploadedPhoto: boolean
       hasCreatedAvatar: boolean
     }
   }
 
   interface User {
     id: string
+    hasCompletedProfile?: boolean
+    hasUploadedPhoto?: boolean
     hasCreatedAvatar?: boolean
   }
 }
@@ -127,6 +141,9 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     id: string
+    nickname?: string | null
+    hasCompletedProfile: boolean
+    hasUploadedPhoto: boolean
     hasCreatedAvatar: boolean
   }
 }
