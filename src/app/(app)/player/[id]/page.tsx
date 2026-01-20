@@ -61,7 +61,6 @@ export default function PlayerPage(): JSX.Element {
   const [isChallengeSending, setIsChallengeSending] = useState(false)
   const [challengeError, setChallengeError] = useState<string | null>(null)
 
-  // Fetch user's current venue (if checked in)
   useEffect(() => {
     const fetchUserVenue = async () => {
       try {
@@ -76,7 +75,7 @@ export default function PlayerPage(): JSX.Element {
           }
         }
       } catch {
-        // Silently fail - user may not be checked in
+        // Silently fail
       }
     }
     fetchUserVenue()
@@ -91,9 +90,7 @@ export default function PlayerPage(): JSX.Element {
 
       try {
         const res = await fetch(`/api/players/${userId}/trump-card`)
-        if (!res.ok) {
-          throw new Error('Failed to load player')
-        }
+        if (!res.ok) throw new Error('Failed to load player')
         const json = await res.json()
         setData(json)
       } catch (err) {
@@ -111,7 +108,7 @@ export default function PlayerPage(): JSX.Element {
 
   const handleChallenge = async () => {
     if (!userVenue) {
-      setChallengeError('Check in to a venue first to challenge players')
+      setChallengeError('Check in to a venue first')
       return
     }
 
@@ -136,7 +133,6 @@ export default function PlayerPage(): JSX.Element {
         return
       }
 
-      // Navigate to pending page
       router.push(`/challenges/1v1/${json.matchId}/pending`)
     } catch {
       setChallengeError('Failed to send challenge')
@@ -146,17 +142,17 @@ export default function PlayerPage(): JSX.Element {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#4361EE] border-t-transparent" />
+      <main className="h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-3 border-yellow-400 border-t-transparent" />
       </main>
     )
   }
 
   if (error || !data) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col items-center justify-center p-4">
-        <p className="text-red-500 mb-4">{error || 'Player not found'}</p>
-        <button onClick={() => router.back()} className="text-[#4361EE] underline">
+      <main className="h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex flex-col items-center justify-center p-4">
+        <p className="text-red-400 mb-4">{error || 'Player not found'}</p>
+        <button onClick={() => router.back()} className="text-yellow-400 underline">
           Go Back
         </button>
       </main>
@@ -164,116 +160,87 @@ export default function PlayerPage(): JSX.Element {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Header */}
-      <div className="p-4 flex items-center justify-between">
+    <main className="h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] overflow-hidden flex flex-col">
+      {/* Header - Compact */}
+      <div className="px-4 py-2 flex items-center justify-between shrink-0">
         <button
           onClick={() => router.back()}
-          className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+          className="text-white/70 hover:text-white text-sm flex items-center gap-1"
         >
           ← Back
         </button>
         {isKing && (
-          <span className="bg-yellow-100 text-yellow-700 text-xs px-3 py-1 rounded-full border border-yellow-300">
+          <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-1 rounded-full">
             👑 King
           </span>
         )}
       </div>
 
-      {/* Card Content */}
-      <div className="px-4 pb-8">
+      {/* Card Content - Fills remaining space */}
+      <div className="flex-1 px-4 pb-4 flex flex-col min-h-0">
         {/* Player Name & Rank */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">{data.player.name || 'Player'}</h1>
-          <div className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded-xl border border-yellow-300">
-            <span className="text-yellow-600 text-lg">🏆</span>
-            <span className="text-gray-900 font-bold text-xl">#{data.stats.rank || '-'}</span>
+        <div className="flex items-center justify-between mb-2 shrink-0">
+          <h1 className="text-xl font-bold text-white truncate">
+            {data.player.name || 'Player'}
+          </h1>
+          <div className="flex items-center gap-1 bg-yellow-500/20 px-3 py-1 rounded-lg">
+            <span className="text-yellow-400 text-sm">🏆</span>
+            <span className="text-white font-bold">#{data.stats.rank || '-'}</span>
           </div>
         </div>
 
-        {/* Avatar */}
-        <div className="flex justify-center mb-6">
-          <div className="relative w-48 h-56 bg-gradient-to-b from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-blue-200 shadow-lg">
+        {/* Avatar - Fixed height */}
+        <div className="flex justify-center mb-3 shrink-0">
+          <div className="relative w-32 h-40 bg-gradient-to-b from-blue-900/50 to-purple-900/50 rounded-xl flex items-center justify-center overflow-hidden border border-yellow-500/30">
             <Image
               src={data.player.avatar?.imageUrl || ''}
               alt="Avatar"
-              width={180}
-              height={220}
+              width={120}
+              height={150}
               className="object-contain"
               unoptimized
             />
-            {isKing && <div className="absolute top-2 left-1/2 -translate-x-1/2 text-4xl">👑</div>}
+            {isKing && <div className="absolute top-1 left-1/2 -translate-x-1/2 text-2xl">👑</div>}
           </div>
         </div>
 
-        {/* Main Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <StatCard
-            icon="XP"
-            label="XP"
-            value={`${data.stats.xp}`}
-            subValue={`+${data.stats.xpToNextLevel} to next`}
-            color="purple"
-          />
-          <StatCard icon="🪙" label="RP" value={data.stats.rp.toString()} color="yellow" />
-          <StatCard
-            icon="🏀"
-            label="Total Points"
-            value={data.stats.totalPoints.toString()}
-            color="blue"
-          />
-          <StatCard icon="📊" label="Win Rate" value={`${data.stats.winRate}%`} color="green" />
+        {/* Stats Grid - 2x2 Compact */}
+        <div className="grid grid-cols-4 gap-2 mb-3 shrink-0">
+          <StatBox label="XP" value={data.stats.xp} color="purple" />
+          <StatBox label="RP" value={data.stats.rp} color="yellow" />
+          <StatBox label="Points" value={data.stats.totalPoints} color="blue" />
+          <StatBox label="Win %" value={`${data.stats.winRate}%`} color="green" />
         </div>
 
-        {/* Detailed Stats */}
-        <div className="bg-white rounded-xl p-4 mb-6 shadow">
-          <h2 className="text-gray-900 font-semibold mb-3">Stats</h2>
-          <div className="space-y-3">
-            <DetailRow
-              label="Matches"
-              value={`${data.stats.matchesWon}W / ${data.stats.matchesLost}L`}
-            />
-            <DetailRow
-              label="Challenges"
-              value={`${data.stats.challengesCompleted} / ${data.stats.totalChallenges}`}
-            />
-            <DetailRow
-              label="3-Point Accuracy"
-              value={`${data.detailedStats.threePointAccuracy}%`}
-            />
-            <DetailRow
-              label="Free Throw Accuracy"
-              value={`${data.detailedStats.freeThrowAccuracy}%`}
-            />
+        {/* Detailed Stats - Compact */}
+        <div className="bg-white/5 rounded-xl p-3 mb-3 shrink-0">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+            <StatRow label="Matches" value={`${data.stats.matchesWon}W / ${data.stats.matchesLost}L`} />
+            <StatRow label="Challenges" value={`${data.stats.challengesCompleted}`} />
+            <StatRow label="3PT %" value={`${data.detailedStats.threePointAccuracy}%`} />
+            <StatRow label="FT %" value={`${data.detailedStats.freeThrowAccuracy}%`} />
           </div>
         </div>
 
-        {/* Events */}
-        <div className="space-y-3">
-          <h2 className="text-gray-900 font-semibold">Championships</h2>
-          <div className="bg-gradient-to-r from-purple-100 to-purple-50 border border-purple-200 rounded-xl p-4 shadow">
-            <p className="text-purple-600 text-xs uppercase tracking-wide">Current</p>
-            <p className="text-gray-900 font-semibold">December BB Championship</p>
-            <p className="text-purple-500 text-sm">sponsored by AVIS</p>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow">
-            <p className="text-gray-400 text-xs uppercase tracking-wide">Coming Soon</p>
-            <p className="text-gray-600 font-semibold">3P Shooting Championship</p>
-            <p className="text-gray-400 text-sm">sponsored by K1</p>
-          </div>
+        {/* Championship - Compact */}
+        <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/20 border border-purple-500/20 rounded-xl p-3 mb-3 shrink-0">
+          <p className="text-purple-400 text-xs uppercase tracking-wide">Current Event</p>
+          <p className="text-white font-semibold text-sm">December BB Championship</p>
+          <p className="text-purple-400 text-xs">sponsored by AVIS</p>
         </div>
 
-        {/* Challenge Button */}
-        <div className="mt-6 space-y-3">
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Challenge Button - Fixed at bottom */}
+        <div className="shrink-0 space-y-2">
           {challengeError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-600 text-sm">{challengeError}</p>
-            </div>
+            <p className="text-red-400 text-xs text-center">{challengeError}</p>
           )}
           <button
             onClick={handleChallenge}
             disabled={isChallengeSending}
-            className="w-full py-4 bg-[#4361EE] hover:bg-[#3651DE] disabled:bg-gray-400 text-white text-lg font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-500 disabled:to-gray-600 text-white text-base font-bold rounded-xl transition-all flex items-center justify-center gap-2"
           >
             {isChallengeSending ? (
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
@@ -285,8 +252,8 @@ export default function PlayerPage(): JSX.Element {
             )}
           </button>
           {!userVenue && (
-            <p className="text-center text-gray-500 text-sm">
-              Check in to a venue to challenge this player
+            <p className="text-center text-white/40 text-xs">
+              Check in to a venue to challenge
             </p>
           )}
         </div>
@@ -295,50 +262,35 @@ export default function PlayerPage(): JSX.Element {
   )
 }
 
-function StatCard({
-  icon,
+function StatBox({
   label,
   value,
-  subValue,
   color,
 }: {
-  icon: string
   label: string
-  value: string
-  subValue?: string
+  value: string | number
   color: string
 }): JSX.Element {
-  const colorClasses: Record<string, string> = {
-    purple: 'bg-purple-50 border-purple-200',
-    yellow: 'bg-yellow-50 border-yellow-200',
-    blue: 'bg-blue-50 border-blue-200',
-    green: 'bg-green-50 border-green-200',
-  }
-
-  const textClasses: Record<string, string> = {
-    purple: 'text-purple-600',
-    yellow: 'text-yellow-600',
-    blue: 'text-blue-600',
-    green: 'text-green-600',
+  const colors: Record<string, string> = {
+    purple: 'bg-purple-500/20 text-purple-300',
+    yellow: 'bg-yellow-500/20 text-yellow-300',
+    blue: 'bg-blue-500/20 text-blue-300',
+    green: 'bg-green-500/20 text-green-300',
   }
 
   return (
-    <div className={`${colorClasses[color]} border rounded-xl p-4 shadow`}>
-      <div className="flex items-center gap-2 mb-1">
-        <span className={`text-sm ${textClasses[color]}`}>{icon}</span>
-        <span className="text-gray-500 text-sm">{label}</span>
-      </div>
-      <p className="text-gray-900 text-2xl font-bold">{value}</p>
-      {subValue && <p className="text-gray-400 text-xs">{subValue}</p>}
+    <div className={`${colors[color]} rounded-lg p-2 text-center`}>
+      <p className="text-white font-bold text-lg">{value}</p>
+      <p className="text-xs opacity-80">{label}</p>
     </div>
   )
 }
 
-function DetailRow({ label, value }: { label: string; value: string }): JSX.Element {
+function StatRow({ label, value }: { label: string; value: string }): JSX.Element {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-gray-500">{label}</span>
-      <span className="text-gray-900 font-medium">{value}</span>
+      <span className="text-white/50">{label}</span>
+      <span className="text-white font-medium">{value}</span>
     </div>
   )
 }

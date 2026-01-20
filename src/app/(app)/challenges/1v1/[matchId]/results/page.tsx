@@ -269,15 +269,13 @@ export default function MatchResultsPage(): JSX.Element {
           </div>
         )}
 
-        {/* Done Button */}
-        {(result.userAgreed || status === 'disputed' || status === 'finalized') && (
-          <button
-            onClick={() => router.push('/matches')}
-            className="w-full py-4 bg-[#4361EE] hover:bg-[#3651DE] text-white font-semibold rounded-xl transition-colors"
-          >
-            Back to Matches
-          </button>
-        )}
+        {/* Back Button - Always visible */}
+        <button
+          onClick={() => router.push('/matches')}
+          className="w-full py-4 bg-[#4361EE] hover:bg-[#3651DE] text-white font-semibold rounded-xl transition-colors"
+        >
+          Back to Matches
+        </button>
 
         {/* Venue */}
         <p className="text-xs text-gray-400 text-center mt-4">{result.venueName}</p>

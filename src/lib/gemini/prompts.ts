@@ -91,6 +91,35 @@ export function buildAvatarPrompt(input: AvatarPromptInput): string {
 }
 
 /**
+ * Build prompt for avatar generation WITH reference photo
+ * Creates an avatar that resembles the person in the photo
+ */
+export function buildAvatarPromptWithPhoto(input: AvatarPromptInput): string {
+  const sport = input.sport || 'basketball'
+  const outfit = getOutfitDescription(sport, input.jerseyNumber)
+
+  return `Create a high-quality cartoon sports avatar illustration based on the person in this photo.
+
+CRITICAL REQUIREMENTS:
+1. The avatar MUST closely resemble the person's facial features, face shape, and overall appearance
+2. Keep the same hairstyle, hair color, and skin tone as the person in the photo
+3. Maintain recognizable likeness while converting to cartoon/illustrated style
+
+STYLE:
+- Mobile game trading card style (like NBA 2K cards)
+- Vibrant warm golden lighting
+- Clean vector-like art with smooth gradients
+- Full body standing pose
+- Basketball arena/stadium background with crowd
+- Golden frame aesthetic, warm amber tones
+
+OUTFIT:
+${outfit}
+
+Generate an avatar that someone would immediately recognize as the person in the photo, but in an illustrated sports card style.`
+}
+
+/**
  * Build prompt for default avatars (used in setup script)
  */
 export function buildDefaultAvatarPrompt(gender: string, sport: string): string {

@@ -4,11 +4,12 @@
 
 import { logger } from '@/lib/utils/logger'
 import { imageClient } from './client'
-import { buildAvatarPrompt } from './prompts'
+import { buildAvatarPrompt, buildAvatarPromptWithPhoto } from './prompts'
 import type { AvatarPromptInput } from './types'
 
 /**
  * Generate an avatar image using Gemini AI
+ * If referencePhoto is provided, uses it to create a resembling avatar
  * Returns image buffer
  */
 export async function generateAvatarImage(input: AvatarPromptInput): Promise<Buffer> {
@@ -16,14 +17,40 @@ export async function generateAvatarImage(input: AvatarPromptInput): Promise<Buf
     throw new Error('Gemini AI is not configured. Set GEMINI_API_KEY.')
   }
 
-  const prompt = buildAvatarPrompt(input)
+  const hasReferencePhoto = !!input.referencePhoto
 
-  logger.info({ prompt }, 'Generating avatar with Gemini')
+  // Build contents based on whether we have a reference photo
+  let contents: Parameters<typeof imageClient.models.generateContent>[0]['contents']
+
+  if (hasReferencePhoto && input.referencePhoto) {
+    const prompt = buildAvatarPromptWithPhoto(input)
+    const base64Data = input.referencePhoto.replace(/^data:image\/\w+;base64,/, '')
+
+    contents = [
+      {
+        role: 'user',
+        parts: [
+          {
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: base64Data,
+            },
+          },
+          { text: prompt },
+        ],
+      },
+    ]
+    logger.info({ prompt }, 'Generating avatar with reference photo')
+  } else {
+    const prompt = buildAvatarPrompt(input)
+    contents = prompt
+    logger.info({ prompt }, 'Generating avatar without reference photo')
+  }
 
   try {
     const response = await imageClient.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: prompt,
+      model: 'gemini-2.0-flash-exp',
+      contents,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
@@ -44,7 +71,7 @@ export async function generateAvatarImage(input: AvatarPromptInput): Promise<Buf
 
     throw new Error('No image data in Gemini response')
   } catch (error) {
-    logger.error({ error, input }, 'Failed to generate avatar with Gemini')
+    logger.error({ error, hasReferencePhoto }, 'Failed to generate avatar with Gemini')
     throw error
   }
 }

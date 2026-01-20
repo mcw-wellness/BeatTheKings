@@ -57,7 +57,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const features = await analyzePhotoForAvatar(image)
     logger.info({ userId: session.user.id, features }, 'Photo analysis complete')
 
-    // Step 3: Generate avatar using extracted features
+    // Step 3: Generate avatar using extracted features AND reference photo
     let avatarImageUrl: string | undefined
     try {
       const avatarBuffer = await generateAvatarImage({
@@ -66,6 +66,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         hairStyle: features.hairStyle,
         hairColor: features.hairColor,
         jerseyNumber: 9, // Default jersey number
+        referencePhoto: image, // Pass the original photo for resemblance
       })
       avatarImageUrl = await uploadAvatar(session.user.id, avatarBuffer)
       logger.info({ userId: session.user.id }, 'Avatar generated and uploaded')

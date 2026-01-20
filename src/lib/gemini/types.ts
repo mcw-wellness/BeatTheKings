@@ -11,6 +11,7 @@ export interface AvatarPromptInput {
   sport?: string
   ageGroup?: string
   jerseyNumber?: number
+  referencePhoto?: string // Base64 encoded photo for resemblance
 }
 
 export type AgeGroup = 'under-18' | '18-30' | '31+'
