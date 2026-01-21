@@ -194,6 +194,74 @@ export async function deleteAvatar(userId: string): Promise<boolean> {
 }
 
 /**
+ * Download user's profile picture as base64
+ */
+export async function getProfilePictureBase64(userId: string): Promise<string | null> {
+  try {
+    const container = getContainerClient()
+    // Try jpeg first, then jpg
+    for (const ext of ['jpeg', 'jpg', 'png']) {
+      const blobPath = `profiles/${userId}/photo.${ext}`
+      const blockBlobClient = container.getBlockBlobClient(blobPath)
+
+      if (await blockBlobClient.exists()) {
+        const downloadResponse = await blockBlobClient.download()
+        const chunks: Buffer[] = []
+
+        for await (const chunk of downloadResponse.readableStreamBody as NodeJS.ReadableStream) {
+          chunks.push(Buffer.from(chunk))
+        }
+
+        const buffer = Buffer.concat(chunks)
+        const base64 = buffer.toString('base64')
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg'
+
+        logger.info({ userId, blobPath }, 'Profile picture downloaded')
+        return `data:${mimeType};base64,${base64}`
+      }
+    }
+
+    logger.warn({ userId }, 'Profile picture not found')
+    return null
+  } catch (error) {
+    logger.error({ error, userId }, 'Failed to download profile picture')
+    return null
+  }
+}
+
+/**
+ * Download user's avatar image as base64
+ */
+export async function getAvatarBase64(userId: string): Promise<string | null> {
+  try {
+    const container = getContainerClient()
+    const blobPath = `avatars/users/${userId}/avatar.png`
+    const blockBlobClient = container.getBlockBlobClient(blobPath)
+
+    if (!(await blockBlobClient.exists())) {
+      logger.warn({ userId }, 'Avatar not found')
+      return null
+    }
+
+    const downloadResponse = await blockBlobClient.download()
+    const chunks: Buffer[] = []
+
+    for await (const chunk of downloadResponse.readableStreamBody as NodeJS.ReadableStream) {
+      chunks.push(Buffer.from(chunk))
+    }
+
+    const buffer = Buffer.concat(chunks)
+    const base64 = buffer.toString('base64')
+
+    logger.info({ userId, blobPath }, 'Avatar downloaded')
+    return `data:image/png;base64,${base64}`
+  } catch (error) {
+    logger.error({ error, userId }, 'Failed to download avatar')
+    return null
+  }
+}
+
+/**
  * Upload match video to Azure Blob Storage
  * Path: matches/{matchId}/{timestamp}.mp4
  */

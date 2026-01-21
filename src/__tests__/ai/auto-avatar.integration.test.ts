@@ -30,7 +30,9 @@ vi.mock('@/db', () => ({
 // Mock Azure storage
 vi.mock('@/lib/azure-storage', () => ({
   uploadProfilePicture: vi.fn().mockResolvedValue('profiles/test-user/photo.jpeg'),
-  getProfilePictureSasUrl: vi.fn().mockReturnValue('https://mock.blob.core/profiles/test-user/photo.jpeg?sas'),
+  getProfilePictureSasUrl: vi
+    .fn()
+    .mockReturnValue('https://mock.blob.core/profiles/test-user/photo.jpeg?sas'),
   uploadAvatar: vi.fn().mockResolvedValue('https://mock.blob.core/avatars/test-user.png?sas'),
 }))
 
@@ -47,6 +49,13 @@ vi.mock('@/lib/ai/analyze-photo', () => ({
 // Mock avatar generator
 vi.mock('@/lib/avatar/generator', () => ({
   generateAvatarImage: vi.fn().mockResolvedValue(Buffer.from('mock-png-data')),
+}))
+
+// Mock gemini module (uses fs for stadium background)
+vi.mock('@/lib/gemini', () => ({
+  editAvatarImage: vi.fn().mockResolvedValue(Buffer.from('mock-png-data')),
+  generateAvatarImage: vi.fn().mockResolvedValue(Buffer.from('mock-png-data')),
+  analyzePhotoForAvatar: vi.fn().mockResolvedValue('medium build athlete'),
 }))
 
 // Mock logger
@@ -163,10 +172,7 @@ describe('Auto Avatar Generation Integration Tests', () => {
       })
 
       // Verify avatar was created in database
-      const [avatar] = await testDb
-        .select()
-        .from(avatars)
-        .where(eq(avatars.userId, user.id))
+      const [avatar] = await testDb.select().from(avatars).where(eq(avatars.userId, user.id))
 
       expect(avatar).toBeDefined()
       expect(avatar.skinTone).toBe('medium')
@@ -174,10 +180,7 @@ describe('Auto Avatar Generation Integration Tests', () => {
       expect(avatar.hairColor).toBe('black')
 
       // Verify user hasCreatedAvatar was updated
-      const [updatedUser] = await testDb
-        .select()
-        .from(users)
-        .where(eq(users.id, user.id))
+      const [updatedUser] = await testDb.select().from(users).where(eq(users.id, user.id))
 
       expect(updatedUser.hasCreatedAvatar).toBe(true)
       expect(updatedUser.hasUploadedPhoto).toBe(true)
@@ -236,10 +239,7 @@ describe('Auto Avatar Generation Integration Tests', () => {
       expect(body.features.hairStyle).toBe('afro')
 
       // Verify avatar was updated (not created new)
-      const allAvatars = await testDb
-        .select()
-        .from(avatars)
-        .where(eq(avatars.userId, user.id))
+      const allAvatars = await testDb.select().from(avatars).where(eq(avatars.userId, user.id))
 
       expect(allAvatars).toHaveLength(1)
       expect(allAvatars[0].id).toBe(existingAvatar.id)
@@ -308,9 +308,11 @@ describe('Auto Avatar Generation Integration Tests', () => {
         .values({ name: 'Basketball', slug: 'basketball', isActive: true })
         .returning()
 
-      await testDb.insert(avatarItems).values([
-        { name: 'Default Jersey', itemType: 'jersey', sportId: sport.id, isDefault: true },
-      ])
+      await testDb
+        .insert(avatarItems)
+        .values([
+          { name: 'Default Jersey', itemType: 'jersey', sportId: sport.id, isDefault: true },
+        ])
 
       mockGetSession.mockResolvedValue({
         user: { id: user.id, email: user.email },
@@ -335,10 +337,7 @@ describe('Auto Avatar Generation Integration Tests', () => {
       await POST(request)
 
       // Verify user gender was updated
-      const [updatedUser] = await testDb
-        .select()
-        .from(users)
-        .where(eq(users.id, user.id))
+      const [updatedUser] = await testDb.select().from(users).where(eq(users.id, user.id))
 
       expect(updatedUser.gender).toBe('female')
     })
@@ -354,9 +353,11 @@ describe('Auto Avatar Generation Integration Tests', () => {
         .values({ name: 'Basketball', slug: 'basketball', isActive: true })
         .returning()
 
-      await testDb.insert(avatarItems).values([
-        { name: 'Default Jersey', itemType: 'jersey', sportId: sport.id, isDefault: true },
-      ])
+      await testDb
+        .insert(avatarItems)
+        .values([
+          { name: 'Default Jersey', itemType: 'jersey', sportId: sport.id, isDefault: true },
+        ])
 
       mockGetSession.mockResolvedValue({
         user: { id: user.id, email: user.email },
@@ -384,10 +385,7 @@ describe('Auto Avatar Generation Integration Tests', () => {
       expect(body.avatarGenerated).toBe(false)
 
       // Avatar should still be created with features
-      const [avatar] = await testDb
-        .select()
-        .from(avatars)
-        .where(eq(avatars.userId, user.id))
+      const [avatar] = await testDb.select().from(avatars).where(eq(avatars.userId, user.id))
 
       expect(avatar).toBeDefined()
       expect(avatar.skinTone).toBe('medium')
@@ -404,9 +402,11 @@ describe('Auto Avatar Generation Integration Tests', () => {
         .values({ name: 'Basketball', slug: 'basketball', isActive: true })
         .returning()
 
-      await testDb.insert(avatarItems).values([
-        { name: 'Default Jersey', itemType: 'jersey', sportId: sport.id, isDefault: true },
-      ])
+      await testDb
+        .insert(avatarItems)
+        .values([
+          { name: 'Default Jersey', itemType: 'jersey', sportId: sport.id, isDefault: true },
+        ])
 
       mockGetSession.mockResolvedValue({
         user: { id: user.id, email: user.email },

@@ -337,7 +337,16 @@ describe('Photo Analysis Unit Tests', () => {
     })
 
     it('should accept all valid hairStyle values', async () => {
-      const validHairStyles = ['short', 'medium', 'long', 'bald', 'afro', 'braids', 'dreads', 'mohawk']
+      const validHairStyles = [
+        'short',
+        'medium',
+        'long',
+        'bald',
+        'afro',
+        'braids',
+        'dreads',
+        'mohawk',
+      ]
 
       for (const hairStyle of validHairStyles) {
         vi.mocked(getGeminiClient).mockReturnValue({

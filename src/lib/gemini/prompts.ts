@@ -11,14 +11,45 @@ import type { AvatarPromptInput, AgeGroup } from './types'
 
 /**
  * Base style for all avatar generations
- * Matches the Trump Card design - cartoon sports card style
+ * Dark gradient background matching app theme
  */
 const AVATAR_BASE_STYLE = `
-High quality cartoon sports avatar illustration in mobile game trading card style,
-vibrant warm golden lighting, clean vector-like art with smooth gradients,
-full body standing pose in basketball arena/stadium background with crowd,
-similar to NBA 2K mobile card art, detailed character design,
-golden frame aesthetic, warm amber tones in background
+CRITICAL: Generate a FULL BODY sports athlete illustration showing the ENTIRE person from HEAD TO FEET.
+
+STYLE REQUIREMENTS:
+- Semi-realistic cartoon style (like NBA 2K mobile trading cards)
+- NOT emoji style, NOT chibi, NOT cute cartoon, NOT just a face/bust
+- Professional sports game character art quality
+- Clean digital illustration with smooth shading
+- Dark purple/navy gradient background (#1a1a2e to #16213e)
+- Character should fill 80% of the image height
+- Character centered in frame
+
+EXACT POSE (MUST follow this exactly):
+- Standing straight, facing directly forward (front view)
+- Arms relaxed at sides, hands slightly away from body (not touching thighs)
+- Feet shoulder-width apart, both feet flat on ground
+- Confident but relaxed posture
+- Head facing forward, looking at camera
+- NO action poses, NO dynamic movement, NO holding balls
+- This is a static character portrait pose
+
+PHYSICAL FEATURES TO INCLUDE:
+- Realistic athletic body type (lean, fit, muscular as appropriate)
+- Natural athletic proportions
+- Glasses if specified
+- Facial hair if specified
+
+ALWAYS WEAR SPORTS OUTFIT - never copy person's actual clothing
+
+DO NOT generate:
+- Just a face or head shot
+- Emoji-style art
+- Chibi or cute style
+- The person's actual clothes (always sports uniform)
+- Only upper body
+- Action poses or dynamic movement
+- Hands in pockets or crossed arms
 `.trim()
 
 /**
@@ -58,18 +89,21 @@ function getAgeDescription(ageGroup?: string): string {
  * Get outfit description based on sport
  */
 function getOutfitDescription(sport: string, jerseyNumber?: number): string {
-  const number = jerseyNumber ?? 10
+  const number = jerseyNumber ?? 9
   switch (sport) {
     case 'soccer':
-      return `wearing red soccer jersey with gold trim and number ${number} clearly visible on back and front,
-        white shorts with red stripe, black soccer cleats with gold accents,
-        one foot on soccer ball, confident athletic pose, arms crossed`
+      return `FULL OUTFIT (must show all):
+        - Red soccer jersey with gold trim, number ${number} on front
+        - White shorts with red stripe down the sides
+        - Black soccer cleats with gold accents
+        - Black athletic socks`
     case 'basketball':
     default:
-      return `wearing royal blue basketball jersey with gold/yellow trim and number ${number} clearly visible on back and front,
-        matching blue shorts with gold stripe, white and blue high-top basketball shoes,
-        doing shaka hand gesture with one hand, spinning basketball on finger with other hand,
-        confident playful pose, wristbands on both wrists`
+      return `FULL OUTFIT (must show all):
+        - Navy blue basketball jersey with gold/yellow trim, number ${number} on front
+        - Matching navy blue basketball shorts with gold stripes down the sides
+        - Navy blue and gold high-top basketball sneakers
+        - Black athletic socks`
   }
 }
 
@@ -98,25 +132,53 @@ export function buildAvatarPromptWithPhoto(input: AvatarPromptInput): string {
   const sport = input.sport || 'basketball'
   const outfit = getOutfitDescription(sport, input.jerseyNumber)
 
-  return `Create a high-quality cartoon sports avatar illustration based on the person in this photo.
+  return `Create a FULL BODY sports athlete illustration that LOOKS LIKE this specific person.
 
-CRITICAL REQUIREMENTS:
-1. The avatar MUST closely resemble the person's facial features, face shape, and overall appearance
-2. Keep the same hairstyle, hair color, and skin tone as the person in the photo
-3. Maintain recognizable likeness while converting to cartoon/illustrated style
+CRITICAL - MATCH THESE FACIAL FEATURES EXACTLY:
+- Face shape (oval, round, square, heart, oblong) - MUST match
+- Forehead shape and size - MUST match
+- Eye shape, size, and spacing - MUST match
+- Nose shape and size - MUST match
+- Ear shape and size - MUST match
+- Lip shape (thin, medium, full) - MUST match
+- Chin shape (pointed, square, round) - MUST match
+- Jawline (defined, soft, angular) - MUST match
+- Skin tone - MUST match
+- Hair style and color - MUST match
+- Body type and build - MUST match
+- Glasses (if worn) - MUST include
+- Facial hair (if any) - MUST include
 
-STYLE:
-- Mobile game trading card style (like NBA 2K cards)
-- Vibrant warm golden lighting
-- Clean vector-like art with smooth gradients
-- Full body standing pose
-- Basketball arena/stadium background with crowd
-- Golden frame aesthetic, warm amber tones
+STYLE REQUIREMENTS:
+- MUST show FULL BODY from head to feet
+- Semi-realistic cartoon style (like NBA 2K mobile cards)
+- Professional sports game character art quality
+- Dark purple/navy gradient background (#1a1a2e to #16213e)
+- Character should fill 80% of the image height
+- Character centered in frame
 
-OUTFIT:
+EXACT POSE (MUST follow this exactly for ALL avatars):
+- Standing straight, facing directly forward (front view)
+- Arms relaxed at sides, hands slightly away from body (not touching thighs)
+- Feet shoulder-width apart, both feet flat on ground
+- Confident but relaxed posture
+- Head facing forward, looking at camera
+- NO action poses, NO dynamic movement, NO holding balls
+- This is a static character portrait pose
+
+OUTFIT (always use this, ignore person's actual clothes):
 ${outfit}
 
-Generate an avatar that someone would immediately recognize as the person in the photo, but in an illustrated sports card style.`
+DO NOT generate:
+- Just a face or head shot
+- Emoji-style art
+- The person's actual clothing
+- Only upper body
+- Generic face that doesn't match the person
+- Action poses or dynamic movement
+- Hands in pockets or crossed arms
+
+The avatar MUST be recognizable as the same person from the photo, just in cartoon sports style.`
 }
 
 /**
@@ -127,7 +189,11 @@ export function buildDefaultAvatarPrompt(gender: string, sport: string): string 
   const character = `${gender} athlete with medium brown skin tone, athletic muscular build, short black hair${facialHair}, friendly confident expression`
   const outfit = getOutfitDescription(sport)
 
-  return `${AVATAR_BASE_STYLE}. ${character}. ${outfit}.`
+  return `${AVATAR_BASE_STYLE}
+
+CHARACTER: ${character}
+
+${outfit}`
 }
 
 /**

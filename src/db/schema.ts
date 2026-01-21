@@ -223,6 +223,9 @@ export const avatars = pgTable('Avatar', {
   // AI-generated avatar image URL (Azure Blob Storage)
   imageUrl: varchar('imageUrl', { length: 500 }),
 
+  // Stored photo analysis for consistent regeneration
+  photoAnalysis: text('photoAnalysis'),
+
   createdAt: timestamp('createdAt').defaultNow().notNull(),
   updatedAt: timestamp('updatedAt'), // Nullable - set on update, not on create
 })

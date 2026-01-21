@@ -216,4 +216,3 @@ function MicrosoftIcon(): JSX.Element {
     </svg>
   )
 }
-

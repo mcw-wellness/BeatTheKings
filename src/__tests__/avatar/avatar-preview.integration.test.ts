@@ -11,6 +11,38 @@ vi.mock('@/lib/avatar/generator', () => ({
   generateAvatarImage: vi.fn(),
 }))
 
+// Mock the gemini module (uses fs for stadium background)
+vi.mock('@/lib/gemini', () => ({
+  editAvatarImage: vi.fn(),
+  generateAvatarImage: vi.fn(),
+  analyzePhotoForAvatar: vi.fn(),
+}))
+
+// Mock database
+vi.mock('@/db', () => ({
+  getDb: vi.fn(() => ({})),
+}))
+
+// Mock Azure storage
+vi.mock('@/lib/azure-storage', () => ({
+  getAvatarBase64: vi.fn().mockResolvedValue(null),
+  getProfilePictureBase64: vi.fn().mockResolvedValue(null),
+}))
+
+// Mock avatar helper
+vi.mock('@/lib/avatar', () => ({
+  getAvatar: vi.fn().mockResolvedValue(null),
+}))
+
+// Mock logger
+vi.mock('@/lib/utils/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}))
+
 import { getSession } from '@/lib/auth'
 import { generateAvatarImage } from '@/lib/avatar/generator'
 

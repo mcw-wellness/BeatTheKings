@@ -19,7 +19,13 @@ export {
 } from './prompts'
 
 // Avatar generation
-export { generateAvatarImage, generateDefaultAvatar } from './avatar'
+export {
+  generateAvatarImage,
+  generateDefaultAvatar,
+  analyzePhotoForAvatar,
+  editAvatarImage,
+} from './avatar'
+export type { AvatarEditInput } from './avatar'
 
 // Video analysis
 export { analyzeMatchVideo, calculateRewards } from './video-analysis'

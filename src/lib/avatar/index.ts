@@ -40,6 +40,7 @@ export interface AvatarCreateInput {
   hairStyle: HairStyle
   hairColor: HairColor
   imageUrl?: string
+  photoAnalysis?: string
 }
 
 export interface AvatarUpdateInput {
@@ -47,6 +48,7 @@ export interface AvatarUpdateInput {
   hairStyle?: HairStyle
   hairColor?: HairColor
   imageUrl?: string
+  photoAnalysis?: string
 }
 
 // ===========================================
@@ -197,6 +199,7 @@ export async function createAvatar(db: Database, userId: string, data: AvatarCre
       hairStyle: data.hairStyle,
       hairColor: data.hairColor,
       imageUrl: data.imageUrl,
+      photoAnalysis: data.photoAnalysis,
     })
     .returning()
 
@@ -227,6 +230,26 @@ export async function updateAvatar(db: Database, avatarId: string, data: AvatarU
     .update(avatars)
     .set({
       ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(avatars.id, avatarId))
+    .returning()
+
+  return updated
+}
+
+/**
+ * Update avatar photo analysis for consistent regeneration
+ */
+export async function updateAvatarPhotoAnalysis(
+  db: Database,
+  avatarId: string,
+  photoAnalysis: string
+) {
+  const [updated] = await db
+    .update(avatars)
+    .set({
+      photoAnalysis,
       updatedAt: new Date(),
     })
     .where(eq(avatars.id, avatarId))

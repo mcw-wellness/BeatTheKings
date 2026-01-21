@@ -116,12 +116,12 @@ function AvatarPageContent(): JSX.Element {
 
   if (status === 'loading') return <AvatarPageSkeleton />
 
-  const handleGenerateAndSave = async (): Promise<void> => {
+  // Generate preview based on current selections
+  const handleGeneratePreview = async (): Promise<void> => {
     setError(null)
     setIsGenerating(true)
 
     try {
-      // Generate preview first
       const previewRes = await fetch('/api/avatar/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,6 +132,7 @@ function AvatarPageContent(): JSX.Element {
           hairColor,
           ageGroup,
           jerseyNumber: parseInt(jerseyNumber) || 9,
+          jerseyColor,
         }),
       })
 
@@ -139,16 +140,26 @@ function AvatarPageContent(): JSX.Element {
       if (!previewRes.ok) throw new Error(previewData.error || 'Failed to generate')
 
       setPreviewImage(previewData.imageUrl)
+    } catch (err) {
+      console.error('Generate error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to generate preview')
+    } finally {
       setIsGenerating(false)
-      setIsSubmitting(true)
+    }
+  }
 
-      // Save avatar
+  // Save current avatar settings
+  const handleSave = async (): Promise<void> => {
+    setError(null)
+    setIsSubmitting(true)
+
+    try {
       const avatarPayload = {
         skinTone,
         hairStyle,
         hairColor,
         jerseyNumber: parseInt(jerseyNumber) || 9,
-        previewImage: previewData.imageUrl,
+        previewImage: previewImage || undefined, // Only include if we have a new preview
       }
 
       const res = await fetch('/api/users/avatar', {
@@ -177,7 +188,6 @@ function AvatarPageContent(): JSX.Element {
       console.error('Save error:', err)
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
-      setIsGenerating(false)
       setIsSubmitting(false)
     }
   }
@@ -191,22 +201,32 @@ function AvatarPageContent(): JSX.Element {
   ]
 
   return (
-    <main className="min-h-screen bg-transparent flex flex-col">
+    <main
+      className="min-h-screen flex flex-col relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Light overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+
       {/* Header */}
-      <div className="p-4 pt-6">
+      <div className="p-4 pt-6 relative z-10">
         <h1 className="text-2xl font-bold text-white">Create Avatar</h1>
         <p className="text-white/60 text-sm">Basketball</p>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mx-4 bg-red-500/20 border border-red-500/30 text-red-200 px-4 py-2 rounded-lg text-sm">
+        <div className="mx-4 bg-red-500/20 border border-red-500/30 text-red-200 px-4 py-2 rounded-lg text-sm relative z-10">
           {error}
         </div>
       )}
 
       {/* Avatar Display - takes up most of the screen */}
-      <div className="flex-1 relative flex items-center justify-center px-4">
+      <div className="flex-1 relative flex items-center justify-center px-4 z-10">
         {isGenerating ? (
           <div className="flex flex-col items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white mb-4" />
@@ -229,7 +249,7 @@ function AvatarPageContent(): JSX.Element {
       </div>
 
       {/* Tab Content Area */}
-      <div className="px-4 py-3 min-h-[100px]">
+      <div className="px-4 py-3 min-h-[100px] relative z-10">
         {activeTab === 'skin' && (
           <div className="flex gap-3 justify-center flex-wrap">
             {VALID_SKIN_TONES.map((tone) => (
@@ -328,7 +348,7 @@ function AvatarPageContent(): JSX.Element {
       </div>
 
       {/* Tab Bar */}
-      <div className="border-t border-white/10">
+      <div className="border-t border-white/10 relative z-10">
         <div className="flex overflow-x-auto">
           {tabs.map((tab) => (
             <button
@@ -346,19 +366,26 @@ function AvatarPageContent(): JSX.Element {
         </div>
       </div>
 
-      {/* Save Button */}
-      <div className="p-4 border-t border-white/10">
+      {/* Action Buttons */}
+      <div className="p-4 border-t border-white/10 space-y-2 relative z-10">
         <button
-          onClick={handleGenerateAndSave}
+          onClick={handleGeneratePreview}
+          disabled={isSubmitting || isGenerating}
+          className="w-full py-3 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-semibold rounded-lg transition-all disabled:opacity-50 border border-yellow-500/30"
+        >
+          {isGenerating ? 'Generating...' : 'Generate Preview'}
+        </button>
+        <button
+          onClick={handleSave}
           disabled={isSubmitting || isGenerating}
           className="w-full py-3 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all disabled:opacity-50 border border-white/30"
         >
-          {isGenerating ? 'Generating...' : isSubmitting ? 'Saving...' : 'Save Avatar'}
+          {isSubmitting ? 'Saving...' : 'Save Avatar'}
         </button>
       </div>
 
       {/* Sponsor Footer */}
-      <div className="py-3 text-center">
+      <div className="py-3 text-center relative z-10">
         <p className="text-xs text-white/30">BB Championship sponsored by DONK</p>
       </div>
     </main>

@@ -180,9 +180,7 @@ export default function PlayerPage(): JSX.Element {
       <div className="flex-1 px-4 pb-4 flex flex-col min-h-0">
         {/* Player Name & Rank */}
         <div className="flex items-center justify-between mb-2 shrink-0">
-          <h1 className="text-xl font-bold text-white truncate">
-            {data.player.name || 'Player'}
-          </h1>
+          <h1 className="text-xl font-bold text-white truncate">{data.player.name || 'Player'}</h1>
           <div className="flex items-center gap-1 bg-yellow-500/20 px-3 py-1 rounded-lg">
             <span className="text-yellow-400 text-sm">🏆</span>
             <span className="text-white font-bold">#{data.stats.rank || '-'}</span>
@@ -215,7 +213,10 @@ export default function PlayerPage(): JSX.Element {
         {/* Detailed Stats - Compact */}
         <div className="bg-white/5 rounded-xl p-3 mb-3 shrink-0">
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-            <StatRow label="Matches" value={`${data.stats.matchesWon}W / ${data.stats.matchesLost}L`} />
+            <StatRow
+              label="Matches"
+              value={`${data.stats.matchesWon}W / ${data.stats.matchesLost}L`}
+            />
             <StatRow label="Challenges" value={`${data.stats.challengesCompleted}`} />
             <StatRow label="3PT %" value={`${data.detailedStats.threePointAccuracy}%`} />
             <StatRow label="FT %" value={`${data.detailedStats.freeThrowAccuracy}%`} />
@@ -234,9 +235,7 @@ export default function PlayerPage(): JSX.Element {
 
         {/* Challenge Button - Fixed at bottom */}
         <div className="shrink-0 space-y-2">
-          {challengeError && (
-            <p className="text-red-400 text-xs text-center">{challengeError}</p>
-          )}
+          {challengeError && <p className="text-red-400 text-xs text-center">{challengeError}</p>}
           <button
             onClick={handleChallenge}
             disabled={isChallengeSending}
@@ -252,9 +251,7 @@ export default function PlayerPage(): JSX.Element {
             )}
           </button>
           {!userVenue && (
-            <p className="text-center text-white/40 text-xs">
-              Check in to a venue to challenge
-            </p>
+            <p className="text-center text-white/40 text-xs">Check in to a venue to challenge</p>
           )}
         </div>
       </div>

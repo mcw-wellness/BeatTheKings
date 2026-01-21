@@ -36,8 +36,8 @@ describe('Avatar Prompts', () => {
       const prompt = buildAvatarPrompt(input)
 
       expect(prompt).toContain('basketball jersey')
-      expect(prompt).toContain('basketball shoes')
-      expect(prompt).toContain('spinning basketball')
+      expect(prompt).toContain('basketball sneakers')
+      expect(prompt).toContain('basketball shorts')
     })
 
     it('should include soccer outfit when sport is soccer', () => {
@@ -53,7 +53,7 @@ describe('Avatar Prompts', () => {
 
       expect(prompt).toContain('soccer jersey')
       expect(prompt).toContain('cleats')
-      expect(prompt).toContain('soccer ball')
+      expect(prompt).toContain('shorts')
     })
 
     it('should include base style keywords', () => {
@@ -67,9 +67,9 @@ describe('Avatar Prompts', () => {
       const prompt = buildAvatarPrompt(input)
 
       expect(prompt.toLowerCase()).toContain('cartoon')
-      expect(prompt).toContain('card style')
-      expect(prompt).toContain('full body')
-      expect(prompt).toContain('stadium background')
+      expect(prompt).toContain('trading cards')
+      expect(prompt.toUpperCase()).toContain('FULL BODY')
+      expect(prompt).toContain('gradient background')
     })
 
     it('should handle different skin tones', () => {
@@ -154,8 +154,8 @@ describe('Avatar Prompts', () => {
       const prompt = buildDefaultAvatarPrompt('male', 'basketball')
 
       expect(prompt.toLowerCase()).toContain('cartoon')
-      expect(prompt).toContain('card style')
-      expect(prompt).toContain('stadium background')
+      expect(prompt).toContain('trading cards')
+      expect(prompt).toContain('gradient background')
     })
   })
 

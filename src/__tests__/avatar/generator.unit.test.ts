@@ -55,8 +55,8 @@ describe('Avatar Generator', () => {
       })
 
       expect(prompt.toLowerCase()).toContain('cartoon')
-      expect(prompt).toContain('card style')
-      expect(prompt).toContain('stadium background')
+      expect(prompt).toContain('trading cards')
+      expect(prompt).toContain('gradient background')
     })
 
     it('should handle all skin tones', () => {

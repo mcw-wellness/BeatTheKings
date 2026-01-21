@@ -3,6 +3,7 @@ import { getDb } from '@/db'
 import { getSession, updateUserProfile } from '@/lib/auth'
 import { uploadProfilePicture, getProfilePictureSasUrl, uploadAvatar } from '@/lib/azure-storage'
 import { analyzePhotoForAvatar } from '@/lib/ai/analyze-photo'
+import { analyzePhotoForAvatar as analyzePhotoDetailed } from '@/lib/gemini'
 import { generateAvatarImage } from '@/lib/avatar/generator'
 import {
   avatarExists,
@@ -52,12 +53,21 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     logger.info({ userId: session.user.id }, 'Profile picture uploaded')
 
-    // Step 2: Analyze photo to extract avatar features
+    // Step 2: Analyze photo to extract avatar features (basic JSON features)
     logger.info({ userId: session.user.id }, 'Analyzing photo for avatar features')
     const features = await analyzePhotoForAvatar(image)
     logger.info({ userId: session.user.id, features }, 'Photo analysis complete')
 
-    // Step 3: Generate avatar using extracted features AND reference photo
+    // Step 3: Get detailed photo analysis for consistent avatar regeneration
+    let detailedPhotoAnalysis: string | undefined
+    try {
+      detailedPhotoAnalysis = await analyzePhotoDetailed(image)
+      logger.info({ userId: session.user.id }, 'Detailed photo analysis complete')
+    } catch (error) {
+      logger.warn({ error }, 'Detailed photo analysis failed')
+    }
+
+    // Step 4: Generate avatar using extracted features AND reference photo
     let avatarImageUrl: string | undefined
     try {
       const avatarBuffer = await generateAvatarImage({
@@ -67,6 +77,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         hairColor: features.hairColor,
         jerseyNumber: 9, // Default jersey number
         referencePhoto: image, // Pass the original photo for resemblance
+        storedPhotoAnalysis: detailedPhotoAnalysis, // Use detailed analysis for consistency
       })
       avatarImageUrl = await uploadAvatar(session.user.id, avatarBuffer)
       logger.info({ userId: session.user.id }, 'Avatar generated and uploaded')
@@ -74,7 +85,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       logger.warn({ error }, 'Avatar generation failed, will use defaults on avatar page')
     }
 
-    // Step 4: Save avatar to database
+    // Step 5: Save avatar to database with photo analysis
     const hasExistingAvatar = await avatarExists(db, session.user.id)
 
     if (hasExistingAvatar) {
@@ -86,6 +97,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           hairStyle: features.hairStyle,
           hairColor: features.hairColor,
           imageUrl: avatarImageUrl,
+          photoAnalysis: detailedPhotoAnalysis,
         })
 
         // Update equipment
@@ -102,6 +114,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         hairStyle: features.hairStyle,
         hairColor: features.hairColor,
         imageUrl: avatarImageUrl,
+        photoAnalysis: detailedPhotoAnalysis,
       })
 
       // Unlock default items

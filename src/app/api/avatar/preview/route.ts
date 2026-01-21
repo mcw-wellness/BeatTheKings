@@ -1,12 +1,16 @@
 /**
  * API Route: POST /api/avatar/preview
  * Generate avatar preview using Gemini AI
- * Returns base64 image data for preview (not saved to storage)
+ * Uses image editing for consistency when an existing avatar exists
  */
 
 import { NextResponse } from 'next/server'
+import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { generateAvatarImage } from '@/lib/avatar/generator'
+import { editAvatarImage } from '@/lib/gemini'
+import { getProfilePictureBase64, getAvatarBase64 } from '@/lib/azure-storage'
+import { getAvatar } from '@/lib/avatar'
 import { logger } from '@/lib/utils/logger'
 
 interface PreviewRequest {
@@ -17,6 +21,7 @@ interface PreviewRequest {
   sport?: string
   ageGroup?: string
   jerseyNumber?: number
+  jerseyColor?: string
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -36,6 +41,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       sport = 'basketball',
       ageGroup,
       jerseyNumber,
+      jerseyColor,
     } = body
 
     // Validate required fields
@@ -46,18 +52,52 @@ export async function POST(request: Request): Promise<NextResponse> {
       )
     }
 
-    logger.info({ userId: session.user.id, ...body }, 'Generating avatar preview')
+    const db = getDb()
 
-    // Generate avatar with Gemini
-    const imageBuffer = await generateAvatarImage({
-      gender,
-      skinTone,
-      hairStyle,
-      hairColor,
-      sport,
-      ageGroup,
-      jerseyNumber,
-    })
+    // Check if user has an existing avatar image
+    const existingAvatarImage = await getAvatarBase64(session.user.id)
+
+    let imageBuffer: Buffer
+
+    if (existingAvatarImage) {
+      // Use image editing to modify existing avatar (maintains consistency)
+      logger.info({ userId: session.user.id, ...body }, 'Editing existing avatar for preview')
+
+      imageBuffer = await editAvatarImage(existingAvatarImage, {
+        skinTone,
+        hairStyle,
+        hairColor,
+        sport,
+        jerseyNumber,
+        jerseyColor,
+      })
+    } else {
+      // No existing avatar - generate from scratch using photo analysis
+      logger.info(
+        { userId: session.user.id, ...body },
+        'Generating new avatar for preview (no existing avatar)'
+      )
+
+      // Fetch user's avatar record to get stored photo analysis
+      const avatar = await getAvatar(db, session.user.id)
+      const storedPhotoAnalysis = avatar?.photoAnalysis || undefined
+
+      // Fetch user's profile picture to use as reference
+      const referencePhoto = await getProfilePictureBase64(session.user.id)
+
+      imageBuffer = await generateAvatarImage({
+        gender,
+        skinTone,
+        hairStyle,
+        hairColor,
+        sport,
+        ageGroup,
+        jerseyNumber,
+        jerseyColor,
+        referencePhoto: referencePhoto || undefined,
+        storedPhotoAnalysis,
+      })
+    }
 
     // Return as base64 data URL for preview
     const base64 = imageBuffer.toString('base64')
