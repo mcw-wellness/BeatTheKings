@@ -201,18 +201,12 @@ export async function PUT(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Avatar not found. Use POST to create.' }, { status: 404 })
     }
 
-    // Merge existing values with updates
-    const skinTone = validation.data.skinTone || existingAvatar.skinTone || 'medium'
-    const hairStyle = validation.data.hairStyle || existingAvatar.hairStyle || 'short'
-    const hairColor = validation.data.hairColor || existingAvatar.hairColor || 'black'
-
-    // Get user's gender for AI generation
-    const gender = await getUserGender(session.user.id)
-
     // Check if a pre-generated preview image was provided
     const previewImage = (body as { previewImage?: string }).previewImage
     const jerseyNumber = (body as { jerseyNumber?: number }).jerseyNumber
 
+    // Only update image if a new preview was explicitly provided
+    // Otherwise, keep the existing image (don't regenerate)
     let imageUrl: string | undefined
     if (previewImage && previewImage.startsWith('data:image/')) {
       // Use the pre-generated preview image
@@ -224,29 +218,15 @@ export async function PUT(request: Request): Promise<NextResponse> {
       } catch (error) {
         logger.warn({ error }, 'Failed to upload preview image')
       }
-    } else {
-      // Try to regenerate AI avatar image
-      try {
-        const imageBuffer = await generateAvatarImage({
-          gender,
-          skinTone,
-          hairStyle,
-          hairColor,
-          jerseyNumber,
-        })
-        imageUrl = await uploadAvatar(session.user.id, imageBuffer)
-        logger.info({ userId: session.user.id, imageUrl }, 'AI avatar regenerated and uploaded')
-      } catch (error) {
-        // Log but continue - keep existing image or use SVG fallback
-        logger.warn({ error }, 'AI avatar regeneration skipped')
-      }
     }
+    // If no previewImage provided, imageUrl stays undefined and existing image is preserved
 
-    // Update avatar with new values and optional image URL
-    const updated = await updateAvatar(db, existingAvatar.id, {
-      ...validation.data,
-      imageUrl,
-    })
+    // Update avatar with new values (only include imageUrl if we have a new one)
+    const updateData = { ...validation.data }
+    if (imageUrl) {
+      Object.assign(updateData, { imageUrl })
+    }
+    const updated = await updateAvatar(db, existingAvatar.id, updateData)
 
     // Upsert equipment (create if not exists, update jersey number if exists)
     const basketballId = await getBasketballSportId(db)

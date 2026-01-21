@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { useAvatarUrl } from '@/lib/hooks/useAvatarUrl'
+import { useAvatarUrlWithLoading } from '@/lib/hooks/useAvatarUrl'
 
 interface PlayerStats {
   totalXp: number
@@ -36,7 +36,10 @@ function WelcomePageContent(): JSX.Element {
   const [stats, setStats] = useState<PlayerStats | null>(null)
   const [rank, setRank] = useState<number | null>(null)
 
-  const avatarUrl = useAvatarUrl({ type: 'user', userId: 'me' })
+  const { url: avatarUrl, isLoading: isAvatarLoading } = useAvatarUrlWithLoading({
+    type: 'user',
+    userId: 'me',
+  })
 
   const displayName = session?.user?.nickname || session?.user?.name || 'Player'
   const hasCreatedAvatar = session?.user?.hasCreatedAvatar ?? false
@@ -121,7 +124,11 @@ function WelcomePageContent(): JSX.Element {
             className="w-[55%] flex items-center justify-center cursor-pointer"
             onClick={() => router.push('/avatar')}
           >
-            {avatarUrl ? (
+            {isAvatarLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white" />
+              </div>
+            ) : avatarUrl ? (
               <div className="relative w-full h-[90%]">
                 {/* Crown for King */}
                 {isKing && (

@@ -64,6 +64,7 @@ function AvatarPageContent(): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabType>('hair')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isLoadingAvatar, setIsLoadingAvatar] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null)
@@ -71,6 +72,7 @@ function AvatarPageContent(): JSX.Element {
   // Fetch user's existing profile and avatar data
   useEffect(() => {
     const fetchUserData = async (): Promise<void> => {
+      setIsLoadingAvatar(true)
       try {
         const profileRes = await fetch('/api/users/profile')
         if (profileRes.ok) {
@@ -101,6 +103,8 @@ function AvatarPageContent(): JSX.Element {
         }
       } catch (error) {
         console.error('Error in fetchUserData:', error)
+      } finally {
+        setIsLoadingAvatar(false)
       }
     }
     fetchUserData()
@@ -214,7 +218,9 @@ function AvatarPageContent(): JSX.Element {
 
       {/* Header */}
       <div className="p-4 pt-6 relative z-10">
-        <h1 className="text-2xl font-bold text-white">Create Avatar</h1>
+        <h1 className="text-2xl font-bold text-white">
+          {savedAvatarUrl ? 'Edit Avatar' : 'Create Avatar'}
+        </h1>
         <p className="text-white/60 text-sm">Basketball</p>
       </div>
 
@@ -231,6 +237,10 @@ function AvatarPageContent(): JSX.Element {
           <div className="flex flex-col items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white mb-4" />
             <p className="text-white/60">Generating your avatar...</p>
+          </div>
+        ) : isLoadingAvatar && !previewImage ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white" />
           </div>
         ) : displayAvatarUrl ? (
           <div className="relative w-full max-w-sm h-[50vh] min-h-[300px]">
