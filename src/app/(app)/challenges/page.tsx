@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocation } from '@/context/LocationContext'
 import Image from 'next/image'
+import { Logo } from '@/components/layout/Logo'
 
 interface ChallengeVenue {
   id: string
@@ -109,17 +110,36 @@ export default function ChallengesPage(): JSX.Element {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent" />
+      <main
+        className="min-h-screen flex items-center justify-center relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent relative z-10" />
       </main>
     )
   }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col items-center justify-center p-4">
-        <p className="text-red-500 mb-4">{error}</p>
-        <button onClick={fetchVenues} className="text-[#4361EE] underline">
+      <main
+        className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <p className="text-red-300 mb-4 relative z-10">{error}</p>
+        <button
+          onClick={fetchVenues}
+          className="text-white/80 hover:text-white underline relative z-10"
+        >
           Try Again
         </button>
       </main>
@@ -134,29 +154,37 @@ export default function ChallengesPage(): JSX.Element {
   )
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-lg mx-auto p-4 space-y-4">
+    <main
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Light overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+
+      <div className="max-w-lg mx-auto p-4 space-y-4 relative z-10">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="text-gray-600 hover:text-gray-900">
-            ← Back
-          </button>
-          <h1 className="text-xl font-bold text-gray-900 flex-1">Challenges</h1>
+          <Logo size="sm" linkToHome className="w-10 h-10" />
+          <h1 className="text-xl font-bold text-white flex-1">Challenges</h1>
         </div>
 
         {/* Received Challenges */}
         {receivedChallenges.length > 0 && (
           <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wide">
               Challenge Requests
             </h2>
             {receivedChallenges.map((match) => (
               <div
                 key={match.id}
-                className="bg-orange-50 border border-orange-200 rounded-xl p-4 shadow"
+                className="bg-orange-500/20 backdrop-blur border border-orange-500/40 rounded-xl p-4"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-white/20">
                     {match.opponent.avatar?.imageUrl ? (
                       <Image
                         src={match.opponent.avatar.imageUrl}
@@ -172,24 +200,24 @@ export default function ChallengesPage(): JSX.Element {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-white">
                       {match.opponent.name || 'Player'} challenged you!
                     </p>
-                    <p className="text-sm text-gray-500">{match.venueName}</p>
+                    <p className="text-sm text-white/60">{match.venueName}</p>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => handleRespond(match.id, true)}
                     disabled={respondingTo === match.id}
-                    className="flex-1 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors"
+                    className="flex-1 py-2 bg-green-500/80 hover:bg-green-500 disabled:bg-white/30 text-white font-semibold rounded-lg transition-colors"
                   >
                     {respondingTo === match.id ? '...' : 'Accept'}
                   </button>
                   <button
                     onClick={() => handleRespond(match.id, false)}
                     disabled={respondingTo === match.id}
-                    className="flex-1 py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors"
+                    className="flex-1 py-2 bg-red-500/80 hover:bg-red-500 disabled:bg-white/30 text-white font-semibold rounded-lg transition-colors"
                   >
                     Decline
                   </button>
@@ -202,17 +230,17 @@ export default function ChallengesPage(): JSX.Element {
         {/* Sent Challenges (Waiting) */}
         {sentChallenges.length > 0 && (
           <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wide">
               Waiting for Response
             </h2>
             {sentChallenges.map((match) => (
               <div
                 key={match.id}
                 onClick={() => router.push(`/challenges/1v1/${match.id}/pending`)}
-                className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow cursor-pointer active:scale-[0.98] transition-transform"
+                className="bg-yellow-500/20 backdrop-blur border border-yellow-500/40 rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-transform"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-white/20">
                     {match.opponent.avatar?.imageUrl ? (
                       <Image
                         src={match.opponent.avatar.imageUrl}
@@ -228,12 +256,12 @@ export default function ChallengesPage(): JSX.Element {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-white">
                       Challenge to {match.opponent.name || 'Player'}
                     </p>
-                    <p className="text-sm text-yellow-600">Waiting for response...</p>
+                    <p className="text-sm text-yellow-300">Waiting for response...</p>
                   </div>
-                  <span className="text-gray-400">→</span>
+                  <span className="text-white/50">→</span>
                 </div>
               </div>
             ))}
@@ -243,7 +271,7 @@ export default function ChallengesPage(): JSX.Element {
         {/* Active Matches */}
         {activeMatches.length > 0 && (
           <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wide">
               Active Matches
             </h2>
             {activeMatches.map((match) => (
@@ -254,10 +282,10 @@ export default function ChallengesPage(): JSX.Element {
                     `/challenges/1v1/${match.id}/${match.status === 'accepted' ? 'ready' : 'record'}`
                   )
                 }
-                className="bg-green-50 border border-green-200 rounded-xl p-4 shadow cursor-pointer active:scale-[0.98] transition-transform"
+                className="bg-green-500/20 backdrop-blur border border-green-500/40 rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-transform"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-white/20">
                     {match.opponent.avatar?.imageUrl ? (
                       <Image
                         src={match.opponent.avatar.imageUrl}
@@ -273,14 +301,12 @@ export default function ChallengesPage(): JSX.Element {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900">
-                      vs {match.opponent.name || 'Player'}
-                    </p>
-                    <p className="text-sm text-green-600">
+                    <p className="font-semibold text-white">vs {match.opponent.name || 'Player'}</p>
+                    <p className="text-sm text-green-300">
                       {match.status === 'accepted' ? 'Ready to play!' : 'In progress'}
                     </p>
                   </div>
-                  <span className="text-green-500 font-bold">GO →</span>
+                  <span className="text-green-300 font-bold">GO →</span>
                 </div>
               </div>
             ))}
@@ -289,11 +315,11 @@ export default function ChallengesPage(): JSX.Element {
 
         {/* Solo Challenges Section */}
         <div className="pt-2">
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
+          <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wide mb-2">
             Solo Challenges
           </h2>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-            <p className="text-blue-800 text-sm">
+          <div className="bg-white/10 backdrop-blur border border-white/20 rounded-lg p-3 mb-3">
+            <p className="text-white/80 text-sm">
               Select a venue to see available challenges. Venues are sorted by distance.
             </p>
           </div>
@@ -302,7 +328,7 @@ export default function ChallengesPage(): JSX.Element {
         {/* Venue List */}
         {venues.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">No venues available</p>
+            <p className="text-white/60">No venues available</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -310,25 +336,25 @@ export default function ChallengesPage(): JSX.Element {
               <div
                 key={venue.id}
                 onClick={() => navigateToVenue(venue.id)}
-                className="bg-white rounded-xl shadow p-4 cursor-pointer active:scale-[0.98] transition-transform border border-gray-100"
+                className="bg-white/10 backdrop-blur rounded-xl border border-white/20 p-4 cursor-pointer active:scale-[0.98] transition-transform"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{venue.name}</h3>
-                    {venue.district && <p className="text-gray-500 text-sm">{venue.district}</p>}
+                    <h3 className="font-semibold text-white">{venue.name}</h3>
+                    {venue.district && <p className="text-white/60 text-sm">{venue.district}</p>}
                     <div className="flex items-center gap-3 mt-2">
-                      <span className="text-xs text-gray-600 flex items-center gap-1">
+                      <span className="text-xs text-white/60 flex items-center gap-1">
                         <span>🏆</span>
                         <span>{venue.challengeCount} challenges</span>
                       </span>
-                      <span className="text-xs text-gray-600 flex items-center gap-1">
+                      <span className="text-xs text-white/60 flex items-center gap-1">
                         <span>👥</span>
                         <span>{venue.activePlayerCount} active</span>
                       </span>
                     </div>
                   </div>
                   {venue.distanceFormatted && (
-                    <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full">
+                    <span className="bg-white/20 text-white text-sm px-3 py-1 rounded-full">
                       {venue.distanceFormatted}
                     </span>
                   )}
@@ -340,7 +366,7 @@ export default function ChallengesPage(): JSX.Element {
 
         {/* Location Hint */}
         {!latitude && (
-          <p className="text-center text-yellow-600 text-xs">
+          <p className="text-center text-yellow-300 text-xs">
             Enable location to sort venues by distance
           </p>
         )}

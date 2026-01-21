@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { Logo } from '@/components/layout/Logo'
 
 interface RankedPlayer {
   id: string
@@ -73,18 +74,23 @@ export default function RankingPage(): JSX.Element {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-lg mx-auto p-4 space-y-4">
+    <main
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Light overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+
+      <div className="max-w-lg mx-auto p-4 space-y-4 relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push('/welcome')}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              ← Back
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">Rankings</h1>
+            <Logo size="sm" linkToHome className="w-10 h-10" />
+            <h1 className="text-xl font-bold text-white">Rankings</h1>
           </div>
           <div className="flex gap-2">
             <span className="text-2xl">🏀</span>
@@ -92,13 +98,13 @@ export default function RankingPage(): JSX.Element {
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-white rounded-xl p-1 shadow">
+        <div className="flex bg-white/10 backdrop-blur rounded-xl p-1 border border-white/20">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                tab === t.id ? 'bg-[#4361EE] text-white' : 'text-gray-500 hover:text-gray-900'
+                tab === t.id ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white'
               }`}
             >
               {t.label}
@@ -108,7 +114,7 @@ export default function RankingPage(): JSX.Element {
 
         {/* Location */}
         {data?.location && (
-          <p className="text-gray-500 text-sm text-center">
+          <p className="text-white/60 text-sm text-center">
             {data.location.name} • {data.totalPlayers} players
           </p>
         )}
@@ -116,26 +122,26 @@ export default function RankingPage(): JSX.Element {
         {/* Content */}
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent" />
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
           </div>
         ) : error ? (
-          <div className="text-center py-12 text-red-500">{error}</div>
+          <div className="text-center py-12 text-red-300">{error}</div>
         ) : data ? (
           <>
             {/* King Section */}
             {data.king && (
               <div
                 onClick={() => openPlayerCard(data.king!.id)}
-                className="bg-gradient-to-r from-yellow-100 to-yellow-50 border border-yellow-300 rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-transform shadow"
+                className="bg-yellow-500/20 backdrop-blur border border-yellow-500/40 rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-transform"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-xl">👑</span>
-                  <span className="text-yellow-700 font-bold text-sm uppercase tracking-wide">
+                  <span className="text-yellow-300 font-bold text-sm uppercase tracking-wide">
                     King of the {tab === 'venue' ? 'Court' : tab === 'city' ? 'City' : 'Country'}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-yellow-200 flex items-center justify-center overflow-hidden border-2 border-yellow-500">
+                  <div className="w-16 h-16 rounded-full bg-yellow-500/30 flex items-center justify-center overflow-hidden border-2 border-yellow-500/60">
                     <Image
                       src={data.king.avatar?.imageUrl || ''}
                       alt="Avatar"
@@ -146,23 +152,23 @@ export default function RankingPage(): JSX.Element {
                     />
                   </div>
                   <div className="flex-1">
-                    <p className="text-gray-900 font-bold text-lg">{data.king.name || 'Player'}</p>
-                    <p className="text-yellow-600 text-sm">XP: {data.king.xp.toLocaleString()}</p>
+                    <p className="text-white font-bold text-lg">{data.king.name || 'Player'}</p>
+                    <p className="text-yellow-300 text-sm">XP: {data.king.xp.toLocaleString()}</p>
                   </div>
-                  <div className="text-3xl font-bold text-yellow-600">#1</div>
+                  <div className="text-3xl font-bold text-yellow-300">#1</div>
                 </div>
               </div>
             )}
 
             {/* Rankings List */}
             <div className="space-y-2">
-              <h2 className="text-gray-700 font-semibold text-sm uppercase tracking-wide px-1">
+              <h2 className="text-white/80 font-semibold text-sm uppercase tracking-wide px-1">
                 Top Players
               </h2>
               {data.rankings.length === 0 ? (
-                <div className="bg-white rounded-xl shadow p-8 text-center">
-                  <p className="text-gray-500">No players ranked yet</p>
-                  <p className="text-gray-400 text-sm mt-1">
+                <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 p-8 text-center">
+                  <p className="text-white/70">No players ranked yet</p>
+                  <p className="text-white/50 text-sm mt-1">
                     Complete matches to earn XP and appear here!
                   </p>
                 </div>
@@ -171,10 +177,10 @@ export default function RankingPage(): JSX.Element {
                   <div
                     key={player.id}
                     onClick={() => openPlayerCard(player.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer active:scale-[0.98] transition-transform shadow ${
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer active:scale-[0.98] transition-transform backdrop-blur ${
                       player.isKing
-                        ? 'bg-yellow-50 border border-yellow-300'
-                        : 'bg-white active:bg-gray-50'
+                        ? 'bg-yellow-500/20 border border-yellow-500/40'
+                        : 'bg-white/10 border border-white/20 active:bg-white/20'
                     }`}
                   >
                     {/* Rank */}
@@ -186,14 +192,14 @@ export default function RankingPage(): JSX.Element {
                             ? 'bg-gray-400 text-white'
                             : player.rank === 3
                               ? 'bg-orange-500 text-white'
-                              : 'bg-gray-200 text-gray-600'
+                              : 'bg-white/20 text-white'
                       }`}
                     >
                       {player.rank}
                     </div>
 
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
                       <Image
                         src={player.avatar?.imageUrl || ''}
                         alt="Avatar"
@@ -206,7 +212,7 @@ export default function RankingPage(): JSX.Element {
 
                     {/* Name */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-gray-900 font-medium truncate">
+                      <p className="text-white font-medium truncate">
                         {player.name || 'Player'}
                         {player.isKing && <span className="ml-2">👑</span>}
                       </p>
@@ -214,8 +220,8 @@ export default function RankingPage(): JSX.Element {
 
                     {/* XP */}
                     <div className="text-right">
-                      <p className="text-[#4361EE] font-bold">{player.xp.toLocaleString()}</p>
-                      <p className="text-gray-400 text-xs">XP</p>
+                      <p className="text-white font-bold">{player.xp.toLocaleString()}</p>
+                      <p className="text-white/50 text-xs">XP</p>
                     </div>
                   </div>
                 ))
@@ -225,16 +231,16 @@ export default function RankingPage(): JSX.Element {
             {/* Current User Rank (if not in top 10) */}
             {data.currentUser && data.currentUser.rank > 10 && (
               <>
-                <div className="border-t border-gray-200 my-4" />
-                <div className="text-gray-500 text-xs text-center mb-2">Your Rank</div>
+                <div className="border-t border-white/20 my-4" />
+                <div className="text-white/60 text-xs text-center mb-2">Your Rank</div>
                 <div
                   onClick={() => openPlayerCard(data.currentUser!.id)}
-                  className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl cursor-pointer active:scale-[0.98] transition-transform shadow"
+                  className="flex items-center gap-3 p-3 bg-white/20 backdrop-blur border border-white/30 rounded-xl cursor-pointer active:scale-[0.98] transition-transform"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-[#4361EE] flex items-center justify-center font-bold text-sm text-white">
+                  <div className="w-8 h-8 rounded-lg bg-white/30 flex items-center justify-center font-bold text-sm text-white">
                     {data.currentUser.rank}
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
                     <Image
                       src={data.currentUser.avatar?.imageUrl || ''}
                       alt="Avatar"
@@ -245,15 +251,13 @@ export default function RankingPage(): JSX.Element {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-gray-900 font-medium truncate">
+                    <p className="text-white font-medium truncate">
                       {data.currentUser.name || 'You'}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[#4361EE] font-bold">
-                      {data.currentUser.xp.toLocaleString()}
-                    </p>
-                    <p className="text-gray-400 text-xs">XP</p>
+                    <p className="text-white font-bold">{data.currentUser.xp.toLocaleString()}</p>
+                    <p className="text-white/50 text-xs">XP</p>
                   </div>
                 </div>
               </>

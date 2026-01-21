@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
+import { Logo } from '@/components/layout/Logo'
 
 interface UserVenue {
   venueId: string
@@ -142,17 +143,33 @@ export default function PlayerPage(): JSX.Element {
 
   if (loading) {
     return (
-      <main className="h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-3 border-yellow-400 border-t-transparent" />
+      <main
+        className="h-screen flex items-center justify-center relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <div className="animate-spin rounded-full h-10 w-10 border-3 border-yellow-400 border-t-transparent relative z-10" />
       </main>
     )
   }
 
   if (error || !data) {
     return (
-      <main className="h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex flex-col items-center justify-center p-4">
-        <p className="text-red-400 mb-4">{error || 'Player not found'}</p>
-        <button onClick={() => router.back()} className="text-yellow-400 underline">
+      <main
+        className="h-screen flex flex-col items-center justify-center p-4 relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <p className="text-red-400 mb-4 relative z-10">{error || 'Player not found'}</p>
+        <button onClick={() => router.back()} className="text-yellow-400 underline relative z-10">
           Go Back
         </button>
       </main>
@@ -160,15 +177,20 @@ export default function PlayerPage(): JSX.Element {
   }
 
   return (
-    <main className="h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] overflow-hidden flex flex-col">
+    <main
+      className="h-screen overflow-hidden flex flex-col relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Light overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+
       {/* Header - Compact */}
-      <div className="px-4 py-2 flex items-center justify-between shrink-0">
-        <button
-          onClick={() => router.back()}
-          className="text-white/70 hover:text-white text-sm flex items-center gap-1"
-        >
-          ← Back
-        </button>
+      <div className="px-4 py-2 flex items-center justify-between shrink-0 relative z-10">
+        <Logo size="sm" linkToHome className="w-10 h-10" />
         {isKing && (
           <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-1 rounded-full">
             👑 King
@@ -177,7 +199,7 @@ export default function PlayerPage(): JSX.Element {
       </div>
 
       {/* Card Content - Fills remaining space */}
-      <div className="flex-1 px-4 pb-4 flex flex-col min-h-0">
+      <div className="flex-1 px-4 pb-4 flex flex-col min-h-0 relative z-10">
         {/* Player Name & Rank */}
         <div className="flex items-center justify-between mb-2 shrink-0">
           <h1 className="text-xl font-bold text-white truncate">{data.player.name || 'Player'}</h1>

@@ -83,17 +83,36 @@ export default function MatchReadyPage(): JSX.Element {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent" />
+      <main
+        className="min-h-screen flex items-center justify-center relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent relative z-10" />
       </main>
     )
   }
 
   if (error || !match) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col items-center justify-center p-4">
-        <p className="text-red-500 mb-4">{error || 'Match not found'}</p>
-        <button onClick={() => router.back()} className="text-[#4361EE] underline">
+      <main
+        className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <p className="text-red-300 mb-4 relative z-10">{error || 'Match not found'}</p>
+        <button
+          onClick={() => router.back()}
+          className="text-white/80 hover:text-white underline relative z-10"
+        >
           Go Back
         </button>
       </main>
@@ -104,12 +123,20 @@ export default function MatchReadyPage(): JSX.Element {
   const opponent = isChallenger ? match.player2 : match.player1
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-lg mx-auto min-h-screen flex flex-col">
+    <main
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="max-w-lg mx-auto min-h-screen flex flex-col relative z-10">
         {/* Header */}
-        <header className="p-4 border-b border-gray-200 bg-white">
-          <h1 className="text-xl font-bold text-gray-900 text-center">Ready to Play!</h1>
-          <p className="text-sm text-gray-500 text-center mt-1">{match.venueName}</p>
+        <header className="p-4 border-b border-white/20 bg-black/20 backdrop-blur">
+          <h1 className="text-xl font-bold text-white text-center">Ready to Play!</h1>
+          <p className="text-sm text-white/60 text-center mt-1">{match.venueName}</p>
         </header>
 
         {/* VS Display */}
@@ -126,14 +153,12 @@ export default function MatchReadyPage(): JSX.Element {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <p className="font-semibold text-gray-900 text-sm md:text-base">
-                {you.name || 'You'}
-              </p>
-              <span className="text-xs text-green-600">Ready</span>
+              <p className="font-semibold text-white text-sm md:text-base">{you.name || 'You'}</p>
+              <span className="text-xs text-green-400">Ready</span>
             </div>
 
             {/* VS */}
-            <div className="text-2xl md:text-4xl font-bold text-gray-400">VS</div>
+            <div className="text-2xl md:text-4xl font-bold text-white/50">VS</div>
 
             {/* Opponent */}
             <div className="text-center">
@@ -146,31 +171,31 @@ export default function MatchReadyPage(): JSX.Element {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <p className="font-semibold text-gray-900 text-sm md:text-base">
+              <p className="font-semibold text-white text-sm md:text-base">
                 {opponent.name || 'Opponent'}
               </p>
-              <span className="text-xs text-blue-600">Ready</span>
+              <span className="text-xs text-blue-400">Ready</span>
             </div>
           </div>
 
           {/* Instructions */}
-          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 w-full max-w-sm mb-6">
-            <h2 className="font-semibold text-gray-900 mb-3 text-center">Recording Tips</h2>
-            <ul className="space-y-2 text-sm text-gray-600">
+          <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 p-4 md:p-6 w-full max-w-sm mb-6">
+            <h2 className="font-semibold text-white mb-3 text-center">Recording Tips</h2>
+            <ul className="space-y-2 text-sm text-white/80">
               <li className="flex items-start gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-400">✓</span>
                 Position phone to capture both players
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-400">✓</span>
                 Ensure good lighting
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-400">✓</span>
                 Record the entire match
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-400">✓</span>
                 AI will count scores automatically
               </li>
             </ul>
@@ -178,11 +203,11 @@ export default function MatchReadyPage(): JSX.Element {
         </div>
 
         {/* Start Button */}
-        <div className="p-4 md:p-6 border-t border-gray-200 bg-white">
+        <div className="p-4 md:p-6 border-t border-white/20 bg-black/20 backdrop-blur">
           <button
             onClick={handleStartRecording}
             disabled={isStarting}
-            className="w-full py-4 md:py-5 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white text-lg font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full py-4 md:py-5 bg-red-500/80 hover:bg-red-500 disabled:bg-white/30 text-white text-lg font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {isStarting ? (
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
@@ -193,7 +218,7 @@ export default function MatchReadyPage(): JSX.Element {
               </>
             )}
           </button>
-          <p className="text-gray-500 text-xs text-center mt-2">
+          <p className="text-white/50 text-xs text-center mt-2">
             Both players should be ready before starting
           </p>
         </div>

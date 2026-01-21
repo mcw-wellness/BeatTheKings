@@ -27,11 +27,19 @@ function ResultContent(): JSX.Element {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-lg mx-auto min-h-screen flex flex-col">
+    <main
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="max-w-lg mx-auto min-h-screen flex flex-col relative z-10">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900 text-center">Challenge Complete!</h1>
+        <div className="p-4 border-b border-white/20">
+          <h1 className="text-xl font-bold text-white text-center">Challenge Complete!</h1>
         </div>
 
         {/* Content */}
@@ -40,40 +48,40 @@ function ResultContent(): JSX.Element {
           <div className="text-6xl md:text-7xl mb-6">{isGoodScore ? '🎉' : '💪'}</div>
 
           {/* Score Card */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-10 text-center w-full max-w-sm mb-6">
-            <p className="text-gray-500 text-sm mb-2">Final Score</p>
-            <p className="text-5xl md:text-6xl font-bold text-gray-900">
+          <div className="bg-white/10 backdrop-blur rounded-2xl border border-white/20 p-6 md:p-10 text-center w-full max-w-sm mb-6">
+            <p className="text-white/60 text-sm mb-2">Final Score</p>
+            <p className="text-5xl md:text-6xl font-bold text-white">
               {score}
-              <span className="text-gray-400">/{max}</span>
+              <span className="text-white/50">/{max}</span>
             </p>
             <p
-              className={`text-2xl md:text-3xl font-semibold mt-2 ${isGoodScore ? 'text-green-500' : 'text-yellow-500'}`}
+              className={`text-2xl md:text-3xl font-semibold mt-2 ${isGoodScore ? 'text-green-400' : 'text-yellow-400'}`}
             >
               {accuracy}% accuracy
             </p>
           </div>
 
           {/* Message */}
-          {message && <p className="text-gray-600 text-center mb-4">{message}</p>}
+          {message && <p className="text-white/80 text-center mb-4">{message}</p>}
 
           {/* Rewards */}
           <div className="flex items-center justify-center gap-8 mb-6">
             <div className="text-center">
-              <p className="text-gray-500 text-xs">XP Earned</p>
-              <p className="text-2xl md:text-3xl font-bold text-yellow-500">+{xp}</p>
+              <p className="text-white/60 text-xs">XP Earned</p>
+              <p className="text-2xl md:text-3xl font-bold text-yellow-400">+{xp}</p>
             </div>
             {rp > 0 && (
               <div className="text-center">
-                <p className="text-gray-500 text-xs">RP Earned</p>
-                <p className="text-2xl md:text-3xl font-bold text-purple-500">+{rp}</p>
+                <p className="text-white/60 text-xs">RP Earned</p>
+                <p className="text-2xl md:text-3xl font-bold text-purple-400">+{rp}</p>
               </div>
             )}
           </div>
 
           {/* Tip for low accuracy */}
           {!isGoodScore && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 w-full max-w-sm">
-              <p className="text-yellow-700 text-sm text-center">
+            <div className="bg-yellow-500/20 border border-yellow-500/40 rounded-lg p-3 w-full max-w-sm">
+              <p className="text-yellow-300 text-sm text-center">
                 Reach 80% accuracy to earn RP rewards!
               </p>
             </div>
@@ -81,16 +89,16 @@ function ResultContent(): JSX.Element {
         </div>
 
         {/* Action Buttons */}
-        <div className="p-4 md:p-6 border-t border-gray-200 bg-white space-y-3">
+        <div className="p-4 md:p-6 border-t border-white/20 bg-black/20 backdrop-blur space-y-3">
           <button
             onClick={handleTryAgain}
-            className="w-full py-4 md:py-5 bg-[#4361EE] hover:bg-[#3651DE] text-white text-lg font-semibold rounded-xl transition-colors"
+            className="w-full py-4 md:py-5 bg-green-500/80 hover:bg-green-500 text-white text-lg font-semibold rounded-xl transition-colors"
           >
             Try Again
           </button>
           <button
             onClick={handleDone}
-            className="w-full py-3 md:py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors"
+            className="w-full py-3 md:py-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors border border-white/20"
           >
             Back to Challenges
           </button>
@@ -104,8 +112,16 @@ export default function ChallengeResultPage(): JSX.Element {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent" />
+        <main
+          className="min-h-screen flex items-center justify-center relative"
+          style={{
+            backgroundImage: 'url(/backgrounds/stadium.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent relative z-10" />
         </main>
       }
     >

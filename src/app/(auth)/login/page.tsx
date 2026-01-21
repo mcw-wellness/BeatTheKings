@@ -23,8 +23,16 @@ export default function LoginPage(): JSX.Element {
 
 function LoginPageSkeleton(): JSX.Element {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-transparent">
-      <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8 animate-pulse">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8 animate-pulse relative z-10">
         <div className="flex justify-center">
           <div className="w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full" />
         </div>
@@ -94,8 +102,18 @@ function LoginPageContent(): JSX.Element {
   const isButtonDisabled = isSigningIn || authLoading
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-transparent">
-      <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Light overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+
+      <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8 relative z-10">
         {/* Logo */}
         <div className="flex justify-center">
           <div className="w-48 h-48 sm:w-64 sm:h-64">

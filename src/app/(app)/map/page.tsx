@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
 import { useLocation } from '@/context/LocationContext'
+import { Logo } from '@/components/layout/Logo'
 
 interface VenueItem {
   id: string
@@ -138,28 +139,41 @@ export default function MapPage(): JSX.Element {
 
   if (loadError) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <p className="text-red-500 mb-2">Failed to load Google Maps</p>
-          <p className="text-gray-500 text-sm">Please check your API key configuration</p>
+      <main
+        className="min-h-screen flex items-center justify-center p-4 relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <div className="text-center relative z-10">
+          <p className="text-red-300 mb-2">Failed to load Google Maps</p>
+          <p className="text-white/60 text-sm">Please check your API key configuration</p>
         </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
+    <main
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Light overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+
+      <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4 md:space-y-6 relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push('/welcome')}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              ← Back
-            </button>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Venue Map</h1>
+            <Logo size="sm" linkToHome className="w-10 h-10" />
+            <h1 className="text-xl md:text-2xl font-bold text-white">Venue Map</h1>
           </div>
           <span className="text-2xl md:text-3xl">🏀</span>
         </div>
@@ -167,23 +181,23 @@ export default function MapPage(): JSX.Element {
         {/* Location Status */}
         <div className="text-sm text-center">
           {geoLoading ? (
-            <p className="text-gray-500">Getting your location...</p>
+            <p className="text-white/60">Getting your location...</p>
           ) : latitude ? (
-            <p className="text-green-600">📍 Showing venues near you</p>
+            <p className="text-green-300">📍 Showing venues near you</p>
           ) : permission === 'denied' ? (
             <div className="space-y-2">
-              <p className="text-yellow-600">📍 Location access denied</p>
-              <p className="text-xs text-gray-500">
+              <p className="text-yellow-300">📍 Location access denied</p>
+              <p className="text-xs text-white/50">
                 Enable Location Services in your phone settings, then allow this site to access
                 location
               </p>
             </div>
           ) : geoError ? (
             <div className="space-y-2">
-              <p className="text-yellow-600">📍 {geoError}</p>
+              <p className="text-yellow-300">📍 {geoError}</p>
               <button
                 onClick={requestPermission}
-                className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-3 py-1 bg-white/20 text-white text-xs font-medium rounded-lg hover:bg-white/30 transition-colors"
               >
                 Try Again
               </button>
@@ -191,7 +205,7 @@ export default function MapPage(): JSX.Element {
           ) : (
             <button
               onClick={requestPermission}
-              className="px-4 py-2 bg-[#4361EE] text-white text-sm font-medium rounded-lg hover:bg-[#3651DE] transition-colors"
+              className="px-4 py-2 bg-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/30 transition-colors border border-white/30"
             >
               📍 Enable Location
             </button>
@@ -199,7 +213,7 @@ export default function MapPage(): JSX.Element {
         </div>
 
         {/* Map */}
-        <div className="bg-white rounded-xl md:rounded-2xl shadow overflow-hidden h-[350px] md:h-[450px]">
+        <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 overflow-hidden h-[350px] md:h-[450px]">
           {isLoaded && !isLoading ? (
             <GoogleMap
               mapContainerStyle={mapContainerStyle}
@@ -264,7 +278,7 @@ export default function MapPage(): JSX.Element {
                     )}
                     <button
                       onClick={() => handleVenueSelect(infoWindowVenue)}
-                      className="mt-2 w-full py-1 px-2 bg-[#4361EE] text-white text-sm rounded hover:bg-[#3651DE]"
+                      className="mt-2 w-full py-1 px-2 bg-white/20 text-gray-900 text-sm rounded hover:bg-white/30 border border-gray-300"
                     >
                       View Details
                     </button>
@@ -274,25 +288,25 @@ export default function MapPage(): JSX.Element {
             </GoogleMap>
           ) : (
             <div className="h-full flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent" />
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
             </div>
           )}
         </div>
 
         {/* Selected Venue Panel */}
         {selectedVenue && (
-          <div className="bg-white rounded-xl md:rounded-2xl shadow p-4 md:p-6 space-y-4">
+          <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 p-4 md:p-6 space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-lg md:text-xl font-bold text-gray-900">{selectedVenue.name}</h2>
+                <h2 className="text-lg md:text-xl font-bold text-white">{selectedVenue.name}</h2>
                 {selectedVenue.district && (
-                  <p className="text-sm text-gray-500">{selectedVenue.district}</p>
+                  <p className="text-sm text-white/60">{selectedVenue.district}</p>
                 )}
                 {selectedVenue.distanceFormatted && (
-                  <p className="text-sm text-blue-600">📍 {selectedVenue.distanceFormatted}</p>
+                  <p className="text-sm text-white/80">📍 {selectedVenue.distanceFormatted}</p>
                 )}
               </div>
-              <button onClick={closePanel} className="text-gray-400 hover:text-gray-600 text-xl">
+              <button onClick={closePanel} className="text-white/60 hover:text-white text-xl">
                 ×
               </button>
             </div>
@@ -301,10 +315,10 @@ export default function MapPage(): JSX.Element {
             {selectedVenue.king && (
               <div
                 onClick={() => openPlayerCard(selectedVenue.king!.id)}
-                className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+                className="bg-yellow-500/20 border border-yellow-500/40 rounded-lg p-3 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
               >
                 <span className="text-xl">👑</span>
-                <div className="w-10 h-10 rounded-full bg-yellow-200 overflow-hidden border-2 border-yellow-400">
+                <div className="w-10 h-10 rounded-full bg-yellow-500/30 overflow-hidden border-2 border-yellow-500/60">
                   <Image
                     src={selectedVenue.king.avatar.imageUrl}
                     alt="King"
@@ -314,8 +328,8 @@ export default function MapPage(): JSX.Element {
                     unoptimized
                   />
                 </div>
-                <span className="text-yellow-700 font-semibold text-sm">King of the Court</span>
-                <span className="text-yellow-600 text-xs ml-auto">
+                <span className="text-yellow-300 font-semibold text-sm">King of the Court</span>
+                <span className="text-yellow-300/80 text-xs ml-auto">
                   {selectedVenue.king.xp.toLocaleString()} XP
                 </span>
               </div>
@@ -323,15 +337,15 @@ export default function MapPage(): JSX.Element {
 
             {/* Active Players */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">
+              <h3 className="text-sm font-semibold text-white/80 mb-2">
                 Active Players ({activePlayers.length})
               </h3>
               {isLoadingDetails ? (
                 <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#4361EE] border-t-transparent mx-auto" />
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mx-auto" />
                 </div>
               ) : activePlayers.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-4">
+                <p className="text-white/50 text-sm text-center py-4">
                   No active players at this venue
                 </p>
               ) : (
@@ -340,9 +354,9 @@ export default function MapPage(): JSX.Element {
                     <div
                       key={player.id}
                       onClick={() => openPlayerCard(player.id)}
-                      className="flex flex-col items-center p-2 bg-gray-50 rounded-lg cursor-pointer active:scale-95 transition-transform"
+                      className="flex flex-col items-center p-2 bg-white/10 rounded-lg cursor-pointer active:scale-95 transition-transform"
                     >
-                      <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden border-2 border-gray-300">
+                      <div className="w-12 h-12 rounded-full bg-white/20 overflow-hidden border-2 border-white/30">
                         <Image
                           src={player.avatar.imageUrl}
                           alt="Player"
@@ -352,7 +366,7 @@ export default function MapPage(): JSX.Element {
                           unoptimized
                         />
                       </div>
-                      <span className="text-xs font-semibold text-gray-700 mt-1">
+                      <span className="text-xs font-semibold text-white/80 mt-1">
                         #{player.rank}
                       </span>
                     </div>
@@ -364,7 +378,7 @@ export default function MapPage(): JSX.Element {
             {/* View Challenges Button */}
             <button
               onClick={() => router.push(`/venues/${selectedVenue.id}`)}
-              className="w-full py-3 md:py-4 bg-[#4361EE] text-white font-semibold rounded-xl hover:bg-[#3651DE] transition-colors"
+              className="w-full py-3 md:py-4 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-colors border border-white/30"
             >
               View Challenges ({selectedVenue.challengeCount})
             </button>
@@ -373,16 +387,16 @@ export default function MapPage(): JSX.Element {
 
         {/* Venue List */}
         <div>
-          <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
+          <h3 className="text-lg md:text-xl font-bold text-white mb-3">
             Nearby Venues ({venues.length})
           </h3>
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent mx-auto" />
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent mx-auto" />
             </div>
           ) : venues.length === 0 ? (
-            <div className="bg-white rounded-xl shadow p-8 text-center">
-              <p className="text-gray-500">No venues found</p>
+            <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 p-8 text-center">
+              <p className="text-white/60">No venues found</p>
             </div>
           ) : (
             <div className="space-y-2 md:space-y-3">
@@ -390,22 +404,22 @@ export default function MapPage(): JSX.Element {
                 <div
                   key={venue.id}
                   onClick={() => handleVenueSelect(venue)}
-                  className={`bg-white rounded-xl md:rounded-2xl shadow p-4 md:p-5 cursor-pointer active:scale-[0.98] transition-transform ${
-                    selectedVenue?.id === venue.id ? 'ring-2 ring-[#4361EE]' : ''
+                  className={`bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 p-4 md:p-5 cursor-pointer active:scale-[0.98] transition-transform ${
+                    selectedVenue?.id === venue.id ? 'ring-2 ring-white/50' : ''
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-gray-900 font-semibold">{venue.name}</h4>
+                        <h4 className="text-white font-semibold">{venue.name}</h4>
                         {venue.king && <span className="text-yellow-500">👑</span>}
                       </div>
-                      {venue.district && <p className="text-gray-500 text-sm">{venue.district}</p>}
+                      {venue.district && <p className="text-white/60 text-sm">{venue.district}</p>}
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-500 text-sm">👥 {venue.activePlayerCount}</span>
+                      <span className="text-white/60 text-sm">👥 {venue.activePlayerCount}</span>
                       {venue.distanceFormatted && (
-                        <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
+                        <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-full">
                           {venue.distanceFormatted}
                         </span>
                       )}

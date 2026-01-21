@@ -91,12 +91,8 @@
           "name": "ActivePlayer_userId_User_id_fk",
           "tableFrom": "ActivePlayer",
           "tableTo": "User",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -104,12 +100,8 @@
           "name": "ActivePlayer_venueId_Venue_id_fk",
           "tableFrom": "ActivePlayer",
           "tableTo": "Venue",
-          "columnsFrom": [
-            "venueId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["venueId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -119,10 +111,7 @@
         "ActivePlayer_userId_venueId_key": {
           "name": "ActivePlayer_userId_venueId_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "userId",
-            "venueId"
-          ]
+          "columns": ["userId", "venueId"]
         }
       },
       "policies": {},
@@ -195,12 +184,8 @@
           "name": "AvatarEquipment_avatarId_Avatar_id_fk",
           "tableFrom": "AvatarEquipment",
           "tableTo": "Avatar",
-          "columnsFrom": [
-            "avatarId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["avatarId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -208,12 +193,8 @@
           "name": "AvatarEquipment_sportId_Sport_id_fk",
           "tableFrom": "AvatarEquipment",
           "tableTo": "Sport",
-          "columnsFrom": [
-            "sportId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sportId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -221,12 +202,8 @@
           "name": "AvatarEquipment_jerseyItemId_AvatarItem_id_fk",
           "tableFrom": "AvatarEquipment",
           "tableTo": "AvatarItem",
-          "columnsFrom": [
-            "jerseyItemId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["jerseyItemId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -234,12 +211,8 @@
           "name": "AvatarEquipment_shortsItemId_AvatarItem_id_fk",
           "tableFrom": "AvatarEquipment",
           "tableTo": "AvatarItem",
-          "columnsFrom": [
-            "shortsItemId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["shortsItemId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -247,12 +220,8 @@
           "name": "AvatarEquipment_shoesItemId_AvatarItem_id_fk",
           "tableFrom": "AvatarEquipment",
           "tableTo": "AvatarItem",
-          "columnsFrom": [
-            "shoesItemId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["shoesItemId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -260,12 +229,8 @@
           "name": "AvatarEquipment_accessoryItemId_AvatarItem_id_fk",
           "tableFrom": "AvatarEquipment",
           "tableTo": "AvatarItem",
-          "columnsFrom": [
-            "accessoryItemId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["accessoryItemId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -275,10 +240,7 @@
         "AvatarEquipment_avatarId_sportId_key": {
           "name": "AvatarEquipment_avatarId_sportId_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "avatarId",
-            "sportId"
-          ]
+          "columns": ["avatarId", "sportId"]
         }
       },
       "policies": {},
@@ -409,12 +371,8 @@
           "name": "AvatarItem_sportId_Sport_id_fk",
           "tableFrom": "AvatarItem",
           "tableTo": "Sport",
-          "columnsFrom": [
-            "sportId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sportId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -492,12 +450,8 @@
           "name": "Avatar_userId_User_id_fk",
           "tableFrom": "Avatar",
           "tableTo": "User",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -507,9 +461,7 @@
         "Avatar_userId_unique": {
           "name": "Avatar_userId_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "userId"
-          ]
+          "columns": ["userId"]
         }
       },
       "policies": {},
@@ -637,12 +589,8 @@
           "name": "ChallengeAttempt_challengeId_Challenge_id_fk",
           "tableFrom": "ChallengeAttempt",
           "tableTo": "Challenge",
-          "columnsFrom": [
-            "challengeId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["challengeId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -650,12 +598,8 @@
           "name": "ChallengeAttempt_userId_User_id_fk",
           "tableFrom": "ChallengeAttempt",
           "tableTo": "User",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -811,12 +755,8 @@
           "name": "Challenge_venueId_Venue_id_fk",
           "tableFrom": "Challenge",
           "tableTo": "Venue",
-          "columnsFrom": [
-            "venueId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["venueId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -824,12 +764,8 @@
           "name": "Challenge_sportId_Sport_id_fk",
           "tableFrom": "Challenge",
           "tableTo": "Sport",
-          "columnsFrom": [
-            "sportId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sportId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -893,12 +829,8 @@
           "name": "City_countryId_Country_id_fk",
           "tableFrom": "City",
           "tableTo": "Country",
-          "columnsFrom": [
-            "countryId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["countryId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -908,10 +840,7 @@
         "City_name_countryId_key": {
           "name": "City_name_countryId_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "name",
-            "countryId"
-          ]
+          "columns": ["name", "countryId"]
         }
       },
       "policies": {},
@@ -956,9 +885,7 @@
         "Country_code_unique": {
           "name": "Country_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -1189,12 +1116,8 @@
           "name": "Match_venueId_Venue_id_fk",
           "tableFrom": "Match",
           "tableTo": "Venue",
-          "columnsFrom": [
-            "venueId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["venueId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1202,12 +1125,8 @@
           "name": "Match_sportId_Sport_id_fk",
           "tableFrom": "Match",
           "tableTo": "Sport",
-          "columnsFrom": [
-            "sportId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sportId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1215,12 +1134,8 @@
           "name": "Match_player1Id_User_id_fk",
           "tableFrom": "Match",
           "tableTo": "User",
-          "columnsFrom": [
-            "player1Id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["player1Id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1228,12 +1143,8 @@
           "name": "Match_player2Id_User_id_fk",
           "tableFrom": "Match",
           "tableTo": "User",
-          "columnsFrom": [
-            "player2Id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["player2Id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1241,12 +1152,8 @@
           "name": "Match_winnerId_User_id_fk",
           "tableFrom": "Match",
           "tableTo": "User",
-          "columnsFrom": [
-            "winnerId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["winnerId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1254,12 +1161,8 @@
           "name": "Match_recordingBy_User_id_fk",
           "tableFrom": "Match",
           "tableTo": "User",
-          "columnsFrom": [
-            "recordingBy"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recordingBy"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1267,12 +1170,8 @@
           "name": "Match_disputedBy_User_id_fk",
           "tableFrom": "Match",
           "tableTo": "User",
-          "columnsFrom": [
-            "disputedBy"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["disputedBy"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1447,12 +1346,8 @@
           "name": "PlayerStats_userId_User_id_fk",
           "tableFrom": "PlayerStats",
           "tableTo": "User",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1460,12 +1355,8 @@
           "name": "PlayerStats_sportId_Sport_id_fk",
           "tableFrom": "PlayerStats",
           "tableTo": "Sport",
-          "columnsFrom": [
-            "sportId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sportId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1475,10 +1366,7 @@
         "PlayerStats_userId_sportId_key": {
           "name": "PlayerStats_userId_sportId_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "userId",
-            "sportId"
-          ]
+          "columns": ["userId", "sportId"]
         }
       },
       "policies": {},
@@ -1530,16 +1418,12 @@
         "Sport_name_unique": {
           "name": "Sport_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         },
         "Sport_slug_unique": {
           "name": "Sport_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1605,12 +1489,8 @@
           "name": "UserUnlockedItem_userId_User_id_fk",
           "tableFrom": "UserUnlockedItem",
           "tableTo": "User",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1618,12 +1498,8 @@
           "name": "UserUnlockedItem_itemId_AvatarItem_id_fk",
           "tableFrom": "UserUnlockedItem",
           "tableTo": "AvatarItem",
-          "columnsFrom": [
-            "itemId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["itemId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1633,10 +1509,7 @@
         "UserUnlockedItem_userId_itemId_key": {
           "name": "UserUnlockedItem_userId_itemId_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "userId",
-            "itemId"
-          ]
+          "columns": ["userId", "itemId"]
         }
       },
       "policies": {},
@@ -1795,12 +1668,8 @@
           "name": "User_cityId_City_id_fk",
           "tableFrom": "User",
           "tableTo": "City",
-          "columnsFrom": [
-            "cityId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cityId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1810,9 +1679,7 @@
         "User_email_unique": {
           "name": "User_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1942,12 +1809,8 @@
           "name": "Venue_cityId_City_id_fk",
           "tableFrom": "Venue",
           "tableTo": "City",
-          "columnsFrom": [
-            "cityId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cityId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

@@ -44,8 +44,16 @@ export default function RegisterPage(): JSX.Element {
 
 function RegisterPageSkeleton(): JSX.Element {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-transparent">
-      <div className="w-full max-w-sm sm:max-w-md space-y-6 animate-pulse">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="w-full max-w-sm sm:max-w-md space-y-6 animate-pulse relative z-10">
         <div className="flex justify-center">
           <div className="w-36 h-36 bg-white/10 rounded-full" />
         </div>
@@ -218,8 +226,18 @@ function RegisterPageContent(): JSX.Element {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-transparent">
-      <div className="w-full max-w-sm sm:max-w-md space-y-6">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Light overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+
+      <div className="w-full max-w-sm sm:max-w-md space-y-6 relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-4">
           <div className="w-28 h-28 sm:w-36 sm:h-36">

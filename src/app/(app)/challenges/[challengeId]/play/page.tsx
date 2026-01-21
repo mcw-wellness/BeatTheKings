@@ -111,17 +111,36 @@ export default function ChallengePlayPage(): JSX.Element {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#4361EE] border-t-transparent" />
+      <main
+        className="min-h-screen flex items-center justify-center relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent relative z-10" />
       </main>
     )
   }
 
   if (error && gameState === 'ready') {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col items-center justify-center p-4">
-        <p className="text-red-500 mb-4">{error}</p>
-        <button onClick={() => router.back()} className="text-[#4361EE] underline">
+      <main
+        className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <p className="text-red-300 mb-4 relative z-10">{error}</p>
+        <button
+          onClick={() => router.back()}
+          className="text-white/80 hover:text-white underline relative z-10"
+        >
           Go Back
         </button>
       </main>
@@ -130,9 +149,20 @@ export default function ChallengePlayPage(): JSX.Element {
 
   if (!challenge) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col items-center justify-center p-4">
-        <p className="text-red-500 mb-4">Challenge not found</p>
-        <button onClick={() => router.back()} className="text-[#4361EE] underline">
+      <main
+        className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <p className="text-red-300 mb-4 relative z-10">Challenge not found</p>
+        <button
+          onClick={() => router.back()}
+          className="text-white/80 hover:text-white underline relative z-10"
+        >
           Go Back
         </button>
       </main>
@@ -144,33 +174,41 @@ export default function ChallengePlayPage(): JSX.Element {
   // Ready state - show start button
   if (gameState === 'ready') {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <div className="max-w-lg mx-auto min-h-screen flex flex-col">
+      <main
+        className="min-h-screen relative"
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <div className="max-w-lg mx-auto min-h-screen flex flex-col relative z-10">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-white/20">
             <div className="flex items-center gap-3">
-              <button onClick={handleCancel} className="text-gray-600 hover:text-gray-900">
+              <button onClick={handleCancel} className="text-white/80 hover:text-white">
                 ← Back
               </button>
-              <h1 className="text-xl font-bold text-gray-900">{challenge.name}</h1>
+              <h1 className="text-xl font-bold text-white">{challenge.name}</h1>
             </div>
           </div>
 
           {/* Content */}
           <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-            <div className="bg-white rounded-2xl shadow-lg p-6 md:p-10 text-center w-full max-w-sm">
-              <div className="w-20 h-20 md:w-24 md:h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="bg-white/10 backdrop-blur rounded-2xl border border-white/20 p-6 md:p-10 text-center w-full max-w-sm">
+              <div className="w-20 h-20 md:w-24 md:h-24 bg-orange-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-4xl md:text-5xl">🏀</span>
               </div>
 
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Ready to Play?</h2>
-              <p className="text-gray-600 mb-6 text-sm md:text-base">
+              <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Ready to Play?</h2>
+              <p className="text-white/70 mb-6 text-sm md:text-base">
                 Tap +1 for made shots, -1 for misses. Hit STOP when done.
               </p>
 
               <button
                 onClick={handleStart}
-                className="w-full py-4 md:py-5 bg-green-500 hover:bg-green-600 text-white text-lg md:text-xl font-bold rounded-xl shadow-lg active:scale-[0.98] transition-transform"
+                className="w-full py-4 md:py-5 bg-green-500/80 hover:bg-green-500 text-white text-lg md:text-xl font-bold rounded-xl active:scale-[0.98] transition-transform"
               >
                 START CHALLENGE
               </button>
@@ -183,23 +221,31 @@ export default function ChallengePlayPage(): JSX.Element {
 
   // Playing state - show counter
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-lg mx-auto min-h-screen flex flex-col">
+    <main
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: 'url(/backgrounds/stadium.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="max-w-lg mx-auto min-h-screen flex flex-col relative z-10">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900 text-center">{challenge.name}</h1>
+        <div className="p-4 border-b border-white/20">
+          <h1 className="text-xl font-bold text-white text-center">{challenge.name}</h1>
         </div>
 
         {/* Score Display */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-10 text-center w-full max-w-sm mb-6">
-            <p className="text-gray-500 text-sm mb-2">Your Score</p>
-            <p className="text-5xl md:text-6xl font-bold text-gray-900">
+          <div className="bg-white/10 backdrop-blur rounded-2xl border border-white/20 p-6 md:p-10 text-center w-full max-w-sm mb-6">
+            <p className="text-white/60 text-sm mb-2">Your Score</p>
+            <p className="text-5xl md:text-6xl font-bold text-white">
               {scoreValue}
-              <span className="text-gray-400">/{maxValue}</span>
+              <span className="text-white/50">/{maxValue}</span>
             </p>
             <p
-              className={`text-2xl md:text-3xl font-semibold mt-2 ${accuracy >= 80 ? 'text-green-500' : accuracy >= 50 ? 'text-yellow-500' : 'text-red-500'}`}
+              className={`text-2xl md:text-3xl font-semibold mt-2 ${accuracy >= 80 ? 'text-green-400' : accuracy >= 50 ? 'text-yellow-400' : 'text-red-400'}`}
             >
               {accuracy}%
             </p>
@@ -210,28 +256,28 @@ export default function ChallengePlayPage(): JSX.Element {
             <button
               onClick={handleMissed}
               disabled={gameState === 'submitting'}
-              className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white text-2xl md:text-4xl font-bold shadow-lg active:scale-95 transition-transform flex items-center justify-center"
+              className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-red-500/80 hover:bg-red-500 disabled:bg-white/30 text-white text-2xl md:text-4xl font-bold active:scale-95 transition-transform flex items-center justify-center"
             >
               -1
             </button>
             <button
               onClick={handleMade}
               disabled={gameState === 'submitting'}
-              className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white text-2xl md:text-4xl font-bold shadow-lg active:scale-95 transition-transform flex items-center justify-center"
+              className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-green-500/80 hover:bg-green-500 disabled:bg-white/30 text-white text-2xl md:text-4xl font-bold active:scale-95 transition-transform flex items-center justify-center"
             >
               +1
             </button>
           </div>
 
-          {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
+          {error && <p className="text-red-300 text-sm mt-4">{error}</p>}
         </div>
 
         {/* Stop Button */}
-        <div className="p-4 md:p-6 border-t border-gray-200 bg-white">
+        <div className="p-4 md:p-6 border-t border-white/20 bg-black/20 backdrop-blur">
           <button
             onClick={handleStop}
             disabled={gameState === 'submitting' || maxValue === 0}
-            className="w-full py-4 md:py-5 bg-[#4361EE] hover:bg-[#3651DE] disabled:bg-gray-400 text-white text-lg font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full py-4 md:py-5 bg-orange-500/80 hover:bg-orange-500 disabled:bg-white/30 text-white text-lg font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {gameState === 'submitting' ? (
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
@@ -241,7 +287,7 @@ export default function ChallengePlayPage(): JSX.Element {
               </>
             )}
           </button>
-          <p className="text-gray-500 text-xs text-center mt-2">
+          <p className="text-white/60 text-xs text-center mt-2">
             Tap when you&apos;re done to submit your score
           </p>
         </div>

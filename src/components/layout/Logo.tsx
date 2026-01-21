@@ -1,11 +1,15 @@
+'use client'
+
 import React from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg'
   pulsing?: boolean
   className?: string
+  linkToHome?: boolean
 }
 
 /**
@@ -14,7 +18,7 @@ interface LogoProps {
  * - md: Illustrated logo without text (logo3) - for medium displays
  * - lg: Full illustrated logo with text (logo2) - for login/splash pages
  */
-export function Logo({ size = 'md', pulsing = false, className }: LogoProps) {
+export function Logo({ size = 'md', pulsing = false, className, linkToHome = false }: LogoProps) {
   const sizes = {
     sm: 'w-16 h-16',
     md: 'w-24 h-24',
@@ -35,17 +39,24 @@ export function Logo({ size = 'md', pulsing = false, className }: LogoProps) {
     lg: 'rounded-[20%] overflow-hidden',
   }
 
-  return (
+  const logoElement = (
     <div
       className={cn(
         'relative flex items-center justify-center',
         sizes[size],
         roundedClass[size],
         pulsing && 'animate-pulse',
+        linkToHome && 'cursor-pointer',
         className
       )}
     >
       <Image src={logoSrc[size]} alt="Beat the Kingz" fill className="object-contain" priority />
     </div>
   )
+
+  if (linkToHome) {
+    return <Link href="/welcome">{logoElement}</Link>
+  }
+
+  return logoElement
 }
