@@ -7,24 +7,7 @@ import {
   PageLoadingState,
   PageErrorState,
 } from '@/components/layout/StadiumPageLayout'
-
-interface BestScore {
-  scoreValue: number
-  maxValue: number
-  accuracy: number
-}
-
-interface ChallengeWithAttempts {
-  id: string
-  name: string
-  description: string
-  difficulty: string
-  xpReward: number
-  venueName: string
-  venueId: string
-  attempts: number
-  bestScore: BestScore | null
-}
+import { ChallengeCard, type ChallengeWithAttempts } from './ChallengeCard'
 
 interface ChallengeTypeListProps {
   title: string
@@ -45,14 +28,15 @@ export function ChallengeTypeList({
 }: ChallengeTypeListProps): JSX.Element {
   const router = useRouter()
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
-  const byVenue = challenges.reduce(
-    (acc, ch) => {
-      if (!acc[ch.venueName]) acc[ch.venueName] = []
-      acc[ch.venueName].push(ch)
-      return acc
-    },
-    {} as Record<string, ChallengeWithAttempts[]>
-  )
+
+  // Group by venue with venueId
+  const byVenue: Record<string, { venueId: string; challenges: ChallengeWithAttempts[] }> = {}
+  challenges.forEach((ch) => {
+    if (!byVenue[ch.venueName]) {
+      byVenue[ch.venueName] = { venueId: ch.venueId, challenges: [] }
+    }
+    byVenue[ch.venueName].challenges.push(ch)
+  })
 
   if (isLoading) return <PageLoadingState />
   if (error) return <PageErrorState error={error} />
@@ -61,7 +45,11 @@ export function ChallengeTypeList({
     <StadiumPageLayout>
       <Header title={title} />
       <ProgressCard total={total} completed={completed} percentage={percentage} />
-      <ChallengeList byVenue={byVenue} onNavigate={(id) => router.push(`/challenges/${id}`)} />
+      <ChallengeList
+        byVenue={byVenue}
+        onNavigate={(id) => router.push(`/challenges/${id}`)}
+        onGoToVenue={(venueId) => router.push(`/map?venueId=${venueId}`)}
+      />
       <BackButton onClick={() => router.push('/challenges')} />
     </StadiumPageLayout>
   )
@@ -110,9 +98,11 @@ function ProgressCard({
 function ChallengeList({
   byVenue,
   onNavigate,
+  onGoToVenue,
 }: {
-  byVenue: Record<string, ChallengeWithAttempts[]>
+  byVenue: Record<string, { venueId: string; challenges: ChallengeWithAttempts[] }>
   onNavigate: (id: string) => void
+  onGoToVenue: (venueId: string) => void
 }): JSX.Element {
   if (Object.keys(byVenue).length === 0) {
     return (
@@ -124,64 +114,25 @@ function ChallengeList({
 
   return (
     <>
-      {Object.entries(byVenue).map(([venueName, challenges]) => (
+      {Object.entries(byVenue).map(([venueName, { venueId, challenges }]) => (
         <div key={venueName} className="space-y-2">
-          <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wide flex items-center gap-2">
-            <span>📍</span> {venueName}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wide flex items-center gap-2">
+              <span>📍</span> {venueName}
+            </h2>
+            <button
+              onClick={() => onGoToVenue(venueId)}
+              className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1"
+            >
+              Go to Venue →
+            </button>
+          </div>
           {challenges.map((ch) => (
             <ChallengeCard key={ch.id} challenge={ch} onClick={() => onNavigate(ch.id)} />
           ))}
         </div>
       ))}
     </>
-  )
-}
-
-const difficultyColors: Record<string, string> = {
-  easy: 'bg-green-500/20 text-green-400',
-  medium: 'bg-yellow-500/20 text-yellow-400',
-  hard: 'bg-red-500/20 text-red-400',
-}
-
-function ChallengeCard({
-  challenge,
-  onClick,
-}: {
-  challenge: ChallengeWithAttempts
-  onClick: () => void
-}): JSX.Element {
-  return (
-    <div
-      onClick={onClick}
-      className="bg-[#1e2a4a]/90 backdrop-blur border border-white/10 rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-transform"
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-white">{challenge.name}</h3>
-            {challenge.attempts > 0 && <span className="text-green-400 text-sm">✓</span>}
-          </div>
-          <p className="text-xs text-white/50 mt-1">{challenge.description}</p>
-          {challenge.bestScore ? (
-            <p className="text-sm text-green-400 mt-2">
-              Best: {challenge.bestScore.scoreValue}/{challenge.bestScore.maxValue} (
-              {challenge.bestScore.accuracy}%)
-            </p>
-          ) : (
-            <p className="text-sm text-white/40 mt-2">Not attempted</p>
-          )}
-        </div>
-        <div className="text-right">
-          <span
-            className={`text-xs px-2 py-1 rounded-full ${difficultyColors[challenge.difficulty] || difficultyColors.medium}`}
-          >
-            {challenge.difficulty}
-          </span>
-          <p className="text-xs text-orange-400 mt-2">+{challenge.xpReward} XP</p>
-        </div>
-      </div>
-    </div>
   )
 }
 

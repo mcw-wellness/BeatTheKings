@@ -8,6 +8,7 @@ import {
   PageLoadingState,
   PageErrorState,
 } from '@/components/layout/StadiumPageLayout'
+import { OneVsOneSlot } from '@/components/challenges'
 
 interface ChallengeSummary {
   total: number
@@ -15,7 +16,6 @@ interface ChallengeSummary {
 }
 
 interface ChallengesSummaryResponse {
-  oneVsOne: { matchesPlayed: number }
   freeThrow: ChallengeSummary
   threePointShot: ChallengeSummary
   aroundTheWorld: ChallengeSummary
@@ -24,7 +24,6 @@ interface ChallengesSummaryResponse {
     sponsor: string
     total: number
     completed: number
-    available: number
   } | null
 }
 
@@ -54,19 +53,11 @@ export default function ChallengesPage(): JSX.Element {
 
   const challengeRows = [
     {
-      id: '1v1',
-      title: '1x1 Challenge',
-      icon: '⚔️',
-      value: data?.oneVsOne.matchesPlayed ?? 0,
-      format: 'single' as const,
-    },
-    {
       id: 'free-throw',
       title: 'Free Throw',
       icon: '🏀',
       total: data?.freeThrow.total ?? 0,
       completed: data?.freeThrow.completed ?? 0,
-      format: 'progress' as const,
     },
     {
       id: 'three-point',
@@ -74,7 +65,6 @@ export default function ChallengesPage(): JSX.Element {
       icon: '🎯',
       total: data?.threePointShot.total ?? 0,
       completed: data?.threePointShot.completed ?? 0,
-      format: 'progress' as const,
     },
     {
       id: 'around-the-world',
@@ -82,7 +72,6 @@ export default function ChallengesPage(): JSX.Element {
       icon: '🌍',
       total: data?.aroundTheWorld.total ?? 0,
       completed: data?.aroundTheWorld.completed ?? 0,
-      format: 'progress' as const,
     },
   ]
 
@@ -94,6 +83,10 @@ export default function ChallengesPage(): JSX.Element {
       </div>
 
       <div className="space-y-3">
+        {/* 1v1 Challenge Slot with Active Venues */}
+        <OneVsOneSlot />
+
+        {/* Other Challenge Types */}
         {challengeRows.map((row) => (
           <ChallengeRow
             key={row.id}
@@ -101,6 +94,8 @@ export default function ChallengesPage(): JSX.Element {
             onClick={() => router.push(`/challenges/${row.id}`)}
           />
         ))}
+
+        {/* Sponsored Challenge */}
         <SponsoredCard
           data={data?.sponsoredChallenge ?? null}
           onClick={() => router.push('/challenges/sponsored')}
@@ -118,10 +113,8 @@ interface ChallengeRowData {
   id: string
   title: string
   icon: string
-  value?: number
-  total?: number
-  completed?: number
-  format: 'single' | 'progress'
+  total: number
+  completed: number
 }
 
 function ChallengeRow({
@@ -141,13 +134,9 @@ function ChallengeRow({
           <span className="text-2xl">{row.icon}</span>
           <span className="font-medium text-white">{row.title}</span>
         </div>
-        {row.format === 'single' ? (
-          <span className="text-xl font-bold text-white">{row.value}</span>
-        ) : (
-          <span className="text-xl font-bold text-white">
-            {row.total}/{row.completed}
-          </span>
-        )}
+        <span className="text-xl font-bold text-white">
+          {row.total}/{row.completed}
+        </span>
       </div>
     </div>
   )

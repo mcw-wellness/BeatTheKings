@@ -396,3 +396,150 @@ export async function checkOutFromVenue(
     return { success: false }
   }
 }
+
+// ===========================================
+// 1v1 CHALLENGE - ACTIVE VENUES
+// ===========================================
+
+export interface ActiveVenueForChallenge {
+  id: string
+  name: string
+  distance: number | null
+  distanceFormatted: string
+  activePlayerCount: number
+  activePlayers: Array<{
+    id: string
+    avatarUrl: string
+    rank: number
+  }>
+}
+
+/**
+ * Get venues with active players for 1v1 challenges
+ * Returns venues sorted by distance with active player previews
+ */
+export async function getVenuesWithActivePlayers(
+  db: Database,
+  options: {
+    userLat: number
+    userLng: number
+    limit?: number
+    excludeUserId?: string
+  }
+): Promise<{ venues: ActiveVenueForChallenge[]; totalActiveVenues: number }> {
+  const { userLat, userLng, limit = 5, excludeUserId } = options
+
+  // Get all active venues (venues with at least one active player)
+  const activeVenueIds = await db
+    .selectDistinct({ venueId: activePlayers.venueId })
+    .from(activePlayers)
+
+  if (activeVenueIds.length === 0) {
+    return { venues: [], totalActiveVenues: 0 }
+  }
+
+  const venueIds = activeVenueIds.map((v) => v.venueId)
+
+  // Get venue details
+  const venueList = await db
+    .select({
+      id: venues.id,
+      name: venues.name,
+      latitude: venues.latitude,
+      longitude: venues.longitude,
+    })
+    .from(venues)
+    .where(sql`${venues.id} IN ${venueIds}`)
+
+  // Calculate distances and get active players
+  const venuesWithPlayers: ActiveVenueForChallenge[] = await Promise.all(
+    venueList.map(async (venue) => {
+      // Calculate distance
+      let distance: number | null = null
+      if (venue.latitude && venue.longitude) {
+        distance = calculateDistance(userLat, userLng, venue.latitude, venue.longitude)
+      }
+
+      // Format distance
+      let distanceFormatted = 'Unknown'
+      if (distance !== null) {
+        if (distance < 1) {
+          distanceFormatted = `${Math.round(distance * 1000)} m`
+        } else if (distance < 10) {
+          distanceFormatted = `${distance.toFixed(1)} km`
+        } else {
+          distanceFormatted = `${Math.round(distance)} km`
+        }
+      }
+
+      // Get active players at this venue (excluding current user)
+      const activePlayerList = await db
+        .select({
+          id: users.id,
+          gender: users.gender,
+          xp: playerStats.totalXp,
+          hasAvatar: avatars.imageUrl,
+        })
+        .from(activePlayers)
+        .innerJoin(users, eq(users.id, activePlayers.userId))
+        .leftJoin(playerStats, eq(playerStats.userId, users.id))
+        .leftJoin(avatars, eq(avatars.userId, users.id))
+        .where(
+          excludeUserId
+            ? and(
+                eq(activePlayers.venueId, venue.id),
+                sql`${activePlayers.userId} != ${excludeUserId}`
+              )
+            : eq(activePlayers.venueId, venue.id)
+        )
+        .orderBy(desc(playerStats.totalXp))
+        .limit(3)
+
+      const playerPreviews = activePlayerList.map((p, idx) => ({
+        id: p.id,
+        avatarUrl: getAvatarUrl(p.id, !!p.hasAvatar, p.gender),
+        rank: idx + 1,
+      }))
+
+      // Get total active player count (excluding current user)
+      const [countResult] = await db
+        .select({ count: count() })
+        .from(activePlayers)
+        .where(
+          excludeUserId
+            ? and(
+                eq(activePlayers.venueId, venue.id),
+                sql`${activePlayers.userId} != ${excludeUserId}`
+              )
+            : eq(activePlayers.venueId, venue.id)
+        )
+
+      return {
+        id: venue.id,
+        name: venue.name,
+        distance,
+        distanceFormatted,
+        activePlayerCount: Number(countResult?.count || 0),
+        activePlayers: playerPreviews,
+      }
+    })
+  )
+
+  // Filter venues with at least one active player (after excluding current user)
+  const venuesWithActiveOthers = venuesWithPlayers.filter((v) => v.activePlayerCount > 0)
+
+  // Sort by distance (closest first)
+  venuesWithActiveOthers.sort((a, b) => {
+    if (a.distance === null) return 1
+    if (b.distance === null) return -1
+    return a.distance - b.distance
+  })
+
+  // Limit results
+  const limited = venuesWithActiveOthers.slice(0, limit)
+
+  return {
+    venues: limited,
+    totalActiveVenues: venuesWithActiveOthers.length,
+  }
+}
