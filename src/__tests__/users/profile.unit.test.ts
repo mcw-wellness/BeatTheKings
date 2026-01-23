@@ -204,13 +204,13 @@ describe('Profile Adapter Functions', () => {
   })
 
   describe('updateUserProfile', () => {
-    it('should update user profile and calculate age group', async () => {
+    it('should update user profile and calculate age group from age', async () => {
       const { city } = await testFactories.createCountryWithCity(db, { cityName: 'Vienna' })
       const user = await testFactories.createUser(db)
 
       const updated = await updateUserProfile(db, user.id, {
         name: 'John Doe',
-        dateOfBirth: '1995-06-15',
+        age: 25,
         gender: 'male',
         cityId: city.id,
       })
@@ -226,12 +226,9 @@ describe('Profile Adapter Functions', () => {
       const { city } = await testFactories.createCountryWithCity(db)
       const user = await testFactories.createUser(db)
 
-      const youngDate = new Date()
-      youngDate.setFullYear(youngDate.getFullYear() - 15)
-
       const updated = await updateUserProfile(db, user.id, {
         name: 'Young User',
-        dateOfBirth: youngDate.toISOString().split('T')[0],
+        age: 15,
         gender: 'male',
         cityId: city.id,
       })
@@ -245,7 +242,7 @@ describe('Profile Adapter Functions', () => {
 
       const updated = await updateUserProfile(db, user.id, {
         name: 'Older User',
-        dateOfBirth: '1985-01-01',
+        age: 40,
         gender: 'male',
         cityId: city.id,
       })

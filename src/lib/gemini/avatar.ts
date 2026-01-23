@@ -7,28 +7,47 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { logger } from '@/lib/utils/logger'
 import { imageClient } from './client'
-import { buildAvatarPrompt } from './prompts'
 import type { AvatarPromptInput } from './types'
 
 // Gemini 3 Pro Image model for best character consistency
 const IMAGE_MODEL = 'gemini-3-pro-image-preview'
 
-// Cache the stadium background to avoid reading from disk each time
-let stadiumBackgroundBase64: string | null = null
+// Cache images to avoid reading from disk each time
+const imageCache: Record<string, string> = {}
+
+/**
+ * Load an image from public folder as base64
+ */
+function loadPublicImage(relativePath: string): string | null {
+  if (imageCache[relativePath]) {
+    return imageCache[relativePath]
+  }
+
+  try {
+    const fullPath = path.join(process.cwd(), 'public', relativePath.replace(/^\//, ''))
+    if (!fs.existsSync(fullPath)) {
+      logger.warn({ path: fullPath }, 'Image not found')
+      return null
+    }
+    const imageBuffer = fs.readFileSync(fullPath)
+    imageCache[relativePath] = imageBuffer.toString('base64')
+    logger.info({ path: relativePath }, 'Image loaded')
+    return imageCache[relativePath]
+  } catch (error) {
+    logger.warn({ error, path: relativePath }, 'Failed to load image')
+    return null
+  }
+}
 
 /**
  * Load the stadium background image as base64
  */
 function getStadiumBackground(): string {
-  if (stadiumBackgroundBase64) {
-    return stadiumBackgroundBase64
+  const cached = loadPublicImage('/backgrounds/stadium.png')
+  if (!cached) {
+    throw new Error('Stadium background not found')
   }
-
-  const stadiumPath = path.join(process.cwd(), 'public', 'backgrounds', 'stadium.png')
-  const imageBuffer = fs.readFileSync(stadiumPath)
-  stadiumBackgroundBase64 = imageBuffer.toString('base64')
-  logger.info('Stadium background loaded')
-  return stadiumBackgroundBase64
+  return cached
 }
 
 /**
@@ -47,66 +66,74 @@ export async function generateAvatarImage(input: AvatarPromptInput): Promise<Buf
     let response
     const stadiumBackground = getStadiumBackground()
 
+    // Load item reference images if provided
+    const jerseyImage = input.jerseyImageUrl ? loadPublicImage(input.jerseyImageUrl) : null
+    const shoesImage = input.shoesImageUrl ? loadPublicImage(input.shoesImageUrl) : null
+
+    // Build the parts array with all reference images
+    const buildParts = (prompt: string, userPhotoBase64?: string) => {
+      const parts: Array<{ inlineData?: { mimeType: string; data: string }; text?: string }> = []
+
+      // User's photo for identity (if provided)
+      if (userPhotoBase64) {
+        parts.push({
+          inlineData: { mimeType: 'image/jpeg', data: userPhotoBase64 },
+        })
+      }
+
+      // Stadium background
+      parts.push({
+        inlineData: { mimeType: 'image/png', data: stadiumBackground },
+      })
+
+      // Jersey reference (if provided)
+      if (jerseyImage) {
+        parts.push({
+          inlineData: { mimeType: 'image/png', data: jerseyImage },
+        })
+      }
+
+      // Shoes reference (if provided)
+      if (shoesImage) {
+        parts.push({
+          inlineData: { mimeType: 'image/png', data: shoesImage },
+        })
+      }
+
+      // Prompt text
+      parts.push({ text: prompt })
+
+      return parts
+    }
+
     if (hasReferencePhoto && input.referencePhoto) {
       // With reference photo - use Gemini 3's identity preservation
       const base64Data = input.referencePhoto.replace(/^data:image\/\w+;base64,/, '')
-      const prompt = buildAvatarPromptWithReference(input)
+      const prompt = buildAvatarPromptWithReference(input, !!jerseyImage, !!shoesImage)
 
-      logger.info('Generating avatar with reference photo and stadium background')
+      logger.info(
+        { hasJerseyRef: !!jerseyImage, hasShoesRef: !!shoesImage },
+        'Generating avatar with reference photo and item references'
+      )
 
       response = await imageClient.models.generateContent({
         model: IMAGE_MODEL,
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              // User's photo for identity
-              {
-                inlineData: {
-                  mimeType: 'image/jpeg',
-                  data: base64Data,
-                },
-              },
-              // Stadium background
-              {
-                inlineData: {
-                  mimeType: 'image/png',
-                  data: stadiumBackground,
-                },
-              },
-              { text: prompt },
-            ],
-          },
-        ],
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-        },
+        contents: [{ role: 'user', parts: buildParts(prompt, base64Data) }],
+        config: { responseModalities: ['TEXT', 'IMAGE'] },
       })
     } else {
       // Without reference photo - generate from description with stadium
-      const prompt = buildAvatarPrompt(input)
-      logger.info('Generating avatar with stadium background')
+      const prompt = buildAvatarPromptWithItems(input, !!jerseyImage, !!shoesImage)
+
+      logger.info(
+        { hasJerseyRef: !!jerseyImage, hasShoesRef: !!shoesImage },
+        'Generating avatar with item references'
+      )
 
       response = await imageClient.models.generateContent({
         model: IMAGE_MODEL,
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              // Stadium background
-              {
-                inlineData: {
-                  mimeType: 'image/png',
-                  data: stadiumBackground,
-                },
-              },
-              { text: prompt + '\n\nUse the provided stadium image as the EXACT background.' },
-            ],
-          },
-        ],
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-        },
+        contents: [{ role: 'user', parts: buildParts(prompt) }],
+        config: { responseModalities: ['TEXT', 'IMAGE'] },
       })
     }
 
@@ -161,19 +188,122 @@ function buildOutfitDescription(sport: string, jerseyNumber: number, jerseyColor
 }
 
 /**
+ * Build prompt for avatar generation WITHOUT reference photo but WITH item references
+ */
+function buildAvatarPromptWithItems(
+  input: AvatarPromptInput,
+  hasJerseyRef: boolean,
+  hasShoesRef: boolean
+): string {
+  const sport = input.sport || 'basketball'
+  const jerseyNumber = input.jerseyNumber ?? 9
+
+  let imageInputDesc = 'IMAGE INPUTS:\n- Image 1: Stadium background (use as EXACT background)'
+  let outfitDesc = ''
+
+  if (hasJerseyRef && hasShoesRef) {
+    imageInputDesc += '\n- Image 2: Jersey reference (copy this EXACT jersey design)'
+    imageInputDesc += '\n- Image 3: Shoes reference (copy this EXACT shoe design)'
+    outfitDesc = `OUTFIT:
+- Jersey: Copy the EXACT design from the jersey reference image, add number ${jerseyNumber} on front
+- Shorts: Matching color to the jersey
+- Shoes: Copy the EXACT design from the shoes reference image
+- Black athletic socks`
+  } else if (hasJerseyRef) {
+    imageInputDesc += '\n- Image 2: Jersey reference (copy this EXACT jersey design)'
+    outfitDesc = `OUTFIT:
+- Jersey: Copy the EXACT design from the jersey reference image, add number ${jerseyNumber} on front
+- Shorts: Matching color to the jersey
+- Shoes: ${sport === 'basketball' ? 'Navy blue high-top basketball sneakers' : 'Black soccer cleats'}
+- Black athletic socks`
+  } else if (hasShoesRef) {
+    imageInputDesc += '\n- Image 2: Shoes reference (copy this EXACT shoe design)'
+    outfitDesc = `OUTFIT:
+- Jersey: Navy blue ${sport} jersey with gold trim, number ${jerseyNumber} on front
+- Shorts: Matching navy blue with gold stripes
+- Shoes: Copy the EXACT design from the shoes reference image
+- Black athletic socks`
+  } else {
+    outfitDesc = buildOutfitDescription(sport, jerseyNumber, input.jerseyColor)
+  }
+
+  return `Create a FULL BODY sports athlete illustration.
+
+${imageInputDesc}
+
+STYLE:
+- Semi-realistic cartoon style (like NBA 2K mobile trading cards)
+- FULL BODY from head to feet
+- Use the stadium image as EXACT background
+- Character fills 80% of image height, centered
+
+CHARACTER:
+- Gender: ${input.gender}
+- Skin tone: ${input.skinTone}
+- Hair style: ${input.hairStyle}
+- Hair color: ${input.hairColor}
+
+EXACT POSE:
+- Standing straight, facing forward
+- Arms relaxed at sides
+- Feet shoulder-width apart
+- Confident, relaxed posture
+
+${outfitDesc}
+
+CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.`
+}
+
+/**
  * Build prompt for avatar generation with reference photo
  * Optimized for Gemini 3 Pro Image's identity preservation
  */
-function buildAvatarPromptWithReference(input: AvatarPromptInput): string {
+function buildAvatarPromptWithReference(
+  input: AvatarPromptInput,
+  hasJerseyRef: boolean,
+  hasShoesRef: boolean
+): string {
   const sport = input.sport || 'basketball'
   const jerseyNumber = input.jerseyNumber ?? 9
-  const outfitDetails = buildOutfitDescription(sport, jerseyNumber, input.jerseyColor)
+
+  // Build image inputs description based on what references are provided
+  let imageInputDesc = `IMAGE INPUTS:
+- Image 1: Person's photo (use for facial identity)
+- Image 2: Stadium background (use as EXACT background)`
+
+  let outfitDesc = ''
+  let imageIndex = 3
+
+  if (hasJerseyRef && hasShoesRef) {
+    imageInputDesc += `\n- Image ${imageIndex}: Jersey reference (copy this EXACT jersey design)`
+    imageIndex++
+    imageInputDesc += `\n- Image ${imageIndex}: Shoes reference (copy this EXACT shoe design)`
+    outfitDesc = `OUTFIT:
+- Jersey: Copy the EXACT design from the jersey reference image, add number ${jerseyNumber} on front
+- Shorts: Matching color to the jersey
+- Shoes: Copy the EXACT design from the shoes reference image
+- Black athletic socks`
+  } else if (hasJerseyRef) {
+    imageInputDesc += `\n- Image ${imageIndex}: Jersey reference (copy this EXACT jersey design)`
+    outfitDesc = `OUTFIT:
+- Jersey: Copy the EXACT design from the jersey reference image, add number ${jerseyNumber} on front
+- Shorts: Matching color to the jersey
+- Shoes: ${sport === 'basketball' ? 'Navy blue high-top basketball sneakers' : 'Black soccer cleats'}
+- Black athletic socks`
+  } else if (hasShoesRef) {
+    imageInputDesc += `\n- Image ${imageIndex}: Shoes reference (copy this EXACT shoe design)`
+    outfitDesc = `OUTFIT:
+- Jersey: Navy blue ${sport} jersey with gold trim, number ${jerseyNumber} on front
+- Shorts: Matching navy blue with gold stripes
+- Shoes: Copy the EXACT design from the shoes reference image
+- Black athletic socks`
+  } else {
+    outfitDesc = `OUTFIT:\n${buildOutfitDescription(sport, jerseyNumber, input.jerseyColor)}`
+  }
 
   return `Create a FULL BODY sports avatar illustration of this person while PRESERVING their EXACT facial identity.
 
-IMAGE INPUTS:
-- First image: Person's photo (use for facial identity)
-- Second image: Stadium background (use as EXACT background)
+${imageInputDesc}
 
 IDENTITY PRESERVATION (CRITICAL):
 - Preserve exact facial features: face shape, eyes, nose, ears, lips, chin, jawline
@@ -190,19 +320,19 @@ CUSTOMIZATIONS TO APPLY:
 STYLE:
 - Semi-realistic cartoon style (like NBA 2K mobile trading cards)
 - FULL BODY from head to feet
-- Use the provided STADIUM IMAGE as the EXACT background
-- Character fills 80% of image height, centered on the stadium
+- Use the stadium image as EXACT background
+- Character fills 80% of image height, centered
 
-EXACT POSE (same for ALL avatars):
+EXACT POSE:
 - Standing straight, facing forward
 - Arms relaxed at sides
 - Feet shoulder-width apart
 - Confident, relaxed posture
 
-OUTFIT:
-${outfitDetails}
+${outfitDesc}
 
-DO NOT: copy their actual clothes, create only face/bust, use emoji style, change their facial identity, use a different background.`
+CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
+DO NOT: copy their actual clothes, create only face/bust, use emoji style, change their facial identity.`
 }
 
 /**

@@ -143,33 +143,17 @@ export default function PlayerPage(): JSX.Element {
 
   if (loading) {
     return (
-      <main
-        className="h-screen flex items-center justify-center relative"
-        style={{
-          backgroundImage: 'url(/backgrounds/stadium.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-        <div className="animate-spin rounded-full h-10 w-10 border-3 border-yellow-400 border-t-transparent relative z-10" />
+      <main className="h-screen flex items-center justify-center bg-[#0a0a1a]">
+        <div className="animate-spin rounded-full h-10 w-10 border-3 border-yellow-400 border-t-transparent" />
       </main>
     )
   }
 
   if (error || !data) {
     return (
-      <main
-        className="h-screen flex flex-col items-center justify-center p-4 relative"
-        style={{
-          backgroundImage: 'url(/backgrounds/stadium.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-        <p className="text-red-400 mb-4 relative z-10">{error || 'Player not found'}</p>
-        <button onClick={() => router.back()} className="text-yellow-400 underline relative z-10">
+      <main className="h-screen flex flex-col items-center justify-center p-4 bg-[#0a0a1a]">
+        <p className="text-red-400 mb-4">{error || 'Player not found'}</p>
+        <button onClick={() => router.back()} className="text-yellow-400 underline">
           Go Back
         </button>
       </main>
@@ -177,63 +161,62 @@ export default function PlayerPage(): JSX.Element {
   }
 
   return (
-    <main
-      className="h-screen overflow-hidden flex flex-col relative"
-      style={{
-        backgroundImage: 'url(/backgrounds/stadium.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      {/* Light overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-
-      {/* Header - Compact */}
-      <div className="px-4 py-2 flex items-center justify-between shrink-0 relative z-10">
+    <main className="h-screen overflow-hidden flex flex-col bg-[#0a0a1a]">
+      {/* Header - Floating over avatar */}
+      <div className="absolute top-0 left-0 right-0 px-4 py-3 flex items-center justify-between z-20">
         <Logo size="sm" linkToHome className="w-10 h-10" />
-        {isKing && (
-          <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-1 rounded-full">
-            👑 King
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          <span className="text-white font-semibold">{data.player.name || 'Player'}</span>
+          <div className="flex items-center gap-1 bg-yellow-500/30 backdrop-blur-sm px-2 py-1 rounded-lg">
+            <span className="text-yellow-400 text-sm">🏆</span>
+            <span className="text-white font-bold text-sm">#{data.stats.rank || '-'}</span>
+          </div>
+        </div>
       </div>
 
-      {/* Card Content - Fills remaining space */}
-      <div className="flex-1 px-4 pb-4 flex flex-col min-h-0 relative z-10">
-        {/* Player Name & Rank */}
-        <div className="flex items-center justify-between mb-2 shrink-0">
-          <h1 className="text-xl font-bold text-white truncate">{data.player.name || 'Player'}</h1>
-          <div className="flex items-center gap-1 bg-yellow-500/20 px-3 py-1 rounded-lg">
-            <span className="text-yellow-400 text-sm">🏆</span>
-            <span className="text-white font-bold">#{data.stats.rank || '-'}</span>
-          </div>
-        </div>
-
-        {/* Avatar - Fixed height */}
-        <div className="flex justify-center mb-3 shrink-0">
-          <div className="relative w-32 h-40 bg-gradient-to-b from-blue-900/50 to-purple-900/50 rounded-xl flex items-center justify-center overflow-hidden border border-yellow-500/30">
+      {/* Fullscreen Avatar Section */}
+      <div className="relative flex-1 min-h-0">
+        {/* Avatar Image - Fullscreen */}
+        {data.player.avatar?.imageUrl ? (
+          <div className="absolute inset-0 flex items-center justify-center">
             <Image
-              src={data.player.avatar?.imageUrl || ''}
+              src={data.player.avatar.imageUrl}
               alt="Avatar"
-              width={120}
-              height={150}
+              fill
               className="object-contain"
               unoptimized
+              priority
             />
-            {isKing && <div className="absolute top-1 left-1/2 -translate-x-1/2 text-2xl">👑</div>}
           </div>
-        </div>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-6xl">🏀</div>
+          </div>
+        )}
 
-        {/* Stats Grid - 2x2 Compact */}
-        <div className="grid grid-cols-4 gap-2 mb-3 shrink-0">
+        {/* Crown badge if king */}
+        {isKing && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10">
+            <span className="text-4xl drop-shadow-lg">👑</span>
+          </div>
+        )}
+
+        {/* Gradient overlay at bottom for text readability */}
+        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-[#0a0a1a] via-[#0a0a1a]/80 to-transparent pointer-events-none" />
+      </div>
+
+      {/* Stats Section - Overlaid at bottom */}
+      <div className="relative z-10 px-4 pb-4 -mt-32">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-4 gap-2 mb-3">
           <StatBox label="XP" value={data.stats.xp} color="purple" />
           <StatBox label="RP" value={data.stats.rp} color="yellow" />
           <StatBox label="Points" value={data.stats.totalPoints} color="blue" />
           <StatBox label="Win %" value={`${data.stats.winRate}%`} color="green" />
         </div>
 
-        {/* Detailed Stats - Compact */}
-        <div className="bg-white/5 rounded-xl p-3 mb-3 shrink-0">
+        {/* Detailed Stats */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 mb-3">
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
             <StatRow
               label="Matches"
@@ -245,18 +228,15 @@ export default function PlayerPage(): JSX.Element {
           </div>
         </div>
 
-        {/* Championship - Compact */}
-        <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/20 border border-purple-500/20 rounded-xl p-3 mb-3 shrink-0">
+        {/* Championship */}
+        <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl p-3 mb-3">
           <p className="text-purple-400 text-xs uppercase tracking-wide">Current Event</p>
           <p className="text-white font-semibold text-sm">December BB Championship</p>
           <p className="text-purple-400 text-xs">sponsored by AVIS</p>
         </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Challenge Button - Fixed at bottom */}
-        <div className="shrink-0 space-y-2">
+        {/* Challenge Button */}
+        <div className="space-y-2">
           {challengeError && <p className="text-red-400 text-xs text-center">{challengeError}</p>}
           <button
             onClick={handleChallenge}
@@ -298,7 +278,7 @@ function StatBox({
   }
 
   return (
-    <div className={`${colors[color]} rounded-lg p-2 text-center`}>
+    <div className={`${colors[color]} backdrop-blur-sm rounded-lg p-2 text-center`}>
       <p className="text-white font-bold text-lg">{value}</p>
       <p className="text-xs opacity-80">{label}</p>
     </div>

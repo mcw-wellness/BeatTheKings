@@ -14,6 +14,8 @@ export interface AvatarPromptInput {
   jerseyColor?: string // Hex color for jersey
   referencePhoto?: string // Base64 encoded photo for resemblance
   storedPhotoAnalysis?: string // Pre-analyzed photo description for consistency
+  jerseyImageUrl?: string // Reference image for jersey design (e.g., /items/jerseys/champion-jersey.png)
+  shoesImageUrl?: string // Reference image for shoes design (e.g., /items/shoes/elite-shoes.png)
 }
 
 export type AgeGroup = 'under-18' | '18-30' | '31+'

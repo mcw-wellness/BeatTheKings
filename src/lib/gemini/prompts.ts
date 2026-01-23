@@ -207,6 +207,73 @@ export const DEFAULT_AVATARS = [
 ] as const
 
 // =============================================================================
+// ITEM GENERATION PROMPTS
+// =============================================================================
+
+/**
+ * Base style for item product shots
+ */
+const ITEM_BASE_STYLE = `Create a clean product image on a solid dark purple background (#1a1a2e).
+
+STYLE:
+- Clean product photography style, item is the main focus
+- Item fills 80% of frame, centered
+- Slight dramatic lighting from top-left
+- High quality, detailed, semi-realistic style
+- NO people, NO body parts, NO mannequin - just the item alone
+`
+
+/**
+ * Jersey design descriptions for image generation
+ */
+export const JERSEY_DESIGNS: Record<string, string> = {
+  'Default Jersey':
+    'Plain navy blue basketball jersey with simple white trim, classic clean design, number 00 on front',
+  'Champion Jersey':
+    'Basketball jersey with dramatic flame/fire pattern - black at top neckline, red/orange/yellow flame streaks rising diagonally from bottom, gold trim on edges, number 00',
+  'Elite Jersey':
+    'Black basketball jersey with electric blue lightning bolt streaks on sides, modern aggressive design, number 00',
+  'Golden Jersey':
+    'Shimmering gold/yellow metallic basketball jersey with black trim, champion winner style, number 00',
+}
+
+/**
+ * Shoe design descriptions for image generation
+ */
+export const SHOE_DESIGNS: Record<string, string> = {
+  'Default Shoes':
+    'Plain white high-top basketball sneakers with navy blue sole and simple design, clean classic look',
+  'Elite Shoes':
+    'Black high-top basketball sneakers with glowing electric blue accents and carbon fiber pattern, futuristic',
+  'Golden Shoes':
+    'Shimmering gold metallic high-top basketball sneakers with black accents, champion trophy style',
+  'Legend Shoes':
+    'All gold high-top basketball sneakers with star patterns and premium leather texture, legendary edition',
+}
+
+/**
+ * Build prompt for jersey product image
+ */
+export function buildJerseyImagePrompt(designDescription: string): string {
+  return `${ITEM_BASE_STYLE}
+ITEM: Basketball jersey laid FLAT, front view showing full jersey.
+
+DESIGN: ${designDescription}
+
+This is a PRODUCT SHOT of the jersey alone, laid flat like in a store display.`
+}
+
+/**
+ * Build prompt for shoes product image
+ */
+export function buildShoesImagePrompt(designDescription: string): string {
+  return `${ITEM_BASE_STYLE}
+ITEM: Single high-top basketball sneaker, side profile view facing right.
+
+DESIGN: ${designDescription}`
+}
+
+// =============================================================================
 // VIDEO ANALYSIS PROMPTS
 // =============================================================================
 

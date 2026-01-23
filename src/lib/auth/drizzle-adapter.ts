@@ -2,7 +2,7 @@ import { eq, desc } from 'drizzle-orm'
 import { randomUUID } from 'crypto'
 import { users, cities, activePlayers, venues } from '@/db/schema'
 import type { Database } from '@/db'
-import { calculateAge, getAgeGroup } from '@/lib/utils/date'
+import { calculateAge } from '@/lib/utils/date'
 
 /**
  * Profile update input type - all fields optional for flexible updates
@@ -239,11 +239,10 @@ export async function updateUserProfile(db: Database, userId: string, data: Prof
 
   if (data.age !== undefined) {
     updateData.age = data.age
-  }
-
-  if (data.dateOfBirth !== undefined) {
-    updateData.dateOfBirth = data.dateOfBirth
-    updateData.ageGroup = getAgeGroup(new Date(data.dateOfBirth))
+    // Calculate ageGroup from age
+    if (data.age < 18) updateData.ageGroup = 'Under-18'
+    else if (data.age <= 30) updateData.ageGroup = '18-30'
+    else updateData.ageGroup = '31+'
   }
 
   if (data.gender !== undefined) {
