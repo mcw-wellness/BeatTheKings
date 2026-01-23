@@ -440,6 +440,10 @@ export interface AvatarEditInput {
   sport?: string
   jerseyNumber?: number
   jerseyColor?: string
+  jerseyDesign?: string
+  shoesDesign?: string
+  jerseyImageUrl?: string
+  shoesImageUrl?: string
 }
 
 export async function editAvatarImage(
@@ -453,23 +457,62 @@ export async function editAvatarImage(
   const base64Data = existingAvatarBase64.replace(/^data:image\/\w+;base64,/, '')
   const sport = changes.sport || 'basketball'
   const jerseyNumber = changes.jerseyNumber ?? 9
-  const outfitDetails = buildOutfitDescription(sport, jerseyNumber, changes.jerseyColor)
+
+  // Build outfit details - use custom designs if provided
+  let outfitDetails: string
+  if (changes.jerseyDesign || changes.shoesDesign) {
+    const jerseyDesc = changes.jerseyDesign
+      ? changes.jerseyDesign.replace('number 00', `number ${jerseyNumber}`)
+      : `${hexToColorName(changes.jerseyColor)} ${sport} jersey with gold trim and number ${jerseyNumber}`
+    const shoesDesc = changes.shoesDesign || `${hexToColorName(changes.jerseyColor)} high-top basketball sneakers`
+    outfitDetails = `- Jersey: ${jerseyDesc}\n- Matching shorts\n- Shoes: ${shoesDesc}\n- Black athletic socks`
+  } else {
+    outfitDetails = buildOutfitDescription(sport, jerseyNumber, changes.jerseyColor)
+  }
 
   // Load stadium background
   const stadiumBackground = getStadiumBackground()
 
+  // Load item reference images if provided
+  const jerseyImage = changes.jerseyImageUrl ? loadPublicImage(changes.jerseyImageUrl) : null
+  const shoesImage = changes.shoesImageUrl ? loadPublicImage(changes.shoesImageUrl) : null
+
+  // Build image inputs description based on what references are provided
+  let imageInputDesc = `IMAGE INPUTS:
+- Image 1: Existing avatar (preserve identity and pose)
+- Image 2: Stadium background (use as EXACT background)`
+
+  let imageIndex = 3
+  if (jerseyImage) {
+    imageInputDesc += `\n- Image ${imageIndex}: Jersey reference (copy this EXACT jersey design)`
+    imageIndex++
+  }
+  if (shoesImage) {
+    imageInputDesc += `\n- Image ${imageIndex}: Shoes reference (copy this EXACT shoe design)`
+  }
+
+  // Update outfit details if we have reference images
+  if (jerseyImage || shoesImage) {
+    const jerseyDesc = jerseyImage
+      ? `Copy the EXACT design from the jersey reference image, add number ${jerseyNumber}`
+      : changes.jerseyDesign
+        ? changes.jerseyDesign.replace('number 00', `number ${jerseyNumber}`)
+        : `${hexToColorName(changes.jerseyColor)} ${sport} jersey with gold trim and number ${jerseyNumber}`
+    const shoesDesc = shoesImage
+      ? 'Copy the EXACT design from the shoes reference image'
+      : changes.shoesDesign || `${hexToColorName(changes.jerseyColor)} high-top basketball sneakers`
+    outfitDetails = `- Jersey: ${jerseyDesc}\n- Matching shorts\n- Shoes: ${shoesDesc}\n- Black athletic socks`
+  }
+
   // Optimized prompt for Gemini 3 Pro Image's identity preservation
   const editPrompt = `Edit this avatar image while PRESERVING the character's EXACT identity.
 
-IMAGE INPUTS:
-- First image: Existing avatar (preserve identity and pose)
-- Second image: Stadium background (use as EXACT background)
+${imageInputDesc}
 
 CHANGES TO APPLY:
 - Hair style: ${changes.hairStyle}
 - Hair color: ${changes.hairColor}
 - Skin tone: ${changes.skinTone}
-- Jersey/outfit color: ${hexToColorName(changes.jerseyColor)}
 
 PRESERVE EXACTLY (do not change):
 - Face shape, facial features, and identity
@@ -484,42 +527,46 @@ BACKGROUND:
 OUTFIT:
 ${outfitDetails}
 
-The edited avatar must be the SAME CHARACTER with hair, skin, and outfit color changes applied. Preserve facial identity completely. Use the stadium background.`
+CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
+The edited avatar must be the SAME CHARACTER with the changes applied. Preserve facial identity completely.`
 
   try {
-    logger.info('Editing avatar with Gemini 3 Pro Image and stadium background')
+    logger.info(
+      { hasJerseyRef: !!jerseyImage, hasShoesRef: !!shoesImage },
+      'Editing avatar with Gemini 3 Pro Image'
+    )
+
+    // Build parts array with all reference images
+    const parts: Array<{ inlineData?: { mimeType: string; data: string }; text?: string }> = [
+      // Existing avatar
+      { inlineData: { mimeType: 'image/png', data: base64Data } },
+      // Stadium background
+      { inlineData: { mimeType: 'image/png', data: stadiumBackground } },
+    ]
+
+    // Add jersey reference if provided
+    if (jerseyImage) {
+      parts.push({ inlineData: { mimeType: 'image/png', data: jerseyImage } })
+    }
+
+    // Add shoes reference if provided
+    if (shoesImage) {
+      parts.push({ inlineData: { mimeType: 'image/png', data: shoesImage } })
+    }
+
+    // Add prompt text
+    parts.push({ text: editPrompt })
 
     const response = await imageClient.models.generateContent({
       model: IMAGE_MODEL,
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            // Existing avatar
-            {
-              inlineData: {
-                mimeType: 'image/png',
-                data: base64Data,
-              },
-            },
-            // Stadium background
-            {
-              inlineData: {
-                mimeType: 'image/png',
-                data: stadiumBackground,
-              },
-            },
-            { text: editPrompt },
-          ],
-        },
-      ],
+      contents: [{ role: 'user', parts }],
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
     })
 
-    const parts = response.candidates?.[0]?.content?.parts || []
-    for (const part of parts) {
+    const responseParts = response.candidates?.[0]?.content?.parts || []
+    for (const part of responseParts) {
       if (part.inlineData) {
         const imageData = part.inlineData.data
         if (imageData) {

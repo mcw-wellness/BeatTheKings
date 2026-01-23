@@ -177,6 +177,8 @@ function AvatarPageContent(): JSX.Element {
           ageGroup,
           jerseyNumber: parseInt(jerseyNumber) || 9,
           jerseyColor,
+          jerseyItemId: selectedJerseyId || undefined,
+          shoesItemId: selectedShoeId || undefined,
         }),
       })
       const data = await res.json()

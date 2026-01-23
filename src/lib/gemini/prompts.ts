@@ -88,8 +88,22 @@ function getAgeDescription(ageGroup?: string): string {
 /**
  * Get outfit description based on sport
  */
-function getOutfitDescription(sport: string, jerseyNumber?: number): string {
+function getOutfitDescription(
+  sport: string,
+  jerseyNumber?: number,
+  jerseyDesign?: string,
+  shoesDesign?: string
+): string {
   const number = jerseyNumber ?? 9
+
+  // Use custom jersey design if provided, otherwise default
+  const jerseyDesc = jerseyDesign
+    ? jerseyDesign.replace('number 00', `number ${number}`)
+    : `Navy blue basketball jersey with gold/yellow trim, number ${number} on front`
+
+  // Use custom shoes design if provided, otherwise default
+  const shoesDesc = shoesDesign || 'Navy blue and gold high-top basketball sneakers'
+
   switch (sport) {
     case 'soccer':
       return `FULL OUTFIT (must show all):
@@ -100,9 +114,9 @@ function getOutfitDescription(sport: string, jerseyNumber?: number): string {
     case 'basketball':
     default:
       return `FULL OUTFIT (must show all):
-        - Navy blue basketball jersey with gold/yellow trim, number ${number} on front
-        - Matching navy blue basketball shorts with gold stripes down the sides
-        - Navy blue and gold high-top basketball sneakers
+        - ${jerseyDesc}
+        - Matching basketball shorts with stripes down the sides
+        - ${shoesDesc}
         - Black athletic socks`
   }
 }
@@ -119,7 +133,7 @@ export function buildAvatarPrompt(input: AvatarPromptInput): string {
     ${input.hairStyle} ${input.hairColor} hair
   `.trim()
 
-  const outfit = getOutfitDescription(sport, input.jerseyNumber)
+  const outfit = getOutfitDescription(sport, input.jerseyNumber, input.jerseyDesign, input.shoesDesign)
 
   return `${AVATAR_BASE_STYLE}. ${character}. ${outfit}.`
 }
@@ -130,7 +144,7 @@ export function buildAvatarPrompt(input: AvatarPromptInput): string {
  */
 export function buildAvatarPromptWithPhoto(input: AvatarPromptInput): string {
   const sport = input.sport || 'basketball'
-  const outfit = getOutfitDescription(sport, input.jerseyNumber)
+  const outfit = getOutfitDescription(sport, input.jerseyNumber, input.jerseyDesign, input.shoesDesign)
 
   return `Create a FULL BODY sports athlete illustration that LOOKS LIKE this specific person.
 

@@ -16,6 +16,8 @@ export interface AvatarPromptInput {
   storedPhotoAnalysis?: string // Pre-analyzed photo description for consistency
   jerseyImageUrl?: string // Reference image for jersey design (e.g., /items/jerseys/champion-jersey.png)
   shoesImageUrl?: string // Reference image for shoes design (e.g., /items/shoes/elite-shoes.png)
+  jerseyDesign?: string // Text description of jersey design from JERSEY_DESIGNS
+  shoesDesign?: string // Text description of shoes design from SHOE_DESIGNS
 }
 
 export type AgeGroup = 'under-18' | '18-30' | '31+'
