@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
 import { getDb } from '@/db'
-import { users } from '@/db/schema'
 import { getSession } from '@/lib/auth'
 import {
   validateAvatarInput,
@@ -18,36 +16,20 @@ import {
   getDefaultItems,
   upsertEquipment,
 } from '@/lib/avatar'
-import { generateAvatarImage } from '@/lib/avatar/generator'
-import { uploadAvatar } from '@/lib/azure-storage'
+import {
+  getUserGender,
+  processPreviewImage,
+  generateAndUploadAvatar,
+} from '@/lib/avatar/api-helpers'
 import { logger } from '@/lib/utils/logger'
 
-/**
- * Get user's gender from database
- */
-async function getUserGender(userId: string): Promise<string> {
-  const db = getDb()
-  const [user] = await db.select({ gender: users.gender }).from(users).where(eq(users.id, userId))
-  return user?.gender || 'Male'
-}
-
-/**
- * GET /api/users/avatar
- */
 export async function GET(): Promise<NextResponse> {
   try {
     const session = await getSession()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const db = getDb()
     const avatarData = await getAvatarWithStats(db, session.user.id)
-
-    if (!avatarData) {
-      return NextResponse.json({ error: 'Avatar not found' }, { status: 404 })
-    }
-
+    if (!avatarData) return NextResponse.json({ error: 'Avatar not found' }, { status: 404 })
     return NextResponse.json(avatarData)
   } catch (error) {
     logger.error({ error }, 'Failed to get avatar')
@@ -55,16 +37,10 @@ export async function GET(): Promise<NextResponse> {
   }
 }
 
-/**
- * POST /api/users/avatar
- * Create avatar and optionally generate AI image
- */
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     const session = await getSession()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     let body: unknown
     try {
@@ -74,78 +50,43 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     const validation = validateAvatarInput(body)
-    if (!validation.valid) {
+    if (!validation.valid)
       return NextResponse.json(
         { error: 'Validation failed', details: validation.errors },
         { status: 400 }
       )
-    }
 
     const db = getDb()
-
-    if (await avatarExists(db, session.user.id)) {
+    if (await avatarExists(db, session.user.id))
       return NextResponse.json(
         { error: 'Avatar already exists. Use PUT to update.' },
         { status: 409 }
       )
-    }
 
-    // Get user's gender for AI generation
     const gender = await getUserGender(session.user.id)
-
-    // Check if a pre-generated preview image was provided
     const previewImage = (body as { previewImage?: string }).previewImage
     const jerseyNumber = (body as { jerseyNumber?: number }).jerseyNumber
 
-    let imageUrl: string | undefined
-    if (previewImage && previewImage.startsWith('data:image/')) {
-      // Use the pre-generated preview image
-      try {
-        const base64Data = previewImage.replace(/^data:image\/\w+;base64,/, '')
-        const imageBuffer = Buffer.from(base64Data, 'base64')
-        imageUrl = await uploadAvatar(session.user.id, imageBuffer)
-        logger.info({ userId: session.user.id, imageUrl }, 'Preview avatar uploaded')
-      } catch (error) {
-        logger.warn({ error }, 'Failed to upload preview image')
-      }
-    } else {
-      // Try to generate AI avatar image (skip if Gemini not configured or fails)
-      try {
-        const imageBuffer = await generateAvatarImage({
-          gender,
-          skinTone: validation.data.skinTone,
-          hairStyle: validation.data.hairStyle,
-          hairColor: validation.data.hairColor,
-          jerseyNumber,
-        })
-        imageUrl = await uploadAvatar(session.user.id, imageBuffer)
-        logger.info({ userId: session.user.id, imageUrl }, 'AI avatar generated and uploaded')
-      } catch (error) {
-        // Log but continue without AI image - will use SVG fallback
-        logger.warn({ error }, 'AI avatar generation skipped, using SVG fallback')
-      }
-    }
+    let imageUrl = await processPreviewImage(session.user.id, previewImage)
+    if (!imageUrl)
+      imageUrl = await generateAndUploadAvatar(
+        session.user.id,
+        gender,
+        validation.data,
+        jerseyNumber
+      )
 
-    // Create avatar with optional image URL
-    const avatar = await createAvatar(db, session.user.id, {
-      ...validation.data,
-      imageUrl,
-    })
-
-    // Unlock default items for the user
+    const avatar = await createAvatar(db, session.user.id, { ...validation.data, imageUrl })
     await unlockDefaultItems(db, session.user.id)
 
-    // Create default equipment for basketball
     const basketballId = await getBasketballSportId(db)
     if (basketballId) {
       const defaultItems = await getDefaultItems(db)
-      if (defaultItems.length > 0) {
+      if (defaultItems.length > 0)
         await createDefaultEquipment(db, avatar.id, basketballId, defaultItems, jerseyNumber)
-      }
     }
 
     await markAvatarCreated(db, session.user.id)
-
     logger.info({ userId: session.user.id, avatarId: avatar.id }, 'Avatar created')
 
     return NextResponse.json(
@@ -168,16 +109,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 }
 
-/**
- * PUT /api/users/avatar
- * Update avatar and optionally regenerate AI image
- */
 export async function PUT(request: Request): Promise<NextResponse> {
   try {
     const session = await getSession()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     let body: unknown
     try {
@@ -187,57 +122,42 @@ export async function PUT(request: Request): Promise<NextResponse> {
     }
 
     const validation = validateAvatarUpdateInput(body)
-    if (!validation.valid) {
+    if (!validation.valid)
       return NextResponse.json(
         { error: 'Validation failed', details: validation.errors },
         { status: 400 }
       )
-    }
 
     const db = getDb()
-
     const existingAvatar = await getAvatar(db, session.user.id)
-    if (!existingAvatar) {
+    if (!existingAvatar)
       return NextResponse.json({ error: 'Avatar not found. Use POST to create.' }, { status: 404 })
-    }
 
-    // Check if a pre-generated preview image was provided
     const previewImage = (body as { previewImage?: string }).previewImage
     const jerseyNumber = (body as { jerseyNumber?: number }).jerseyNumber
+    const shoesItemId = (body as { shoesItemId?: string }).shoesItemId
+    const jerseyItemId = (body as { jerseyItemId?: string }).jerseyItemId
 
-    // Only update image if a new preview was explicitly provided
-    // Otherwise, keep the existing image (don't regenerate)
-    let imageUrl: string | undefined
-    if (previewImage && previewImage.startsWith('data:image/')) {
-      // Use the pre-generated preview image
-      try {
-        const base64Data = previewImage.replace(/^data:image\/\w+;base64,/, '')
-        const imageBuffer = Buffer.from(base64Data, 'base64')
-        imageUrl = await uploadAvatar(session.user.id, imageBuffer)
-        logger.info({ userId: session.user.id, imageUrl }, 'Preview avatar uploaded')
-      } catch (error) {
-        logger.warn({ error }, 'Failed to upload preview image')
-      }
-    }
-    // If no previewImage provided, imageUrl stays undefined and existing image is preserved
-
-    // Update avatar with new values (only include imageUrl if we have a new one)
-    const updateData = { ...validation.data }
-    if (imageUrl) {
-      Object.assign(updateData, { imageUrl })
-    }
+    const imageUrl = await processPreviewImage(session.user.id, previewImage)
+    const updateData = imageUrl ? { ...validation.data, imageUrl } : validation.data
     const updated = await updateAvatar(db, existingAvatar.id, updateData)
 
-    // Upsert equipment (create if not exists, update jersey number if exists)
     const basketballId = await getBasketballSportId(db)
     if (basketballId) {
       const defaultItems = await getDefaultItems(db)
       await unlockDefaultItems(db, session.user.id)
-      await upsertEquipment(db, existingAvatar.id, basketballId, defaultItems, jerseyNumber)
+      await upsertEquipment(
+        db,
+        existingAvatar.id,
+        basketballId,
+        defaultItems,
+        jerseyNumber,
+        shoesItemId,
+        jerseyItemId
+      )
     }
 
     await markAvatarCreated(db, session.user.id)
-
     logger.info({ userId: session.user.id, avatarId: updated.id }, 'Avatar updated')
 
     return NextResponse.json({

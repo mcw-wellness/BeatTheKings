@@ -3,45 +3,38 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import Image from 'next/image'
 import { useAvatarUrl } from '@/lib/hooks/useAvatarUrl'
 import {
-  SKIN_TONE_COLORS,
-  HAIR_COLOR_HEX,
   VALID_SKIN_TONES,
   VALID_HAIR_STYLES,
   VALID_HAIR_COLORS,
 } from '@/components/avatar/AvatarPreview'
 import { calculateAgeGroup } from '@/lib/avatar/prompts'
+import { SkinToneSelector } from '@/components/avatar/SkinToneSelector'
+import { HairSelector } from '@/components/avatar/HairSelector'
+import { JerseyNumberInput, JerseyColorSelector } from '@/components/avatar/JerseySelector'
+import { ShoeSelector, type ShoeItem } from '@/components/avatar/ShoeSelector'
+import { JerseyUnlockSelector, type JerseyItem } from '@/components/avatar/JerseyUnlockSelector'
+import { AvatarDisplay } from '@/components/avatar/AvatarDisplay'
+import { ActionButtons, TabBar } from '@/components/avatar/AvatarActions'
+import { Logo } from '@/components/layout/Logo'
 
 type SkinTone = (typeof VALID_SKIN_TONES)[number]
 type HairStyle = (typeof VALID_HAIR_STYLES)[number]
 type HairColor = (typeof VALID_HAIR_COLORS)[number]
-type Gender = 'male' | 'female'
-type TabType = 'skin' | 'hair' | 'jerseyNumber' | 'jerseyColor' | 'shoes'
-
-const JERSEY_COLORS = [
-  { name: 'Navy', value: '#1a1a4e' },
-  { name: 'Red', value: '#dc2626' },
-  { name: 'Green', value: '#16a34a' },
-  { name: 'White', value: '#ffffff' },
-  { name: 'Black', value: '#1f2937' },
-  { name: 'Purple', value: '#7c3aed' },
-]
+type TabType = 'skin' | 'hair' | 'jerseyNumber' | 'jerseyColor' | 'jersey' | 'shoes'
 
 export default function AvatarPage(): JSX.Element {
   return (
-    <Suspense fallback={<AvatarPageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-pulse text-white/60">Loading...</div>
+        </div>
+      }
+    >
       <AvatarPageContent />
     </Suspense>
-  )
-}
-
-function AvatarPageSkeleton(): JSX.Element {
-  return (
-    <main className="min-h-screen bg-transparent flex items-center justify-center">
-      <div className="animate-pulse text-white/60">Loading...</div>
-    </main>
   )
 }
 
@@ -49,18 +42,19 @@ function AvatarPageContent(): JSX.Element {
   const router = useRouter()
   const { status, update } = useSession()
 
-  // User profile fields
-  const [gender, setGender] = useState<Gender>('male')
-  const [dateOfBirth, setDateOfBirth] = useState<string>('')
-
-  // Avatar customization fields
+  const [gender, setGender] = useState<'male' | 'female'>('male')
+  const [dateOfBirth, setDateOfBirth] = useState('')
   const [skinTone, setSkinTone] = useState<SkinTone>('medium')
   const [hairStyle, setHairStyle] = useState<HairStyle>('short')
   const [hairColor, setHairColor] = useState<HairColor>('black')
   const [jerseyNumber, setJerseyNumber] = useState('9')
   const [jerseyColor, setJerseyColor] = useState('#1a1a4e')
-
-  // UI state
+  const [shoes, setShoes] = useState<ShoeItem[]>([])
+  const [selectedShoeId, setSelectedShoeId] = useState<string | null>(null)
+  const [jerseys, setJerseys] = useState<JerseyItem[]>([])
+  const [selectedJerseyId, setSelectedJerseyId] = useState<string | null>(null)
+  const [isUnlocking, setIsUnlocking] = useState(false)
+  const [isUnlockingJersey, setIsUnlockingJersey] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>('hair')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -69,64 +63,110 @@ function AvatarPageContent(): JSX.Element {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null)
 
-  // Fetch user's existing profile and avatar data
   useEffect(() => {
-    const fetchUserData = async (): Promise<void> => {
-      setIsLoadingAvatar(true)
-      try {
-        const profileRes = await fetch('/api/users/profile')
-        if (profileRes.ok) {
-          const profileData = await profileRes.json()
-          const user = profileData.user || profileData
-          if (user.gender) setGender(user.gender as Gender)
-          if (user.dateOfBirth) setDateOfBirth(user.dateOfBirth.split('T')[0])
-        }
-
-        const avatarRes = await fetch('/api/users/avatar')
-        if (avatarRes.ok) {
-          const data = await avatarRes.json()
-          const avatar = data.avatar
-          if (avatar) {
-            if (avatar.skinTone) setSkinTone(avatar.skinTone)
-            if (avatar.hairStyle) setHairStyle(avatar.hairStyle)
-            if (avatar.hairColor) setHairColor(avatar.hairColor)
-            const equipment = data.equipment
-            if (equipment?.basketball?.jerseyNumber != null) {
-              setJerseyNumber(String(equipment.basketball.jerseyNumber))
-            }
-            if (avatar.imageUrl) {
-              const sasRes = await fetch('/api/avatar/url?type=user&userId=me')
-              const sasData = await sasRes.json()
-              if (sasRes.ok && sasData.url) setSavedAvatarUrl(sasData.url)
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error in fetchUserData:', error)
-      } finally {
-        setIsLoadingAvatar(false)
-      }
-    }
     fetchUserData()
   }, [])
-
-  const defaultAvatarUrl = useAvatarUrl({ type: 'default', gender })
-  const ageGroup = dateOfBirth ? calculateAgeGroup(dateOfBirth) : undefined
-  const displayAvatarUrl = previewImage || savedAvatarUrl || defaultAvatarUrl
-
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
   }, [status, router])
 
-  if (status === 'loading') return <AvatarPageSkeleton />
+  const defaultAvatarUrl = useAvatarUrl({ type: 'default', gender })
+  const displayAvatarUrl = previewImage || savedAvatarUrl || defaultAvatarUrl
+  const ageGroup = dateOfBirth ? calculateAgeGroup(dateOfBirth) : undefined
 
-  // Generate preview based on current selections
+  async function fetchUserData(): Promise<void> {
+    setIsLoadingAvatar(true)
+    try {
+      const [profileRes, avatarRes, shoesRes, jerseysRes] = await Promise.all([
+        fetch('/api/users/profile'),
+        fetch('/api/users/avatar'),
+        fetch('/api/items?type=shoes'),
+        fetch('/api/items?type=jersey'),
+      ])
+      if (profileRes.ok) {
+        const { user } = await profileRes.json()
+        if (user?.gender) setGender(user.gender)
+        if (user?.dateOfBirth) setDateOfBirth(user.dateOfBirth.split('T')[0])
+      }
+      if (avatarRes.ok) {
+        const { avatar, equipment } = await avatarRes.json()
+        if (avatar?.skinTone) setSkinTone(avatar.skinTone)
+        if (avatar?.hairStyle) setHairStyle(avatar.hairStyle)
+        if (avatar?.hairColor) setHairColor(avatar.hairColor)
+        if (equipment?.basketball?.jerseyNumber != null)
+          setJerseyNumber(String(equipment.basketball.jerseyNumber))
+        if (equipment?.basketball?.shoesItemId) setSelectedShoeId(equipment.basketball.shoesItemId)
+        if (equipment?.basketball?.jersey?.id) setSelectedJerseyId(equipment.basketball.jersey.id)
+        if (avatar?.imageUrl) {
+          const sasRes = await fetch('/api/avatar/url?type=user&userId=me')
+          if (sasRes.ok) {
+            const { url } = await sasRes.json()
+            if (url) setSavedAvatarUrl(url)
+          }
+        }
+      }
+      if (shoesRes.ok) {
+        const { items } = await shoesRes.json()
+        setShoes(items || [])
+        setSelectedShoeId(
+          (cur) => cur || items?.find((s: ShoeItem) => s.isDefault && s.isUnlocked)?.id || null
+        )
+      }
+      if (jerseysRes.ok) {
+        const { items } = await jerseysRes.json()
+        setJerseys(items || [])
+        setSelectedJerseyId(
+          (cur) => cur || items?.find((j: JerseyItem) => j.isDefault && j.isUnlocked)?.id || null
+        )
+      }
+    } catch (e) {
+      console.error('fetchUserData error:', e)
+    } finally {
+      setIsLoadingAvatar(false)
+    }
+  }
+
+  const handleUnlockShoe = async (shoeId: string): Promise<void> => {
+    setIsUnlocking(true)
+    try {
+      const res = await fetch(`/api/items/${shoeId}/unlock`, { method: 'POST' })
+      if (res.ok) {
+        const itemsRes = await fetch('/api/items?type=shoes')
+        if (itemsRes.ok) setShoes((await itemsRes.json()).items || [])
+        setSelectedShoeId(shoeId)
+      } else {
+        setError((await res.json()).error || 'Failed to unlock')
+      }
+    } catch {
+      setError('Failed to unlock shoe')
+    } finally {
+      setIsUnlocking(false)
+    }
+  }
+
+  const handleUnlockJersey = async (jerseyId: string): Promise<void> => {
+    setIsUnlockingJersey(true)
+    try {
+      const res = await fetch(`/api/items/${jerseyId}/unlock`, { method: 'POST' })
+      if (res.ok) {
+        const itemsRes = await fetch('/api/items?type=jersey')
+        if (itemsRes.ok) setJerseys((await itemsRes.json()).items || [])
+        setSelectedJerseyId(jerseyId)
+      } else {
+        setError((await res.json()).error || 'Failed to unlock')
+      }
+    } catch {
+      setError('Failed to unlock jersey')
+    } finally {
+      setIsUnlockingJersey(false)
+    }
+  }
+
   const handleGeneratePreview = async (): Promise<void> => {
     setError(null)
     setIsGenerating(true)
-
     try {
-      const previewRes = await fetch('/api/avatar/preview', {
+      const res = await fetch('/api/avatar/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -139,68 +179,64 @@ function AvatarPageContent(): JSX.Element {
           jerseyColor,
         }),
       })
-
-      const previewData = await previewRes.json()
-      if (!previewRes.ok) throw new Error(previewData.error || 'Failed to generate')
-
-      setPreviewImage(previewData.imageUrl)
-    } catch (err) {
-      console.error('Generate error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to generate preview')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate')
+      setPreviewImage(data.imageUrl)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to generate')
     } finally {
       setIsGenerating(false)
     }
   }
 
-  // Save current avatar settings
   const handleSave = async (): Promise<void> => {
     setError(null)
     setIsSubmitting(true)
-
     try {
-      const avatarPayload = {
+      const payload = {
         skinTone,
         hairStyle,
         hairColor,
         jerseyNumber: parseInt(jerseyNumber) || 9,
-        previewImage: previewImage || undefined, // Only include if we have a new preview
+        shoesItemId: selectedShoeId || undefined,
+        jerseyItemId: selectedJerseyId || undefined,
+        previewImage: previewImage || undefined,
       }
-
-      const res = await fetch('/api/users/avatar', {
+      let res = await fetch('/api/users/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(avatarPayload),
+        body: JSON.stringify(payload),
       })
-
-      let data = await res.json()
-
-      if (res.status === 409) {
-        const updateRes = await fetch('/api/users/avatar', {
+      if (res.status === 409)
+        res = await fetch('/api/users/avatar', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(avatarPayload),
+          body: JSON.stringify(payload),
         })
-        data = await updateRes.json()
-        if (!updateRes.ok) throw new Error(data.error || 'Failed to update')
-      } else if (!res.ok) {
-        throw new Error(data.error || 'Failed to create')
-      }
-
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
       await update()
       router.push('/welcome')
-    } catch (err) {
-      console.error('Save error:', err)
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong')
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  if (status === 'loading')
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-white/60">Loading...</div>
+      </div>
+    )
+
   const tabs: { id: TabType; label: string }[] = [
     { id: 'skin', label: 'Skin' },
     { id: 'hair', label: 'Hair' },
-    { id: 'jerseyNumber', label: 'Jersey Number' },
-    { id: 'jerseyColor', label: 'Jersey Color' },
+    { id: 'jerseyNumber', label: 'Number' },
+    { id: 'jerseyColor', label: 'Color' },
+    { id: 'jersey', label: 'Jersey' },
     { id: 'shoes', label: 'Shoes' },
   ]
 
@@ -213,188 +249,69 @@ function AvatarPageContent(): JSX.Element {
         backgroundPosition: 'center',
       }}
     >
-      {/* Light overlay for text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-
-      {/* Header */}
-      <div className="p-4 pt-6 relative z-10">
-        <h1 className="text-2xl font-bold text-white">
-          {savedAvatarUrl ? 'Edit Avatar' : 'Create Avatar'}
-        </h1>
-        <p className="text-white/60 text-sm">Basketball</p>
+      <div className="p-4 pt-6 relative z-10 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">
+            {savedAvatarUrl ? 'Edit Avatar' : 'Create Avatar'}
+          </h1>
+          <p className="text-white/60 text-sm">Basketball</p>
+        </div>
+        <Logo size="sm" linkToHome className="w-10 h-10" />
       </div>
-
-      {/* Error */}
       {error && (
         <div className="mx-4 bg-red-500/20 border border-red-500/30 text-red-200 px-4 py-2 rounded-lg text-sm relative z-10">
           {error}
         </div>
       )}
-
-      {/* Avatar Display - takes up most of the screen */}
-      <div className="flex-1 relative flex items-center justify-center px-4 z-10">
-        {isGenerating ? (
-          <div className="flex flex-col items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white mb-4" />
-            <p className="text-white/60">Generating your avatar...</p>
-          </div>
-        ) : isLoadingAvatar && !previewImage ? (
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white" />
-          </div>
-        ) : displayAvatarUrl ? (
-          <div className="relative w-full max-w-sm h-[50vh] min-h-[300px]">
-            <Image
-              src={displayAvatarUrl}
-              alt="Your Avatar"
-              fill
-              className="object-contain"
-              priority
-              unoptimized
-            />
-          </div>
-        ) : (
-          <div className="text-white/40">Loading...</div>
-        )}
-      </div>
-
-      {/* Tab Content Area */}
+      <AvatarDisplay
+        isGenerating={isGenerating}
+        isLoadingAvatar={isLoadingAvatar}
+        previewImage={previewImage}
+        displayAvatarUrl={displayAvatarUrl}
+      />
       <div className="px-4 py-3 min-h-[100px] relative z-10">
-        {activeTab === 'skin' && (
-          <div className="flex gap-3 justify-center flex-wrap">
-            {VALID_SKIN_TONES.map((tone) => (
-              <button
-                key={tone}
-                onClick={() => setSkinTone(tone)}
-                style={{ backgroundColor: SKIN_TONE_COLORS[tone] }}
-                className={`w-12 h-12 rounded-full border-2 transition-all ${
-                  skinTone === tone
-                    ? 'border-white scale-110'
-                    : 'border-white/20 hover:border-white/40'
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
+        {activeTab === 'skin' && <SkinToneSelector skinTone={skinTone} onSelect={setSkinTone} />}
         {activeTab === 'hair' && (
-          <div className="space-y-3">
-            <div className="flex gap-2 justify-center flex-wrap">
-              {VALID_HAIR_STYLES.map((style) => (
-                <button
-                  key={style}
-                  onClick={() => setHairStyle(style)}
-                  className={`px-4 py-2 rounded-lg border text-sm capitalize transition-all ${
-                    hairStyle === style
-                      ? 'border-white bg-white/20 text-white'
-                      : 'border-white/20 text-white/60 hover:border-white/40'
-                  }`}
-                >
-                  {style}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2 justify-center">
-              {VALID_HAIR_COLORS.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setHairColor(color)}
-                  style={{ backgroundColor: HAIR_COLOR_HEX[color] }}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    hairColor === color
-                      ? 'border-white scale-110'
-                      : 'border-white/20 hover:border-white/40'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
+          <HairSelector
+            hairStyle={hairStyle}
+            hairColor={hairColor}
+            onStyleSelect={setHairStyle}
+            onColorSelect={setHairColor}
+          />
         )}
-
         {activeTab === 'jerseyNumber' && (
-          <div className="flex justify-center">
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={2}
-              value={jerseyNumber}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '').slice(0, 2)
-                setJerseyNumber(val)
-              }}
-              onBlur={() => {
-                if (jerseyNumber === '') setJerseyNumber('0')
-              }}
-              className="w-24 text-center text-4xl font-bold py-3 bg-white/10 border-2 border-white/30 rounded-lg text-white focus:border-white focus:outline-none"
-            />
-          </div>
+          <JerseyNumberInput jerseyNumber={jerseyNumber} onChange={setJerseyNumber} />
         )}
-
         {activeTab === 'jerseyColor' && (
-          <div className="flex gap-3 justify-center flex-wrap">
-            {JERSEY_COLORS.map((color) => (
-              <button
-                key={color.value}
-                onClick={() => setJerseyColor(color.value)}
-                style={{ backgroundColor: color.value }}
-                className={`w-12 h-12 rounded-full border-2 transition-all ${
-                  jerseyColor === color.value
-                    ? 'border-white scale-110'
-                    : 'border-white/20 hover:border-white/40'
-                } ${color.value === '#ffffff' ? 'border-white/40' : ''}`}
-                title={color.name}
-              />
-            ))}
-          </div>
+          <JerseyColorSelector jerseyColor={jerseyColor} onSelect={setJerseyColor} />
         )}
-
+        {activeTab === 'jersey' && (
+          <JerseyUnlockSelector
+            jerseys={jerseys}
+            selectedJerseyId={selectedJerseyId}
+            isUnlocking={isUnlockingJersey}
+            onSelect={setSelectedJerseyId}
+            onUnlock={handleUnlockJersey}
+          />
+        )}
         {activeTab === 'shoes' && (
-          <div className="text-center text-white/40 text-sm py-4">
-            Shoes customization coming soon
-          </div>
+          <ShoeSelector
+            shoes={shoes}
+            selectedShoeId={selectedShoeId}
+            isUnlocking={isUnlocking}
+            onSelect={setSelectedShoeId}
+            onUnlock={handleUnlockShoe}
+          />
         )}
       </div>
-
-      {/* Tab Bar */}
-      <div className="border-t border-white/10 relative z-10">
-        <div className="flex overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-max px-4 py-3 text-sm font-medium whitespace-nowrap transition-all ${
-                activeTab === tab.id
-                  ? 'text-white border-b-2 border-white'
-                  : 'text-white/50 hover:text-white/70'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="p-4 border-t border-white/10 space-y-2 relative z-10">
-        <button
-          onClick={handleGeneratePreview}
-          disabled={isSubmitting || isGenerating}
-          className="w-full py-3 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-semibold rounded-lg transition-all disabled:opacity-50 border border-yellow-500/30"
-        >
-          {isGenerating ? 'Generating...' : 'Generate Preview'}
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={isSubmitting || isGenerating}
-          className="w-full py-3 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all disabled:opacity-50 border border-white/30"
-        >
-          {isSubmitting ? 'Saving...' : 'Save Avatar'}
-        </button>
-      </div>
-
-      {/* Sponsor Footer */}
+      <TabBar tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+      <ActionButtons
+        isSubmitting={isSubmitting}
+        isGenerating={isGenerating}
+        onGenerate={handleGeneratePreview}
+        onSave={handleSave}
+      />
       <div className="py-3 text-center relative z-10">
         <p className="text-xs text-white/30">BB Championship sponsored by DONK</p>
       </div>

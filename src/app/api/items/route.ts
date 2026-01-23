@@ -20,12 +20,16 @@ export async function GET(request: NextRequest): Promise<Response> {
     const db = getDb()
     const { searchParams } = new URL(request.url)
     const sportId = searchParams.get('sportId') || undefined
+    const itemType = searchParams.get('type') || undefined
 
     const { items, stats } = await getItemsWithStatus(db, session.user.id, sportId)
 
+    // Filter by type if specified
+    const filteredItems = itemType ? items.filter((item) => item.itemType === itemType) : items
+
     // Transform for API response
     const response = {
-      items: items.map((item) => ({
+      items: filteredItems.map((item) => ({
         id: item.id,
         name: item.name,
         itemType: item.itemType,
