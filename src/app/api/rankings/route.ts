@@ -51,21 +51,14 @@ export async function GET(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Sport not found' }, { status: 404 })
     }
 
-    // Get user's age group (required for filtering)
+    // Get user's age group (optional - will show empty rankings if not set)
     const [currentUser] = await db
       .select({ ageGroup: users.ageGroup })
       .from(users)
       .where(eq(users.id, session.user.id))
       .limit(1)
 
-    if (!currentUser?.ageGroup) {
-      return NextResponse.json(
-        { error: 'User age group not set. Please complete your profile.' },
-        { status: 400 }
-      )
-    }
-
-    const ageGroup = currentUser.ageGroup
+    const ageGroup = currentUser?.ageGroup || null
 
     // Get user's location if not provided
     if (!cityId || !countryId) {
@@ -77,11 +70,35 @@ export async function GET(request: Request): Promise<NextResponse> {
     let rankings: { players: RankedPlayer[]; total: number }
     let location: { id: string; name: string } | null = null
 
+    // Return empty rankings if age group not set
+    if (!ageGroup) {
+      const response: RankingsResponse = {
+        level,
+        sport,
+        location: null,
+        king: null,
+        rankings: [],
+        currentUser: null,
+        totalPlayers: 0,
+      }
+      return NextResponse.json(response)
+    }
+
     // Get rankings based on level (filtered by user's age group)
     switch (level) {
       case 'city':
         if (!cityId) {
-          return NextResponse.json({ error: 'City ID required for city rankings' }, { status: 400 })
+          // Return empty rankings if city not set
+          const response: RankingsResponse = {
+            level,
+            sport,
+            location: null,
+            king: null,
+            rankings: [],
+            currentUser: null,
+            totalPlayers: 0,
+          }
+          return NextResponse.json(response)
         }
         rankings = await getCityRankings(db, sportId, cityId, ageGroup, limit)
         location = await getLocationInfo(db, 'city', cityId)
@@ -89,10 +106,17 @@ export async function GET(request: Request): Promise<NextResponse> {
 
       case 'country':
         if (!countryId) {
-          return NextResponse.json(
-            { error: 'Country ID required for country rankings' },
-            { status: 400 }
-          )
+          // Return empty rankings if country not set
+          const response: RankingsResponse = {
+            level,
+            sport,
+            location: null,
+            king: null,
+            rankings: [],
+            currentUser: null,
+            totalPlayers: 0,
+          }
+          return NextResponse.json(response)
         }
         rankings = await getCountryRankings(db, sportId, countryId, ageGroup, limit)
         location = await getLocationInfo(db, 'country', undefined, countryId)
