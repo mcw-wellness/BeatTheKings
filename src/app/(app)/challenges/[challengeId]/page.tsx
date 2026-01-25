@@ -66,6 +66,15 @@ export default function ChallengeDetailPage(): JSX.Element {
     router.push(`/challenges/${challengeId}/play`)
   }
 
+  const startDemoChallenge = (): void => {
+    router.push(`/challenges/${challengeId}/demo`)
+  }
+
+  // Check if this is a 3-Point Shot challenge at Esterhazy Park (demo eligible)
+  const isDemoEligible =
+    challenge?.challengeType === 'three_point' &&
+    challenge?.venueName?.toLowerCase().includes('esterhazy')
+
   if (isLoading) {
     return (
       <main
@@ -165,6 +174,16 @@ export default function ChallengeDetailPage(): JSX.Element {
             <span>Instructions</span>
           </h2>
           <p className="text-white/70 whitespace-pre-line">{challenge.instructions}</p>
+
+          {/* Camera instructions for demo-eligible challenges */}
+          {isDemoEligible && (
+            <div className="mt-3 p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+              <p className="text-yellow-200 text-sm">
+                Position camera at a 45° angle (wing) to avoiding backlighting. Record in landscape
+                at eye level using tripod or steady hand. Keep videos short (max. 2 minutes).
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Stats Card */}
@@ -199,14 +218,33 @@ export default function ChallengeDetailPage(): JSX.Element {
           </p>
         </div>
 
-        {/* Start Button */}
-        <button
-          onClick={startChallenge}
-          className="w-full py-4 bg-green-500/80 hover:bg-green-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-        >
-          <span>🎯</span>
-          <span>Start Challenge</span>
-        </button>
+        {/* Start Buttons */}
+        {isDemoEligible ? (
+          <div className="flex gap-3">
+            <button
+              onClick={startChallenge}
+              className="flex-1 py-4 bg-green-500/80 hover:bg-green-500 text-white font-semibold rounded-xl transition-colors flex flex-col items-center justify-center gap-1"
+            >
+              <span className="text-sm">Start Challenge</span>
+              <span className="text-xs opacity-80">& recording video</span>
+            </button>
+            <button
+              onClick={startDemoChallenge}
+              className="flex-1 py-4 bg-yellow-500/90 hover:bg-yellow-500 text-black font-semibold rounded-xl transition-colors flex flex-col items-center justify-center gap-1"
+            >
+              <span className="text-sm">Start Challenge &</span>
+              <span className="text-xs opacity-80">use demo video</span>
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={startChallenge}
+            className="w-full py-4 bg-green-500/80 hover:bg-green-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            <span>🎯</span>
+            <span>Start Challenge</span>
+          </button>
+        )}
       </div>
     </main>
   )
