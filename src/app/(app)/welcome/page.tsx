@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
@@ -54,7 +54,7 @@ function WelcomePageContent(): JSX.Element {
   const [rank, setRank] = useState<number | null>(null)
   const [isResetting, setIsResetting] = useState(false)
   const [showToast, setShowToast] = useState(false)
-  const [avatarVersion, setAvatarVersion] = useState(Date.now())
+  const [avatarVersion, setAvatarVersion] = useState<number | null>(null) // Only set after update detected
   const { url: avatarUrl, isLoading: isAvatarLoading } = useAvatarUrlWithLoading({
     type: 'user',
     userId: 'me',
@@ -62,44 +62,46 @@ function WelcomePageContent(): JSX.Element {
 
   // Check if avatar is updating in background
   const isAvatarUpdating = searchParams.get('avatarUpdating') === 'true'
+  const [pollingStartTime, setPollingStartTime] = useState<number | null>(null)
 
   // Show toast and start polling when avatarUpdating param is present
   useEffect(() => {
     if (isAvatarUpdating) {
       setShowToast(true)
+      setPollingStartTime(Date.now())
       // Remove the query param from URL without refresh
       router.replace('/welcome', { scroll: false })
     }
   }, [isAvatarUpdating, router])
 
   // Poll for avatar updates when toast is showing
-  const pollForAvatarUpdate = useCallback(async () => {
-    try {
-      const res = await fetch('/api/users/avatar')
-      if (res.ok) {
-        const data = await res.json()
-        // Check if avatar was updated (updatedAt changed)
-        if (data.avatar?.updatedAt) {
-          const updatedAt = new Date(data.avatar.updatedAt).getTime()
-          if (updatedAt > avatarVersion) {
-            // Avatar was updated! Refresh the image
-            setAvatarVersion(Date.now())
-            setShowToast(false)
-            return true // Stop polling
+  useEffect(() => {
+    if (!showToast || !pollingStartTime) return
+
+    const pollForUpdate = async (): Promise<boolean> => {
+      try {
+        const res = await fetch('/api/users/avatar')
+        if (res.ok) {
+          const data = await res.json()
+          // Check if avatar was updated after we started polling
+          if (data.avatar?.updatedAt) {
+            const updatedAt = new Date(data.avatar.updatedAt).getTime()
+            if (updatedAt > pollingStartTime) {
+              // Avatar was updated! Set version to trigger cache-bust refresh
+              setAvatarVersion(Date.now())
+              setShowToast(false)
+              return true // Stop polling
+            }
           }
         }
+      } catch {
+        // Ignore errors during polling
       }
-    } catch {
-      // Ignore errors during polling
+      return false // Continue polling
     }
-    return false // Continue polling
-  }, [avatarVersion])
-
-  useEffect(() => {
-    if (!showToast) return
 
     const pollInterval = setInterval(async () => {
-      const updated = await pollForAvatarUpdate()
+      const updated = await pollForUpdate()
       if (updated) {
         clearInterval(pollInterval)
       }
@@ -115,7 +117,7 @@ function WelcomePageContent(): JSX.Element {
       clearInterval(pollInterval)
       clearTimeout(timeout)
     }
-  }, [showToast, pollForAvatarUpdate])
+  }, [showToast, pollingStartTime])
 
   const displayName = session?.user?.nickname || session?.user?.name || 'Player'
   const hasCreatedAvatar = session?.user?.hasCreatedAvatar ?? false
@@ -173,8 +175,12 @@ function WelcomePageContent(): JSX.Element {
   const xpProgress = (xpInLevel / xpForNextLevel) * 100
   const isKing = rank === 1
 
-  // Add cache-busting to avatar URL when version changes
-  const avatarUrlWithVersion = avatarUrl ? `${avatarUrl}?v=${avatarVersion}` : avatarUrl
+  // Add cache-busting to avatar URL only AFTER we detect an update completed
+  // This prevents load failures during background generation
+  const avatarUrlWithVersion =
+    avatarUrl && avatarVersion
+      ? `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}v=${avatarVersion}`
+      : avatarUrl
 
   return (
     <main
