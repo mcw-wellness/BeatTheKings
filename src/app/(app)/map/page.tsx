@@ -40,6 +40,28 @@ function MapPageContent(): JSX.Element {
     requestPermission,
   } = useLocation()
 
+  // Onboarding: highlight Enable Location if not completed
+  const [showLocationHighlight, setShowLocationHighlight] = useState(false)
+  const ONBOARDING_KEY = 'hasCompletedOnboarding'
+
+  useEffect(() => {
+    const hasCompleted = localStorage.getItem(ONBOARDING_KEY) === 'true'
+    if (!hasCompleted && !latitude) {
+      setShowLocationHighlight(true)
+    }
+  }, [latitude])
+
+  // Mark onboarding complete when location is enabled
+  useEffect(() => {
+    if (latitude && longitude) {
+      const hasCompleted = localStorage.getItem(ONBOARDING_KEY) === 'true'
+      if (!hasCompleted) {
+        localStorage.setItem(ONBOARDING_KEY, 'true')
+        setShowLocationHighlight(false)
+      }
+    }
+  }, [latitude, longitude])
+
   const [venues, setVenues] = useState<VenueItem[]>([])
   const [selectedVenue, setSelectedVenue] = useState<VenueItem | null>(null)
   const [activePlayers, setActivePlayers] = useState<ActivePlayer[]>([])
@@ -135,6 +157,7 @@ function MapPageContent(): JSX.Element {
           permission={permission}
           geoError={geoError}
           requestPermission={requestPermission}
+          highlight={showLocationHighlight}
         />
 
         <MapView

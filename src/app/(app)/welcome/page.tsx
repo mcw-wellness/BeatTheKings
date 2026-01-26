@@ -156,6 +156,19 @@ function WelcomePageContent(): JSX.Element {
   const displayName = session?.user?.nickname || session?.user?.name || 'Player'
   const hasCreatedAvatar = session?.user?.hasCreatedAvatar ?? false
 
+  // Onboarding: highlight Map button if user hasn't completed onboarding
+  const [showMapHighlight, setShowMapHighlight] = useState(false)
+  const ONBOARDING_KEY = 'hasCompletedOnboarding'
+
+  useEffect(() => {
+    if (hasCreatedAvatar) {
+      const hasCompleted = localStorage.getItem(ONBOARDING_KEY) === 'true'
+      if (!hasCompleted) {
+        setShowMapHighlight(true)
+      }
+    }
+  }, [hasCreatedAvatar])
+
   useEffect(() => {
     if (session?.user?.id) {
       fetch('/api/users/stats')
@@ -263,7 +276,7 @@ function WelcomePageContent(): JSX.Element {
             challengesCompleted={challengesCompleted}
           />
         </div>
-        <NavigationGrid hasCreatedAvatar={hasCreatedAvatar} onNavigate={router.push} />
+        <NavigationGrid hasCreatedAvatar={hasCreatedAvatar} onNavigate={router.push} highlightMap={showMapHighlight} />
       </div>
     </main>
   )

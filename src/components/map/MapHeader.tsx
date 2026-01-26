@@ -39,6 +39,7 @@ interface LocationStatusProps {
   permission: string
   geoError: string | null
   requestPermission: () => void
+  highlight?: boolean
 }
 
 export function MapLoadingFallback(): JSX.Element {
@@ -63,6 +64,7 @@ export function LocationStatus({
   permission,
   geoError,
   requestPermission,
+  highlight,
 }: LocationStatusProps): JSX.Element {
   if (geoLoading) {
     return (
@@ -100,10 +102,22 @@ export function LocationStatus({
     )
   }
   return (
-    <div className="text-sm text-center">
+    <div className="text-sm text-center relative">
+      {highlight && (
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
+          <div className="bg-green-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg">
+            👆 Enable location to play!
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-green-500" />
+          </div>
+        </div>
+      )}
       <button
         onClick={requestPermission}
-        className="px-4 py-2 bg-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/30 border border-white/30"
+        className={`px-4 py-2 text-white text-sm font-medium rounded-lg border ${
+          highlight
+            ? 'bg-green-500/20 border-green-400 ring-2 ring-green-400 ring-offset-2 ring-offset-transparent animate-pulse'
+            : 'bg-white/20 border-white/30 hover:bg-white/30'
+        }`}
       >
         📍 Enable Location
       </button>

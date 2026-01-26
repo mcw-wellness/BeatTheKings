@@ -25,26 +25,44 @@ export function NavButton({
   label,
   locked,
   onClick,
+  highlight,
 }: {
   icon: string
   label: string
   locked: boolean
   onClick: () => void
+  highlight?: boolean
 }): JSX.Element {
   return (
-    <button
-      onClick={locked ? undefined : onClick}
-      disabled={locked}
-      className={`flex items-center justify-between p-3 rounded-xl border transition-all ${locked ? 'bg-[#1e2a4a]/60 border-white/10 cursor-not-allowed' : 'bg-[#1e2a4a]/80 border-white/20 hover:bg-[#1e2a4a] active:scale-98'}`}
-    >
-      <div className="flex items-center gap-2">
-        <span className="text-lg">{icon}</span>
-        <span className={`text-sm font-medium ${locked ? 'text-white/40' : 'text-white'}`}>
-          {label}
-        </span>
-      </div>
-      {locked && <span className="text-white/40">🔒</span>}
-    </button>
+    <div className="relative">
+      {highlight && (
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
+          <div className="bg-green-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg">
+            👆 Tap here next!
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-green-500" />
+          </div>
+        </div>
+      )}
+      <button
+        onClick={locked ? undefined : onClick}
+        disabled={locked}
+        className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
+          highlight
+            ? 'bg-green-500/20 border-green-400 ring-2 ring-green-400 ring-offset-2 ring-offset-transparent animate-pulse'
+            : locked
+              ? 'bg-[#1e2a4a]/60 border-white/10 cursor-not-allowed'
+              : 'bg-[#1e2a4a]/80 border-white/20 hover:bg-[#1e2a4a] active:scale-98'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{icon}</span>
+          <span className={`text-sm font-medium ${locked ? 'text-white/40' : 'text-white'}`}>
+            {label}
+          </span>
+        </div>
+        {locked && <span className="text-white/40">🔒</span>}
+      </button>
+    </div>
   )
 }
 
@@ -156,9 +174,10 @@ export function StatsPanels({
 interface NavigationGridProps {
   hasCreatedAvatar: boolean
   onNavigate: (path: string) => void
+  highlightMap?: boolean
 }
 
-export function NavigationGrid({ hasCreatedAvatar, onNavigate }: NavigationGridProps): JSX.Element {
+export function NavigationGrid({ hasCreatedAvatar, onNavigate, highlightMap }: NavigationGridProps): JSX.Element {
   return (
     <div className="px-4 pb-4 pt-2 shrink-0 space-y-2">
       <div className="grid grid-cols-2 gap-2">
@@ -173,6 +192,7 @@ export function NavigationGrid({ hasCreatedAvatar, onNavigate }: NavigationGridP
           label="Map"
           locked={!hasCreatedAvatar}
           onClick={() => onNavigate('/map')}
+          highlight={highlightMap}
         />
         <NavButton
           icon="⚔️"
