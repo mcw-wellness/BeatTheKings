@@ -2,10 +2,13 @@
 
 import { eq } from 'drizzle-orm'
 import { getDb } from '@/db'
-import { users } from '@/db/schema'
+import { users, avatarItems } from '@/db/schema'
 import { generateAvatarImage } from './generator'
-import { uploadAvatar } from '@/lib/azure-storage'
+import { editAvatarImage } from '@/lib/gemini'
+import { uploadAvatar, getAvatarBase64, getProfilePictureBase64 } from '@/lib/azure-storage'
 import { logger } from '@/lib/utils/logger'
+import { JERSEY_DESIGNS, SHOE_DESIGNS } from '@/lib/gemini/prompts'
+import { getAvatar } from './crud'
 import type { AvatarCreateInput, AvatarUpdateInput } from './validation'
 
 export async function getUserGender(userId: string): Promise<string> {
@@ -31,22 +34,110 @@ export async function processPreviewImage(
   }
 }
 
+interface GenerateAvatarOptions {
+  gender: string
+  data: AvatarCreateInput | AvatarUpdateInput
+  jerseyNumber?: number
+  jerseyColor?: string
+  jerseyItemId?: string
+  shoesItemId?: string
+  ageGroup?: string
+}
+
 export async function generateAndUploadAvatar(
   userId: string,
-  gender: string,
-  data: AvatarCreateInput | AvatarUpdateInput,
-  jerseyNumber?: number
+  options: GenerateAvatarOptions
 ): Promise<string | undefined> {
+  const { gender, data, jerseyNumber, jerseyColor, jerseyItemId, shoesItemId, ageGroup } = options
+  const db = getDb()
+
   try {
-    const imageBuffer = await generateAvatarImage({
-      gender,
-      skinTone: data.skinTone || 'medium',
-      hairStyle: data.hairStyle || 'short',
-      hairColor: data.hairColor || 'black',
-      jerseyNumber,
-    })
+    // Look up jersey and shoes designs from item IDs
+    let jerseyDesign: string | undefined
+    let shoesDesign: string | undefined
+    let jerseyImageUrl: string | undefined
+    let shoesImageUrl: string | undefined
+
+    if (jerseyItemId) {
+      const [jerseyItem] = await db
+        .select({ name: avatarItems.name, imageUrl: avatarItems.imageUrl })
+        .from(avatarItems)
+        .where(eq(avatarItems.id, jerseyItemId))
+        .limit(1)
+      if (jerseyItem?.name && JERSEY_DESIGNS[jerseyItem.name]) {
+        jerseyDesign = JERSEY_DESIGNS[jerseyItem.name]
+      }
+      if (jerseyItem?.imageUrl) {
+        jerseyImageUrl = jerseyItem.imageUrl
+      }
+    }
+
+    if (shoesItemId) {
+      const [shoesItem] = await db
+        .select({ name: avatarItems.name, imageUrl: avatarItems.imageUrl })
+        .from(avatarItems)
+        .where(eq(avatarItems.id, shoesItemId))
+        .limit(1)
+      if (shoesItem?.name && SHOE_DESIGNS[shoesItem.name]) {
+        shoesDesign = SHOE_DESIGNS[shoesItem.name]
+      }
+      if (shoesItem?.imageUrl) {
+        shoesImageUrl = shoesItem.imageUrl
+      }
+    }
+
+    // Check if user has an existing avatar image
+    const existingAvatarImage = await getAvatarBase64(userId)
+
+    let imageBuffer: Buffer
+
+    if (existingAvatarImage) {
+      // Use image editing to modify existing avatar (maintains consistency)
+      logger.info({ userId }, 'Editing existing avatar on save')
+
+      imageBuffer = await editAvatarImage(existingAvatarImage, {
+        skinTone: data.skinTone || 'medium',
+        hairStyle: data.hairStyle || 'short',
+        hairColor: data.hairColor || 'black',
+        sport: 'basketball',
+        jerseyNumber,
+        jerseyColor,
+        jerseyDesign,
+        shoesDesign,
+        jerseyImageUrl,
+        shoesImageUrl,
+      })
+    } else {
+      // No existing avatar - generate from scratch
+      logger.info({ userId }, 'Generating new avatar on save (no existing avatar)')
+
+      // Fetch user's avatar record to get stored photo analysis
+      const avatar = await getAvatar(db, userId)
+      const storedPhotoAnalysis = avatar?.photoAnalysis || undefined
+
+      // Fetch user's profile picture to use as reference
+      const referencePhoto = await getProfilePictureBase64(userId)
+
+      imageBuffer = await generateAvatarImage({
+        gender,
+        skinTone: data.skinTone || 'medium',
+        hairStyle: data.hairStyle || 'short',
+        hairColor: data.hairColor || 'black',
+        sport: 'basketball',
+        ageGroup,
+        jerseyNumber,
+        jerseyColor,
+        referencePhoto: referencePhoto || undefined,
+        storedPhotoAnalysis,
+        jerseyDesign,
+        shoesDesign,
+        jerseyImageUrl,
+        shoesImageUrl,
+      })
+    }
+
     const url = await uploadAvatar(userId, imageBuffer)
-    logger.info({ userId, url }, 'AI avatar generated and uploaded')
+    logger.info({ userId, url }, 'AI avatar generated and uploaded on save')
     return url
   } catch (error) {
     logger.warn({ error }, 'AI avatar generation skipped, using SVG fallback')

@@ -200,9 +200,11 @@ function AvatarPageContent(): JSX.Element {
         hairStyle,
         hairColor,
         jerseyNumber: parseInt(jerseyNumber) || 9,
+        jerseyColor,
         shoesItemId: selectedShoeId || undefined,
         jerseyItemId: selectedJerseyId || undefined,
         previewImage: previewImage || undefined,
+        ageGroup,
       }
       let res = await fetch('/api/users/avatar', {
         method: 'POST',

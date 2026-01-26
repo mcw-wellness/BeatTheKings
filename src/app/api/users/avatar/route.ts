@@ -66,15 +66,22 @@ export async function POST(request: Request): Promise<NextResponse> {
     const gender = await getUserGender(session.user.id)
     const previewImage = (body as { previewImage?: string }).previewImage
     const jerseyNumber = (body as { jerseyNumber?: number }).jerseyNumber
+    const jerseyColor = (body as { jerseyColor?: string }).jerseyColor
+    const jerseyItemId = (body as { jerseyItemId?: string }).jerseyItemId
+    const shoesItemId = (body as { shoesItemId?: string }).shoesItemId
+    const ageGroup = (body as { ageGroup?: string }).ageGroup
 
     let imageUrl = await processPreviewImage(session.user.id, previewImage)
     if (!imageUrl)
-      imageUrl = await generateAndUploadAvatar(
-        session.user.id,
+      imageUrl = await generateAndUploadAvatar(session.user.id, {
         gender,
-        validation.data,
-        jerseyNumber
-      )
+        data: validation.data,
+        jerseyNumber,
+        jerseyColor,
+        jerseyItemId,
+        shoesItemId,
+        ageGroup,
+      })
 
     const avatar = await createAvatar(db, session.user.id, { ...validation.data, imageUrl })
     await unlockDefaultItems(db, session.user.id)
@@ -135,10 +142,27 @@ export async function PUT(request: Request): Promise<NextResponse> {
 
     const previewImage = (body as { previewImage?: string }).previewImage
     const jerseyNumber = (body as { jerseyNumber?: number }).jerseyNumber
+    const jerseyColor = (body as { jerseyColor?: string }).jerseyColor
     const shoesItemId = (body as { shoesItemId?: string }).shoesItemId
     const jerseyItemId = (body as { jerseyItemId?: string }).jerseyItemId
+    const ageGroup = (body as { ageGroup?: string }).ageGroup
 
-    const imageUrl = await processPreviewImage(session.user.id, previewImage)
+    // Process preview image if provided, otherwise generate new avatar
+    let imageUrl = await processPreviewImage(session.user.id, previewImage)
+    if (!imageUrl) {
+      // No preview provided - auto-generate avatar with current settings
+      const gender = await getUserGender(session.user.id)
+      imageUrl = await generateAndUploadAvatar(session.user.id, {
+        gender,
+        data: validation.data,
+        jerseyNumber,
+        jerseyColor,
+        jerseyItemId,
+        shoesItemId,
+        ageGroup,
+      })
+    }
+
     const updateData = imageUrl ? { ...validation.data, imageUrl } : validation.data
     const updated = await updateAvatar(db, existingAvatar.id, updateData)
 
