@@ -106,9 +106,9 @@ function WelcomePageContent(): JSX.Element {
     }
   }, [isAvatarUpdating, router])
 
-  // Poll for avatar updates when toast is showing
+  // Poll for avatar updates (continues even if toast is closed)
   useEffect(() => {
-    if (!showToast || !pollingStartTime) return
+    if (!pollingStartTime) return
 
     const pollForUpdate = async (): Promise<boolean> => {
       try {
@@ -151,7 +151,7 @@ function WelcomePageContent(): JSX.Element {
       clearInterval(pollInterval)
       clearTimeout(timeout)
     }
-  }, [showToast, pollingStartTime, refetchAvatar, clearUpdateState])
+  }, [pollingStartTime, refetchAvatar, clearUpdateState])
 
   const displayName = session?.user?.nickname || session?.user?.name || 'Player'
   const hasCreatedAvatar = session?.user?.hasCreatedAvatar ?? false
