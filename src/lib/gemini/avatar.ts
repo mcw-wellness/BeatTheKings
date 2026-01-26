@@ -229,13 +229,18 @@ function buildAvatarPromptWithItems(
 
   return `Create a FULL BODY sports athlete illustration.
 
+OUTPUT DIMENSIONS (CRITICAL):
+- Generate a SQUARE image (1:1 aspect ratio)
+- Image must be exactly 1024x1024 pixels
+- Character must be vertically centered and fill 85% of image height
+
 ${imageInputDesc}
 
 STYLE:
 - Semi-realistic cartoon style (like NBA 2K mobile trading cards)
-- FULL BODY from head to feet
+- FULL BODY from head to feet visible
 - Use the stadium image as EXACT background
-- Character fills 80% of image height, centered
+- Character centered horizontally and vertically
 
 CHARACTER:
 - Gender: ${input.gender}
@@ -251,7 +256,8 @@ EXACT POSE:
 
 ${outfitDesc}
 
-CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.`
+CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
+CRITICAL: Output MUST be a 1024x1024 square image with character filling most of the frame.`
 }
 
 /**
@@ -303,6 +309,11 @@ function buildAvatarPromptWithReference(
 
   return `Create a FULL BODY sports avatar illustration of this person while PRESERVING their EXACT facial identity.
 
+OUTPUT DIMENSIONS (CRITICAL):
+- Generate a SQUARE image (1:1 aspect ratio)
+- Image must be exactly 1024x1024 pixels
+- Character must be vertically centered and fill 85% of image height
+
 ${imageInputDesc}
 
 IDENTITY PRESERVATION (CRITICAL):
@@ -319,9 +330,9 @@ CUSTOMIZATIONS TO APPLY:
 
 STYLE:
 - Semi-realistic cartoon style (like NBA 2K mobile trading cards)
-- FULL BODY from head to feet
+- FULL BODY from head to feet visible
 - Use the stadium image as EXACT background
-- Character fills 80% of image height, centered
+- Character centered horizontally and vertically
 
 EXACT POSE:
 - Standing straight, facing forward
@@ -332,6 +343,7 @@ EXACT POSE:
 ${outfitDesc}
 
 CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
+CRITICAL: Output MUST be a 1024x1024 square image with character filling most of the frame.
 DO NOT: copy their actual clothes, create only face/bust, use emoji style, change their facial identity.`
 }
 
@@ -507,6 +519,11 @@ export async function editAvatarImage(
   // Optimized prompt for Gemini 3 Pro Image's identity preservation
   const editPrompt = `Edit this avatar image while PRESERVING the character's EXACT identity.
 
+OUTPUT DIMENSIONS (CRITICAL):
+- Generate a SQUARE image (1:1 aspect ratio)
+- Image must be exactly 1024x1024 pixels
+- Character must be vertically centered and fill 85% of image height
+
 ${imageInputDesc}
 
 CHANGES TO APPLY:
@@ -519,7 +536,7 @@ PRESERVE EXACTLY (do not change):
 - Body type, height, and proportions
 - Standing pose (arms at sides, facing forward)
 - Art style (semi-realistic cartoon)
-- Character position (centered, 80% height)
+- Character centered horizontally and vertically
 
 BACKGROUND:
 - Use the provided STADIUM IMAGE as the EXACT background
@@ -528,6 +545,7 @@ OUTFIT:
 ${outfitDetails}
 
 CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
+CRITICAL: Output MUST be a 1024x1024 square image with character filling most of the frame.
 The edited avatar must be the SAME CHARACTER with the changes applied. Preserve facial identity completely.`
 
   try {
