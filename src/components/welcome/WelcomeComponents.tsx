@@ -64,13 +64,16 @@ export function AvatarDisplay({
   onClick,
 }: AvatarDisplayProps): JSX.Element {
   return (
-    <div className="w-[55%] flex items-center justify-center cursor-pointer" onClick={onClick}>
+    <div
+      className="w-[55%] flex-1 flex items-center justify-center cursor-pointer overflow-hidden"
+      onClick={onClick}
+    >
       {isLoading ? (
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white" />
         </div>
       ) : avatarUrl ? (
-        <div className="relative w-full h-[90%]">
+        <div className="relative w-full h-full max-h-full">
           {isKing && (
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10">
               <span className="text-5xl">👑</span>
@@ -116,7 +119,7 @@ export function StatsPanels({
   challengesCompleted,
 }: StatsPanelsProps): JSX.Element {
   return (
-    <div className="w-[45%] flex flex-col justify-center gap-3 pl-2">
+    <div className="w-[45%] flex flex-col justify-center gap-3 pl-2 overflow-hidden">
       <div className="bg-[#1e2a4a]/90 backdrop-blur rounded-xl p-3 border border-white/10">
         <h3 className="text-xs font-bold text-white/80 uppercase tracking-wider mb-3">
           Performance
