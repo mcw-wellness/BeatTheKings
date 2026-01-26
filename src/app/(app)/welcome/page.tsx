@@ -54,8 +54,11 @@ function WelcomePageContent(): JSX.Element {
   const [rank, setRank] = useState<number | null>(null)
   const [isResetting, setIsResetting] = useState(false)
   const [showToast, setShowToast] = useState(false)
-  const [avatarVersion, setAvatarVersion] = useState<number | null>(null) // Only set after update detected
-  const { url: avatarUrl, isLoading: isAvatarLoading } = useAvatarUrlWithLoading({
+  const {
+    url: avatarUrl,
+    isLoading: isAvatarLoading,
+    refetch: refetchAvatar,
+  } = useAvatarUrlWithLoading({
     type: 'user',
     userId: 'me',
   })
@@ -80,15 +83,15 @@ function WelcomePageContent(): JSX.Element {
 
     const pollForUpdate = async (): Promise<boolean> => {
       try {
-        const res = await fetch('/api/users/avatar')
+        const res = await fetch(`/api/users/avatar?_t=${Date.now()}`) // Cache-bust the API call
         if (res.ok) {
           const data = await res.json()
           // Check if avatar was updated after we started polling
           if (data.avatar?.updatedAt) {
             const updatedAt = new Date(data.avatar.updatedAt).getTime()
             if (updatedAt > pollingStartTime) {
-              // Avatar was updated! Set version to trigger cache-bust refresh
-              setAvatarVersion(Date.now())
+              // Avatar was updated! Refetch the avatar URL to get fresh image
+              refetchAvatar()
               setShowToast(false)
               return true // Stop polling
             }
@@ -117,7 +120,7 @@ function WelcomePageContent(): JSX.Element {
       clearInterval(pollInterval)
       clearTimeout(timeout)
     }
-  }, [showToast, pollingStartTime])
+  }, [showToast, pollingStartTime, refetchAvatar])
 
   const displayName = session?.user?.nickname || session?.user?.name || 'Player'
   const hasCreatedAvatar = session?.user?.hasCreatedAvatar ?? false
@@ -175,13 +178,6 @@ function WelcomePageContent(): JSX.Element {
   const xpProgress = (xpInLevel / xpForNextLevel) * 100
   const isKing = rank === 1
 
-  // Add cache-busting to avatar URL only AFTER we detect an update completed
-  // This prevents load failures during background generation
-  const avatarUrlWithVersion =
-    avatarUrl && avatarVersion
-      ? `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}v=${avatarVersion}`
-      : avatarUrl
-
   return (
     <main
       className="h-screen overflow-hidden flex flex-col"
@@ -221,7 +217,7 @@ function WelcomePageContent(): JSX.Element {
         <div className="flex-1 flex min-h-0 px-4">
           <AvatarDisplay
             isLoading={isAvatarLoading}
-            avatarUrl={avatarUrlWithVersion}
+            avatarUrl={avatarUrl}
             isKing={isKing}
             onClick={() => router.push('/avatar')}
           />

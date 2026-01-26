@@ -16,13 +16,80 @@ import {
   getDefaultItems,
   upsertEquipment,
 } from '@/lib/avatar'
+import type { AvatarUpdateInput } from '@/lib/avatar'
 import {
   getUserGender,
   processPreviewImage,
   generateAndUploadAvatar,
-  generateAvatarInBackground,
 } from '@/lib/avatar/api-helpers'
 import { logger } from '@/lib/utils/logger'
+
+/**
+ * Background task for avatar update - handles all non-critical operations
+ * This runs after the response is sent to the user
+ */
+interface BackgroundUpdateOptions {
+  userId: string
+  avatarId: string
+  data: AvatarUpdateInput
+  jerseyNumber?: number
+  jerseyColor?: string
+  jerseyItemId?: string
+  shoesItemId?: string
+  ageGroup?: string
+  shouldGenerateImage: boolean
+}
+
+function runAvatarUpdateInBackground(options: BackgroundUpdateOptions): void {
+  const {
+    userId,
+    avatarId,
+    data,
+    jerseyNumber,
+    jerseyColor,
+    jerseyItemId,
+    shoesItemId,
+    ageGroup,
+    shouldGenerateImage,
+  } = options
+
+  // Fire and forget
+  ;(async () => {
+    const db = getDb()
+    try {
+      // 1. Generate avatar image if needed (this is the slow part - 30-60s)
+      if (shouldGenerateImage) {
+        const gender = await getUserGender(userId)
+        const imageUrl = await generateAndUploadAvatar(userId, {
+          gender,
+          data,
+          jerseyNumber,
+          jerseyColor,
+          jerseyItemId,
+          shoesItemId,
+          ageGroup,
+        })
+        // Update avatar with new image URL
+        if (imageUrl) {
+          await updateAvatar(db, avatarId, { imageUrl })
+        }
+      }
+
+      // 2. Handle equipment updates
+      const basketballId = await getBasketballSportId(db)
+      if (basketballId) {
+        const defaultItems = await getDefaultItems(db)
+        await unlockDefaultItems(db, userId)
+        await upsertEquipment(db, avatarId, basketballId, defaultItems, jerseyNumber, shoesItemId, jerseyItemId)
+      }
+
+      // 3. Mark avatar as created
+      await markAvatarCreated(db, userId)
+    } catch (error) {
+      logger.error({ error, userId }, 'Background avatar update failed')
+    }
+  })()
+}
 
 export async function GET(): Promise<NextResponse> {
   try {
@@ -148,49 +215,31 @@ export async function PUT(request: Request): Promise<NextResponse> {
     const jerseyItemId = (body as { jerseyItemId?: string }).jerseyItemId
     const ageGroup = (body as { ageGroup?: string }).ageGroup
 
-    // Process preview image if provided (instant)
+    // Process preview image if provided (only blocks if user generated a preview)
     const imageUrl = await processPreviewImage(session.user.id, previewImage)
-    let generatingInBackground = false
 
-    if (!imageUrl) {
-      // No preview provided - trigger background generation (instant return)
-      const gender = await getUserGender(session.user.id)
-      generateAvatarInBackground(session.user.id, existingAvatar.id, {
-        gender,
-        data: validation.data,
-        jerseyNumber,
-        jerseyColor,
-        jerseyItemId,
-        shoesItemId,
-        ageGroup,
-      })
-      generatingInBackground = true
-    }
-
-    // Update avatar data immediately (image will be updated in background if needed)
+    // Update avatar data immediately with basic info
     const updateData = imageUrl ? { ...validation.data, imageUrl } : validation.data
     const updated = await updateAvatar(db, existingAvatar.id, updateData)
 
-    const basketballId = await getBasketballSportId(db)
-    if (basketballId) {
-      const defaultItems = await getDefaultItems(db)
-      await unlockDefaultItems(db, session.user.id)
-      await upsertEquipment(
-        db,
-        existingAvatar.id,
-        basketballId,
-        defaultItems,
-        jerseyNumber,
-        shoesItemId,
-        jerseyItemId
-      )
-    }
+    // Run ALL other operations in background (fire and forget)
+    const shouldGenerateImage = !imageUrl
+    runAvatarUpdateInBackground({
+      userId: session.user.id,
+      avatarId: existingAvatar.id,
+      data: validation.data,
+      jerseyNumber,
+      jerseyColor,
+      jerseyItemId,
+      shoesItemId,
+      ageGroup,
+      shouldGenerateImage,
+    })
 
-    await markAvatarCreated(db, session.user.id)
-
+    // Return immediately
     return NextResponse.json({
       success: true,
-      generatingInBackground,
+      generatingInBackground: shouldGenerateImage,
       avatar: {
         id: updated.id,
         skinTone: updated.skinTone,
