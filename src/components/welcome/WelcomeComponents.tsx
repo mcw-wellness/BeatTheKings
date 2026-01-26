@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 export function StatRow({
   icon,
   label,
@@ -68,19 +70,19 @@ export function AvatarDisplay({
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white" />
         </div>
       ) : avatarUrl ? (
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="relative w-full h-[90%]">
           {isKing && (
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10">
               <span className="text-5xl">👑</span>
             </div>
           )}
-          {/* Use img tag for more reliable sizing with dynamic images */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={avatarUrl}
             alt="Your Avatar"
-            className="max-w-full max-h-full object-contain"
-            style={{ minHeight: '200px' }}
+            fill
+            className="object-contain"
+            priority
+            unoptimized
           />
         </div>
       ) : (
