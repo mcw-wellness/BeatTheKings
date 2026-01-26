@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
@@ -67,11 +67,40 @@ function WelcomePageContent(): JSX.Element {
   const isAvatarUpdating = searchParams.get('avatarUpdating') === 'true'
   const [pollingStartTime, setPollingStartTime] = useState<number | null>(null)
 
+  const STORAGE_KEY = 'avatarUpdateStartTime'
+  const POLLING_TIMEOUT = 120000 // 2 minutes
+
+  // Helper to clear the update state
+  const clearUpdateState = useCallback((): void => {
+    localStorage.removeItem(STORAGE_KEY)
+    setShowToast(false)
+    setPollingStartTime(null)
+  }, [])
+
+  // On mount, check localStorage for an active avatar update
+  useEffect(() => {
+    const storedStartTime = localStorage.getItem(STORAGE_KEY)
+    if (storedStartTime) {
+      const startTime = parseInt(storedStartTime, 10)
+      const elapsed = Date.now() - startTime
+      // If within timeout, resume polling
+      if (elapsed < POLLING_TIMEOUT) {
+        setPollingStartTime(startTime)
+        setShowToast(true)
+      } else {
+        // Expired, clear it
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    }
+  }, [])
+
   // Show toast and start polling when avatarUpdating param is present
   useEffect(() => {
     if (isAvatarUpdating) {
+      const startTime = Date.now()
+      localStorage.setItem(STORAGE_KEY, startTime.toString())
       setShowToast(true)
-      setPollingStartTime(Date.now())
+      setPollingStartTime(startTime)
       // Remove the query param from URL without refresh
       router.replace('/welcome', { scroll: false })
     }
@@ -92,7 +121,7 @@ function WelcomePageContent(): JSX.Element {
             if (updatedAt > pollingStartTime) {
               // Avatar was updated! Refetch the avatar URL to get fresh image
               refetchAvatar()
-              setShowToast(false)
+              clearUpdateState()
               return true // Stop polling
             }
           }
@@ -110,17 +139,19 @@ function WelcomePageContent(): JSX.Element {
       }
     }, 5000) // Poll every 5 seconds
 
-    // Stop polling after 2 minutes
+    // Stop polling after remaining time from original start
+    const elapsed = Date.now() - pollingStartTime
+    const remainingTime = Math.max(POLLING_TIMEOUT - elapsed, 0)
     const timeout = setTimeout(() => {
       clearInterval(pollInterval)
-      setShowToast(false)
-    }, 120000)
+      clearUpdateState()
+    }, remainingTime)
 
     return () => {
       clearInterval(pollInterval)
       clearTimeout(timeout)
     }
-  }, [showToast, pollingStartTime, refetchAvatar])
+  }, [showToast, pollingStartTime, refetchAvatar, clearUpdateState])
 
   const displayName = session?.user?.nickname || session?.user?.name || 'Player'
   const hasCreatedAvatar = session?.user?.hasCreatedAvatar ?? false
