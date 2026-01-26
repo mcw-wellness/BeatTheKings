@@ -214,7 +214,7 @@ function WelcomePageContent(): JSX.Element {
             </div>
           </div>
         </div>
-        <div className="flex-1 flex min-h-0 px-4 overflow-hidden">
+        <div className="flex-1 grid grid-cols-[55%_45%] min-h-0 px-4">
           <AvatarDisplay
             isLoading={isAvatarLoading}
             avatarUrl={avatarUrl}

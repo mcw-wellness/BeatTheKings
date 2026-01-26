@@ -230,9 +230,9 @@ function buildAvatarPromptWithItems(
   return `Create a FULL BODY sports athlete illustration.
 
 OUTPUT DIMENSIONS (CRITICAL):
-- Generate a SQUARE image (1:1 aspect ratio)
-- Image must be exactly 1024x1024 pixels
-- Character must be vertically centered and fill 85% of image height
+- Generate a tall PORTRAIT image (9:16 aspect ratio)
+- Image must be exactly 576x1024 pixels (width x height)
+- Character must be vertically centered and fill 95% of image height
 
 ${imageInputDesc}
 
@@ -257,7 +257,7 @@ EXACT POSE:
 ${outfitDesc}
 
 CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
-CRITICAL: Output MUST be a 1024x1024 square image with character filling most of the frame.`
+CRITICAL: Output MUST be a 576x1024 tall portrait image with character filling most of the frame.`
 }
 
 /**
@@ -310,9 +310,9 @@ function buildAvatarPromptWithReference(
   return `Create a FULL BODY sports avatar illustration of this person while PRESERVING their EXACT facial identity.
 
 OUTPUT DIMENSIONS (CRITICAL):
-- Generate a SQUARE image (1:1 aspect ratio)
-- Image must be exactly 1024x1024 pixels
-- Character must be vertically centered and fill 85% of image height
+- Generate a tall PORTRAIT image (9:16 aspect ratio)
+- Image must be exactly 576x1024 pixels (width x height)
+- Character must be vertically centered and fill 95% of image height
 
 ${imageInputDesc}
 
@@ -343,7 +343,7 @@ EXACT POSE:
 ${outfitDesc}
 
 CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
-CRITICAL: Output MUST be a 1024x1024 square image with character filling most of the frame.
+CRITICAL: Output MUST be a 576x1024 tall portrait image with character filling most of the frame.
 DO NOT: copy their actual clothes, create only face/bust, use emoji style, change their facial identity.`
 }
 
@@ -520,9 +520,9 @@ export async function editAvatarImage(
   const editPrompt = `Edit this avatar image while PRESERVING the character's EXACT identity.
 
 OUTPUT DIMENSIONS (CRITICAL):
-- Generate a SQUARE image (1:1 aspect ratio)
-- Image must be exactly 1024x1024 pixels
-- Character must be vertically centered and fill 85% of image height
+- Generate a tall PORTRAIT image (9:16 aspect ratio)
+- Image must be exactly 576x1024 pixels (width x height)
+- Character must be vertically centered and fill 95% of image height
 
 ${imageInputDesc}
 
@@ -545,7 +545,7 @@ OUTFIT:
 ${outfitDetails}
 
 CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
-CRITICAL: Output MUST be a 1024x1024 square image with character filling most of the frame.
+CRITICAL: Output MUST be a 576x1024 tall portrait image with character filling most of the frame.
 The edited avatar must be the SAME CHARACTER with the changes applied. Preserve facial identity completely.`
 
   try {

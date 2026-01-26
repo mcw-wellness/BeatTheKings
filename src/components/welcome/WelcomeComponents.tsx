@@ -1,7 +1,5 @@
 'use client'
 
-import Image from 'next/image'
-
 export function StatRow({
   icon,
   label,
@@ -65,7 +63,7 @@ export function AvatarDisplay({
 }: AvatarDisplayProps): JSX.Element {
   return (
     <div
-      className="w-[55%] flex-1 flex items-center justify-center cursor-pointer overflow-hidden"
+      className="h-full flex items-center justify-center cursor-pointer"
       onClick={onClick}
     >
       {isLoading ? (
@@ -73,19 +71,17 @@ export function AvatarDisplay({
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white" />
         </div>
       ) : avatarUrl ? (
-        <div className="relative w-full h-full max-h-full">
+        <div className="relative flex items-center justify-center">
           {isKing && (
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10">
               <span className="text-5xl">👑</span>
             </div>
           )}
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={avatarUrl}
             alt="Your Avatar"
-            fill
-            className="object-contain"
-            priority
-            unoptimized
+            className="h-[380px] w-auto object-contain"
           />
         </div>
       ) : (
@@ -119,7 +115,7 @@ export function StatsPanels({
   challengesCompleted,
 }: StatsPanelsProps): JSX.Element {
   return (
-    <div className="w-[45%] flex flex-col justify-center gap-3 pl-2 overflow-hidden">
+    <div className="flex flex-col justify-center gap-3 pl-2">
       <div className="bg-[#1e2a4a]/90 backdrop-blur rounded-xl p-3 border border-white/10">
         <h3 className="text-xs font-bold text-white/80 uppercase tracking-wider mb-3">
           Performance
