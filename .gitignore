@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Local Claude notes
 CLAUDE.local.md
+
+# Avatar generation logs
+logs/

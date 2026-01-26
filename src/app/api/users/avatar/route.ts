@@ -20,6 +20,7 @@ import {
   getUserGender,
   processPreviewImage,
   generateAndUploadAvatar,
+  generateAvatarInBackground,
 } from '@/lib/avatar/api-helpers'
 import { logger } from '@/lib/utils/logger'
 
@@ -147,12 +148,14 @@ export async function PUT(request: Request): Promise<NextResponse> {
     const jerseyItemId = (body as { jerseyItemId?: string }).jerseyItemId
     const ageGroup = (body as { ageGroup?: string }).ageGroup
 
-    // Process preview image if provided, otherwise generate new avatar
-    let imageUrl = await processPreviewImage(session.user.id, previewImage)
+    // Process preview image if provided (instant)
+    const imageUrl = await processPreviewImage(session.user.id, previewImage)
+    let generatingInBackground = false
+
     if (!imageUrl) {
-      // No preview provided - auto-generate avatar with current settings
+      // No preview provided - trigger background generation (instant return)
       const gender = await getUserGender(session.user.id)
-      imageUrl = await generateAndUploadAvatar(session.user.id, {
+      generateAvatarInBackground(session.user.id, existingAvatar.id, {
         gender,
         data: validation.data,
         jerseyNumber,
@@ -161,8 +164,10 @@ export async function PUT(request: Request): Promise<NextResponse> {
         shoesItemId,
         ageGroup,
       })
+      generatingInBackground = true
     }
 
+    // Update avatar data immediately (image will be updated in background if needed)
     const updateData = imageUrl ? { ...validation.data, imageUrl } : validation.data
     const updated = await updateAvatar(db, existingAvatar.id, updateData)
 
@@ -182,10 +187,10 @@ export async function PUT(request: Request): Promise<NextResponse> {
     }
 
     await markAvatarCreated(db, session.user.id)
-    logger.info({ userId: session.user.id, avatarId: updated.id }, 'Avatar updated')
 
     return NextResponse.json({
       success: true,
+      generatingInBackground,
       avatar: {
         id: updated.id,
         skinTone: updated.skinTone,

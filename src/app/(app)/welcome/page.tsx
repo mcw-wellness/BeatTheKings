@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { useAvatarUrlWithLoading } from '@/lib/hooks/useAvatarUrl'
@@ -13,6 +13,23 @@ interface PlayerStats {
   matchesPlayed: number
   matchesWon: number
   challengesCompleted: number
+}
+
+// Toast component for avatar updating notification
+function AvatarToast({ show, onHide }: { show: boolean; onHide: () => void }): JSX.Element | null {
+  if (!show) return null
+
+  return (
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+      <div className="bg-green-500/90 backdrop-blur-sm text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
+        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <span className="font-medium">Your avatar will be updated shortly</span>
+        <button onClick={onHide} className="ml-2 text-white/80 hover:text-white">
+          ✕
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default function WelcomePage(): JSX.Element {
@@ -31,14 +48,74 @@ export default function WelcomePage(): JSX.Element {
 
 function WelcomePageContent(): JSX.Element {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { data: session, status, update } = useSession()
   const [stats, setStats] = useState<PlayerStats | null>(null)
   const [rank, setRank] = useState<number | null>(null)
   const [isResetting, setIsResetting] = useState(false)
+  const [showToast, setShowToast] = useState(false)
+  const [avatarVersion, setAvatarVersion] = useState(Date.now())
   const { url: avatarUrl, isLoading: isAvatarLoading } = useAvatarUrlWithLoading({
     type: 'user',
     userId: 'me',
   })
+
+  // Check if avatar is updating in background
+  const isAvatarUpdating = searchParams.get('avatarUpdating') === 'true'
+
+  // Show toast and start polling when avatarUpdating param is present
+  useEffect(() => {
+    if (isAvatarUpdating) {
+      setShowToast(true)
+      // Remove the query param from URL without refresh
+      router.replace('/welcome', { scroll: false })
+    }
+  }, [isAvatarUpdating, router])
+
+  // Poll for avatar updates when toast is showing
+  const pollForAvatarUpdate = useCallback(async () => {
+    try {
+      const res = await fetch('/api/users/avatar')
+      if (res.ok) {
+        const data = await res.json()
+        // Check if avatar was updated (updatedAt changed)
+        if (data.avatar?.updatedAt) {
+          const updatedAt = new Date(data.avatar.updatedAt).getTime()
+          if (updatedAt > avatarVersion) {
+            // Avatar was updated! Refresh the image
+            setAvatarVersion(Date.now())
+            setShowToast(false)
+            return true // Stop polling
+          }
+        }
+      }
+    } catch {
+      // Ignore errors during polling
+    }
+    return false // Continue polling
+  }, [avatarVersion])
+
+  useEffect(() => {
+    if (!showToast) return
+
+    const pollInterval = setInterval(async () => {
+      const updated = await pollForAvatarUpdate()
+      if (updated) {
+        clearInterval(pollInterval)
+      }
+    }, 5000) // Poll every 5 seconds
+
+    // Stop polling after 2 minutes
+    const timeout = setTimeout(() => {
+      clearInterval(pollInterval)
+      setShowToast(false)
+    }, 120000)
+
+    return () => {
+      clearInterval(pollInterval)
+      clearTimeout(timeout)
+    }
+  }, [showToast, pollForAvatarUpdate])
 
   const displayName = session?.user?.nickname || session?.user?.name || 'Player'
   const hasCreatedAvatar = session?.user?.hasCreatedAvatar ?? false
@@ -96,6 +173,9 @@ function WelcomePageContent(): JSX.Element {
   const xpProgress = (xpInLevel / xpForNextLevel) * 100
   const isKing = rank === 1
 
+  // Add cache-busting to avatar URL when version changes
+  const avatarUrlWithVersion = avatarUrl ? `${avatarUrl}?v=${avatarVersion}` : avatarUrl
+
   return (
     <main
       className="h-screen overflow-hidden flex flex-col"
@@ -105,6 +185,7 @@ function WelcomePageContent(): JSX.Element {
         backgroundPosition: 'center',
       }}
     >
+      <AvatarToast show={showToast} onHide={() => setShowToast(false)} />
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
       <div className="relative z-10 flex flex-col h-full">
         <div className="px-4 py-3 flex items-center justify-between shrink-0">
@@ -134,7 +215,7 @@ function WelcomePageContent(): JSX.Element {
         <div className="flex-1 flex min-h-0 px-4">
           <AvatarDisplay
             isLoading={isAvatarLoading}
-            avatarUrl={avatarUrl}
+            avatarUrl={avatarUrlWithVersion}
             isKing={isKing}
             onClick={() => router.push('/avatar')}
           />

@@ -220,7 +220,9 @@ function AvatarPageContent(): JSX.Element {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to save')
       await update()
-      router.push('/welcome')
+      // If generating in background, add query param to show toast and poll
+      const redirectUrl = data.generatingInBackground ? '/welcome?avatarUpdating=true' : '/welcome'
+      router.push(redirectUrl)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong')
     } finally {
