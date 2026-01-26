@@ -26,6 +26,7 @@ export default function ChallengeDetailPage(): JSX.Element {
   const [challenge, setChallenge] = useState<ChallengeDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showDetailedInstructions, setShowDetailedInstructions] = useState(false)
 
   const fetchChallenge = useCallback(async (): Promise<void> => {
     if (!challengeId) return
@@ -173,16 +174,35 @@ export default function ChallengeDetailPage(): JSX.Element {
             <span>📋</span>
             <span>Instructions</span>
           </h2>
-          <p className="text-white/70 whitespace-pre-line">{challenge.instructions}</p>
 
-          {/* Camera instructions for demo-eligible challenges */}
-          {isDemoEligible && (
-            <div className="mt-3 p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
-              <p className="text-yellow-200 text-sm">
-                Position camera at a 45° angle (wing) to avoiding backlighting. Record in landscape
-                at eye level using tripod or steady hand. Keep videos short (max. 2 minutes).
-              </p>
-            </div>
+          {isDemoEligible ? (
+            <>
+              {/* Game Instructions */}
+              <div className="p-3 bg-blue-500/20 rounded-lg border border-blue-500/30 mb-3">
+                <p className="text-blue-200 text-sm">
+                  <span className="font-semibold text-blue-100">Game:</span> Stand at the top of the
+                  3-point line. Jump straight up and throw the ball with both hands mid-air. Only
+                  balls going through the rim count.{' '}
+                  <button
+                    onClick={() => setShowDetailedInstructions(true)}
+                    className="text-yellow-300 font-semibold hover:text-yellow-200 underline"
+                  >
+                    GET DETAILED GAME INSTRUCTIONS {'>>'}
+                  </button>
+                </p>
+              </div>
+
+              {/* Camera Instructions */}
+              <div className="p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                <p className="text-yellow-200 text-sm">
+                  <span className="font-semibold text-yellow-100">Camera:</span> Position camera at
+                  a 45° angle (wing point) and avoid backlighting. Record in portrait mode at eye
+                  level using tripod or steady hand. Keep video short (max. 2 minutes).
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="text-white/70 whitespace-pre-line">{challenge.instructions}</p>
           )}
         </div>
 
@@ -246,6 +266,69 @@ export default function ChallengeDetailPage(): JSX.Element {
           </button>
         )}
       </div>
+
+      {/* Detailed Instructions Overlay */}
+      {showDetailedInstructions && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowDetailedInstructions(false)}
+        >
+          {/* Blurred backdrop */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+          {/* Modal content */}
+          <div
+            className="relative bg-gray-900/95 rounded-2xl border border-white/20 p-6 max-w-lg max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowDetailedInstructions(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white text-2xl font-bold"
+            >
+              ×
+            </button>
+
+            <h2 className="text-xl font-bold text-white mb-4">Detailed Game Instructions:</h2>
+
+            <div className="space-y-4 text-white/80 text-sm">
+              <div>
+                <h3 className="font-semibold text-yellow-300 mb-2">Perfecting Your Form</h3>
+                <p>
+                  Stand at the top of the 3-point line with your feet shoulder-width apart, dominant
+                  foot 6 inches ahead of the other, and shoulders squared to the basket for
+                  accuracy. Keep your knees slightly bent to generate power from your legs. Hold the
+                  ball above your head with your elbow at a 90-degree angle, fingers spread wide,
+                  and the ball resting on the pads of your fingers. Use your non-dominant hand as a
+                  guide, lightly touching the side of the ball without gripping it.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-yellow-300 mb-2">Taking the Shot</h3>
+                <p>
+                  Jump straight up as you extend your shooting arm forward, snap your wrist at the
+                  peak of your jump to create backspin and arc, and follow through fully with your
+                  arm extended and wrist snapped. Aim for the front of the rim or the hooks holding
+                  the net, visualizing the ball going just over the rim.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-yellow-300 mb-2">Practicing for Consistency</h3>
+                <p>
+                  Start with 25 shots from below the rim, then progress to 5 feet away, focusing on
+                  shot line and wrist snap. Use imaginary baskets (with a partner or wall) to refine
+                  form without distraction. Practice from multiple spots around the 3-point
+                  line—top of key, wings, and corners—ensuring toes point toward the basket after
+                  each shot. Incorporate drills like dribbling into a shot, quick hops, and energy
+                  transfer exercises to build rhythm and strength.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
