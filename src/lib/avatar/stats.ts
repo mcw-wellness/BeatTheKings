@@ -79,6 +79,7 @@ export async function getAvatarWithStats(db: Database, userId: string) {
       hairStyle: avatar.hairStyle,
       hairColor: avatar.hairColor,
       imageUrl: avatar.imageUrl,
+      updatedAt: avatar.updatedAt, // Needed for polling to detect updates
     },
     equipment,
     stats,
