@@ -38,13 +38,13 @@ export default function DemoResultPage(): JSX.Element {
     router.push('/challenges')
   }
 
-  // Hardcoded demo results (matching screenshot: Made 2, Missed 2, 50% but showing 80%)
+  // Hardcoded demo results (matching actual demo video: 2 hits, 2 misses, 50%)
   const results = {
-    made: 4,
-    missed: 1,
-    accuracy: 80,
+    made: 2,
+    missed: 2,
+    accuracy: 50,
     xp: 50,
-    rp: 10,
+    rp: 0, // No RP since accuracy is below 80%
   }
 
   const isUploadComplete = stage !== 'uploading'
@@ -168,7 +168,9 @@ export default function DemoResultPage(): JSX.Element {
                 onClick={handleClaim}
                 className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-2xl transition-all text-lg"
               >
-                Claim {results.rp} RP & {results.xp} XP
+                {results.rp > 0
+                  ? `Claim ${results.rp} RP & ${results.xp} XP`
+                  : `Claim ${results.xp} XP`}
               </button>
             </>
           )}
