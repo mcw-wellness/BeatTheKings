@@ -125,7 +125,7 @@ export default function MatchRecordPage(): JSX.Element {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+      <main className="h-dvh bg-black flex flex-col items-center justify-center p-4">
         <p className="text-red-500 mb-4 text-center">{error}</p>
         <button onClick={initCamera} className="px-6 py-3 bg-[#4361EE] text-white rounded-lg">
           Try Again
@@ -138,9 +138,9 @@ export default function MatchRecordPage(): JSX.Element {
   }
 
   return (
-    <main className="min-h-screen bg-black relative">
+    <main className="h-dvh bg-black relative overflow-hidden">
       {/* Video Preview */}
-      <video ref={videoRef} autoPlay playsInline muted className="w-full h-screen object-cover" />
+      <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
 
       {/* Overlay */}
       <div className="absolute inset-0 pointer-events-none">

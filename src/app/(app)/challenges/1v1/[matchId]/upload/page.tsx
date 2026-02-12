@@ -125,7 +125,7 @@ export default function MatchUploadPage(): JSX.Element {
   if (status === 'error') {
     return (
       <main
-        className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+        className="h-dvh flex flex-col items-center justify-center p-4 relative"
         style={{
           backgroundImage: 'url(/backgrounds/stadium.png)',
           backgroundSize: 'cover',
@@ -152,7 +152,7 @@ export default function MatchUploadPage(): JSX.Element {
 
   return (
     <main
-      className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+      className="h-dvh flex flex-col items-center justify-center p-4 relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',

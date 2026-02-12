@@ -125,14 +125,14 @@ export default function LocationPage(): JSX.Element {
 
   if (status === 'loading' || isLoading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <main className="h-dvh bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
         <div className="animate-pulse text-gray-400">Loading...</div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 sm:p-6">
+    <main className="h-dvh bg-gradient-to-b from-blue-50 to-white p-4 sm:p-6 overflow-y-auto">
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center justify-center mb-6">

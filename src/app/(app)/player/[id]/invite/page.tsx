@@ -124,7 +124,7 @@ export default function InvitePage(): JSX.Element {
 
   return (
     <main
-      className="min-h-screen relative"
+      className="h-dvh flex flex-col overflow-hidden relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -132,7 +132,7 @@ export default function InvitePage(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-lg mx-auto p-4 space-y-4 relative z-10">
+      <div className="max-w-lg mx-auto p-4 space-y-4 relative z-10 flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <Logo size="sm" linkToHome className="w-10 h-10" />

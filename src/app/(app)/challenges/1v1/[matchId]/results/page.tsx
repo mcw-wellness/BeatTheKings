@@ -105,7 +105,7 @@ export default function MatchResultsPage(): JSX.Element {
   if (status === 'loading' || status === 'analyzing') {
     return (
       <main
-        className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+        className="h-dvh flex flex-col items-center justify-center p-4 relative"
         style={{
           backgroundImage: 'url(/backgrounds/stadium.png)',
           backgroundSize: 'cover',
@@ -124,7 +124,7 @@ export default function MatchResultsPage(): JSX.Element {
   if (error && !result) {
     return (
       <main
-        className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+        className="h-dvh flex flex-col items-center justify-center p-4 relative"
         style={{
           backgroundImage: 'url(/backgrounds/stadium.png)',
           backgroundSize: 'cover',
@@ -146,7 +146,7 @@ export default function MatchResultsPage(): JSX.Element {
   if (!result) {
     return (
       <main
-        className="min-h-screen flex items-center justify-center relative"
+        className="h-dvh flex items-center justify-center relative"
         style={{
           backgroundImage: 'url(/backgrounds/stadium.png)',
           backgroundSize: 'cover',
@@ -163,7 +163,7 @@ export default function MatchResultsPage(): JSX.Element {
 
   return (
     <main
-      className="min-h-screen relative"
+      className="h-dvh relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -171,7 +171,7 @@ export default function MatchResultsPage(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-lg mx-auto min-h-screen flex flex-col p-4 md:p-6 relative z-10">
+      <div className="max-w-lg mx-auto h-full flex flex-col p-4 md:p-6 relative z-10 overflow-y-auto">
         {/* Result Banner */}
         <div
           className={`rounded-xl p-6 md:p-8 text-center text-white mb-6 backdrop-blur ${

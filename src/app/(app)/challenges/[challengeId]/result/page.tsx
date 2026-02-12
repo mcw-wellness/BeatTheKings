@@ -28,7 +28,7 @@ function ResultContent(): JSX.Element {
 
   return (
     <main
-      className="min-h-screen relative"
+      className="h-dvh relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -36,14 +36,14 @@ function ResultContent(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-lg mx-auto min-h-screen flex flex-col relative z-10">
+      <div className="max-w-lg mx-auto h-full flex flex-col relative z-10">
         {/* Header */}
         <div className="p-4 border-b border-white/20">
           <h1 className="text-xl font-bold text-white text-center">Challenge Complete!</h1>
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
           {/* Result Icon */}
           <div className="text-6xl md:text-7xl mb-6">{isGoodScore ? '🎉' : '💪'}</div>
 
@@ -113,7 +113,7 @@ export default function ChallengeResultPage(): JSX.Element {
     <Suspense
       fallback={
         <main
-          className="min-h-screen flex items-center justify-center relative"
+          className="h-dvh flex items-center justify-center relative"
           style={{
             backgroundImage: 'url(/backgrounds/stadium.png)',
             backgroundSize: 'cover',

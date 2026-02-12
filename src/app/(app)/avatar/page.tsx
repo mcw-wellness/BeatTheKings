@@ -28,7 +28,7 @@ export default function AvatarPage(): JSX.Element {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="h-dvh flex items-center justify-center">
           <div className="animate-pulse text-white/60">Loading...</div>
         </div>
       }
@@ -232,7 +232,7 @@ function AvatarPageContent(): JSX.Element {
 
   if (status === 'loading')
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-dvh flex items-center justify-center">
         <div className="animate-pulse text-white/60">Loading...</div>
       </div>
     )
@@ -248,7 +248,7 @@ function AvatarPageContent(): JSX.Element {
 
   return (
     <main
-      className="min-h-screen flex flex-col relative"
+      className="h-dvh flex flex-col overflow-hidden relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',

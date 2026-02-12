@@ -9,7 +9,7 @@ interface StadiumPageLayoutProps {
 export function StadiumPageLayout({ children }: StadiumPageLayoutProps): JSX.Element {
   return (
     <main
-      className="min-h-screen relative"
+      className="h-dvh flex flex-col overflow-hidden relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -17,7 +17,7 @@ export function StadiumPageLayout({ children }: StadiumPageLayoutProps): JSX.Ele
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-lg mx-auto p-4 space-y-4 relative z-10">{children}</div>
+      <div className="max-w-lg mx-auto p-4 space-y-4 relative z-10 flex-1 overflow-y-auto">{children}</div>
     </main>
   )
 }
@@ -25,7 +25,7 @@ export function StadiumPageLayout({ children }: StadiumPageLayoutProps): JSX.Ele
 export function PageLoadingState(): JSX.Element {
   return (
     <main
-      className="min-h-screen flex items-center justify-center relative"
+      className="h-dvh flex items-center justify-center relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -47,7 +47,7 @@ export function PageErrorState({
 }): JSX.Element {
   return (
     <main
-      className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+      className="h-dvh flex flex-col items-center justify-center p-4 relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',

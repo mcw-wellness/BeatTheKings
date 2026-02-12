@@ -18,7 +18,7 @@ export default function PhotoPage(): JSX.Element {
 function PhotoPageSkeleton(): JSX.Element {
   return (
     <main
-      className="flex min-h-screen flex-col items-center justify-center p-6 relative"
+      className="flex h-dvh flex-col items-center justify-center overflow-y-auto p-6 relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -165,7 +165,7 @@ function PhotoPageContent(): JSX.Element {
 
   return (
     <main
-      className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 relative"
+      className="flex h-dvh flex-col items-center justify-center overflow-y-auto p-4 sm:p-6 relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',

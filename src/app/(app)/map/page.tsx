@@ -132,9 +132,9 @@ function MapPageContent(): JSX.Element {
     ? { lat: selectedVenue.latitude, lng: selectedVenue.longitude } : null
 
   return (
-    <main className="min-h-screen relative" style={{ backgroundImage: 'url(/backgrounds/stadium.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    <main className="h-dvh flex flex-col overflow-hidden relative" style={{ backgroundImage: 'url(/backgrounds/stadium.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4 md:space-y-6 relative z-10">
+      <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4 md:space-y-6 relative z-10 flex-1 overflow-y-auto">
         <MapHeader />
         <LocationStatus geoLoading={geoLoading} latitude={latitude} permission={permission} geoError={geoError} requestPermission={requestPermission} highlight={showLocationHighlight} />
 

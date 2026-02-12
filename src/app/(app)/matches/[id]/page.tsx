@@ -42,7 +42,7 @@ export default function MatchDetailsPage() {
   if (isLoading) {
     return (
       <main
-        className="min-h-screen flex items-center justify-center relative"
+        className="h-dvh flex items-center justify-center relative"
         style={{
           backgroundImage: 'url(/backgrounds/stadium.png)',
           backgroundSize: 'cover',
@@ -58,7 +58,7 @@ export default function MatchDetailsPage() {
   if (!match) {
     return (
       <main
-        className="min-h-screen flex items-center justify-center relative"
+        className="h-dvh flex items-center justify-center relative"
         style={{
           backgroundImage: 'url(/backgrounds/stadium.png)',
           backgroundSize: 'cover',
@@ -73,7 +73,7 @@ export default function MatchDetailsPage() {
 
   return (
     <main
-      className="min-h-screen relative"
+      className="h-dvh flex flex-col overflow-hidden relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -83,7 +83,7 @@ export default function MatchDetailsPage() {
       {/* Light overlay for text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
-      <div className="w-full max-w-4xl mx-auto p-4 md:p-8 space-y-4 relative z-10">
+      <div className="w-full max-w-4xl mx-auto p-4 md:p-8 space-y-4 relative z-10 flex-1 overflow-y-auto">
         {/* Header with Logo */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-start gap-2">

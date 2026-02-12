@@ -24,7 +24,7 @@ export default function LoginPage(): JSX.Element {
 function LoginPageSkeleton(): JSX.Element {
   return (
     <main
-      className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 relative"
+      className="flex h-dvh flex-col items-center justify-center overflow-y-auto p-4 sm:p-6 relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -103,7 +103,7 @@ function LoginPageContent(): JSX.Element {
 
   return (
     <main
-      className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 relative"
+      className="flex h-dvh flex-col items-center justify-center overflow-y-auto p-4 sm:p-6 relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',

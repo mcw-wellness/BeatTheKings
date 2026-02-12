@@ -62,7 +62,7 @@ export default function DisputeMatchPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="h-dvh bg-white overflow-y-auto">
       <div className="w-full max-w-4xl mx-auto p-4 md:p-8 space-y-4">
         {/* Header with Logo */}
         <div className="flex items-start justify-between mb-2">
