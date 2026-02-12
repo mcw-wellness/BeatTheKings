@@ -62,7 +62,7 @@ export function InvitationCard({
               alt={opponent.name || 'Player'}
               width={48}
               height={48}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-top"
               unoptimized
             />
           ) : (

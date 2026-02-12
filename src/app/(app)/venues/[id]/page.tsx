@@ -206,7 +206,7 @@ export default function VenueDetailPage(): JSX.Element {
                   alt="King"
                   width={56}
                   height={56}
-                  className="object-cover w-full h-full"
+                  className="object-cover object-top w-full h-full"
                   unoptimized
                 />
               </div>
@@ -241,7 +241,7 @@ export default function VenueDetailPage(): JSX.Element {
                       alt="Player"
                       width={40}
                       height={40}
-                      className="object-cover w-full h-full"
+                      className="object-cover object-top w-full h-full"
                       unoptimized
                     />
                   </div>

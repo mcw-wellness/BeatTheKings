@@ -147,7 +147,7 @@ export default function RankingPage(): JSX.Element {
                       alt="Avatar"
                       width={64}
                       height={64}
-                      className="object-cover w-full h-full"
+                      className="object-cover object-top w-full h-full"
                       unoptimized
                     />
                   </div>
@@ -205,7 +205,7 @@ export default function RankingPage(): JSX.Element {
                         alt="Avatar"
                         width={40}
                         height={40}
-                        className="object-cover w-full h-full"
+                        className="object-cover object-top w-full h-full"
                         unoptimized
                       />
                     </div>
@@ -246,7 +246,7 @@ export default function RankingPage(): JSX.Element {
                       alt="Avatar"
                       width={40}
                       height={40}
-                      className="object-cover w-full h-full"
+                      className="object-cover object-top w-full h-full"
                       unoptimized
                     />
                   </div>

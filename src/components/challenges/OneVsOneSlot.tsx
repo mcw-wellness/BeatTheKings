@@ -60,7 +60,7 @@ export function OneVsOneSlot(): JSX.Element {
       <div className="p-4 border-b border-white/10">
         <div className="flex items-center gap-3">
           <span className="text-2xl">⚔️</span>
-          <span className="font-medium text-white">1v1 Challenge</span>
+          <span className="font-medium text-white">1x1 Match</span>
         </div>
       </div>
 
@@ -122,7 +122,7 @@ function VenueRow({ venue, onClick }: { venue: ActiveVenue; onClick: () => void 
                 alt=""
                 width={24}
                 height={24}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
                 unoptimized
               />
             </div>

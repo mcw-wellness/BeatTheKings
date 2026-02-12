@@ -176,7 +176,7 @@ function KingCard({
           alt="King"
           width={40}
           height={40}
-          className="object-cover w-full h-full"
+          className="object-cover object-top w-full h-full"
           unoptimized
         />
       </div>
@@ -239,7 +239,7 @@ function PlayerAvatar({
           alt="Player"
           width={48}
           height={48}
-          className="object-cover w-full h-full"
+          className="object-cover object-top w-full h-full"
           unoptimized
         />
       </div>

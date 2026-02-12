@@ -8,13 +8,15 @@
 }
 
 html {
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
+  height: 100%;
+  overflow: hidden;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  min-height: 100vh;
   /* Stadium Background */
   background-color: #0a0f1a;
   background-image: url('/backgrounds/stadium.png');
@@ -22,6 +24,13 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+/* Lock all pages to viewport height with internal scroll */
+main {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Toast fade-in animation */

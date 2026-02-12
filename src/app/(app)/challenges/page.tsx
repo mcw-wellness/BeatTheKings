@@ -8,7 +8,6 @@ import {
   PageLoadingState,
   PageErrorState,
 } from '@/components/layout/StadiumPageLayout'
-import { OneVsOneSlot } from '@/components/challenges'
 
 interface ChallengeSummary {
   total: number
@@ -83,10 +82,6 @@ export default function ChallengesPage(): JSX.Element {
       </div>
 
       <div className="space-y-3">
-        {/* 1v1 Challenge Slot with Active Venues */}
-        <OneVsOneSlot />
-
-        {/* Other Challenge Types */}
         {challengeRows.map((row) => (
           <ChallengeRow
             key={row.id}

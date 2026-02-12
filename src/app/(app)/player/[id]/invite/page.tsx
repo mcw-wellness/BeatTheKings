@@ -150,7 +150,7 @@ export default function InvitePage(): JSX.Element {
                 alt={player.name || 'Player'}
                 width={80}
                 height={80}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
                 unoptimized
               />
             ) : (

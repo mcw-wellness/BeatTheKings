@@ -164,15 +164,15 @@ export default function VenueChallengesPage(): JSX.Element {
           </div>
         </div>
 
-        {/* 1v1 Challenge Section */}
+        {/* 1x1 Match Section */}
         {opponents.length > 0 && (
           <div className="bg-purple-500/20 backdrop-blur border border-purple-500/40 rounded-xl p-4">
             <h2 className="font-semibold text-white mb-2 flex items-center gap-2">
               <span>⚔️</span>
-              <span>1v1 Challenges</span>
+              <span>1x1 Matches</span>
             </h2>
             <p className="text-white/70 text-sm mb-3">
-              {opponents.length} player{opponents.length !== 1 ? 's' : ''} available for 1v1
+              {opponents.length} player{opponents.length !== 1 ? 's' : ''} available for 1x1
             </p>
             <div className="flex gap-2 overflow-x-auto pb-2">
               {opponents.map((opponent) => (
@@ -187,7 +187,7 @@ export default function VenueChallengesPage(): JSX.Element {
                       alt="Player"
                       width={48}
                       height={48}
-                      className="object-cover w-full h-full"
+                      className="object-cover object-top w-full h-full"
                       unoptimized
                     />
                   </div>

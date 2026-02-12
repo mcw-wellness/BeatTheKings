@@ -72,7 +72,7 @@ function Header(): JSX.Element {
     <div className="flex items-center gap-3">
       <Logo size="sm" linkToHome className="w-10 h-10" />
       <div className="flex-1">
-        <h1 className="text-xl font-bold text-white">1v1 Challenges</h1>
+        <h1 className="text-xl font-bold text-white">1x1 Matches</h1>
         <p className="text-sm text-white/60">Match History</p>
       </div>
     </div>

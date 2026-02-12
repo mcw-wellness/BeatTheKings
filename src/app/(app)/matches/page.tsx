@@ -236,7 +236,7 @@ function Header({ invitationCount }: { invitationCount: number }): JSX.Element {
       </div>
       <div className="text-center">
         <h1 className="text-2xl font-bold text-white">My Matches</h1>
-        <p className="text-sm text-white/60">1v1 Challenge History</p>
+        <p className="text-sm text-white/60">1x1 Match History</p>
       </div>
     </>
   )

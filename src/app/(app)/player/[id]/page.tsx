@@ -248,7 +248,7 @@ export default function PlayerPage(): JSX.Element {
             ) : (
               <>
                 <span>🏀</span>
-                <span>Challenge to 1v1</span>
+                <span>Challenge to 1x1</span>
               </>
             )}
           </button>
