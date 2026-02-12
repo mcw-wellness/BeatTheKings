@@ -4,6 +4,7 @@ import './globals.css'
 import { AppProvider } from '@/context/AppContext'
 import { SessionProvider } from '@/components/layout/SessionProvider'
 import { LocationProvider } from '@/context/LocationContext'
+import { AutoCheckIn } from '@/components/AutoCheckIn'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,7 +23,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <SessionProvider>
           <LocationProvider>
-            <AppProvider>{children}</AppProvider>
+            <AppProvider>
+              <AutoCheckIn />
+              {children}
+            </AppProvider>
           </LocationProvider>
         </SessionProvider>
       </body>

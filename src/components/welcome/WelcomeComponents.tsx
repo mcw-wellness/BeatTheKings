@@ -26,12 +26,14 @@ export function NavButton({
   locked,
   onClick,
   highlight,
+  badge,
 }: {
   icon: string
   label: string
   locked: boolean
   onClick: () => void
   highlight?: boolean
+  badge?: number
 }): JSX.Element {
   return (
     <div className="relative">
@@ -60,7 +62,13 @@ export function NavButton({
             {label}
           </span>
         </div>
-        {locked && <span className="text-white/40">🔒</span>}
+        {locked ? (
+          <span className="text-white/40">🔒</span>
+        ) : badge && badge > 0 ? (
+          <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+            {badge}
+          </span>
+        ) : null}
       </button>
     </div>
   )
@@ -113,6 +121,8 @@ export function AvatarDisplay({
 
 interface StatsPanelsProps {
   totalPoints: number
+  totalXp: number
+  totalRp: number
   winRate: number
   rank: number | null
   level: number
@@ -124,6 +134,8 @@ interface StatsPanelsProps {
 
 export function StatsPanels({
   totalPoints,
+  totalXp,
+  totalRp,
   winRate,
   rank,
   level,
@@ -136,7 +148,7 @@ export function StatsPanels({
     <div className="flex flex-col justify-center gap-3 pl-2">
       <div className="bg-[#1e2a4a]/90 backdrop-blur rounded-xl p-3 border border-white/10">
         <h3 className="text-xs font-bold text-white/80 uppercase tracking-wider mb-3">
-          Performance
+          Performance <span className="text-yellow-400 font-bold">{totalXp} XP</span>
         </h3>
         <div className="space-y-3">
           <StatRow icon="🏆" label="Total Points" value={totalPoints.toString()} />
@@ -146,7 +158,7 @@ export function StatsPanels({
       </div>
       <div className="bg-[#1e2a4a]/90 backdrop-blur rounded-xl p-3 border border-white/10">
         <h3 className="text-xs font-bold text-white/80 uppercase tracking-wider mb-3">
-          Progression
+          Progression <span className="text-green-400 font-bold">{totalRp} RP</span>
         </h3>
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1">
@@ -175,9 +187,10 @@ interface NavigationGridProps {
   hasCreatedAvatar: boolean
   onNavigate: (path: string) => void
   highlightMap?: boolean
+  matchInvitationCount?: number
 }
 
-export function NavigationGrid({ hasCreatedAvatar, onNavigate, highlightMap }: NavigationGridProps): JSX.Element {
+export function NavigationGrid({ hasCreatedAvatar, onNavigate, highlightMap, matchInvitationCount }: NavigationGridProps): JSX.Element {
   return (
     <div className="px-4 pb-4 pt-2 shrink-0 space-y-2">
       <div className="grid grid-cols-2 gap-2">
@@ -205,6 +218,7 @@ export function NavigationGrid({ hasCreatedAvatar, onNavigate, highlightMap }: N
           label="My Matches"
           locked={!hasCreatedAvatar}
           onClick={() => onNavigate('/matches')}
+          badge={matchInvitationCount}
         />
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -212,7 +226,7 @@ export function NavigationGrid({ hasCreatedAvatar, onNavigate, highlightMap }: N
           <p className="text-xs text-white/60">🏀 BB Championship</p>
         </div>
         <div className="bg-[#1e2a4a]/80 rounded-xl p-3 border border-white/10">
-          <p className="text-xs text-white/60">COMING SOON</p>
+          <p className="text-xs text-white/60">🏋️ Practice</p>
         </div>
       </div>
     </div>

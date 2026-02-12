@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useLocation } from '@/context/LocationContext'
+import { useVenueCheckIn } from '@/lib/hooks/useVenueCheckIn'
+import { formatDistance } from '@/lib/utils/distance'
 import { Logo } from '@/components/layout/Logo'
 
 interface VenueDetail {
@@ -11,6 +13,8 @@ interface VenueDetail {
   name: string
   address: string | null
   district: string | null
+  latitude: number | null
+  longitude: number | null
   distance: number | null
   distanceFormatted: string | null
   cityName: string | null
@@ -55,8 +59,12 @@ export default function VenueDetailPage(): JSX.Element {
   const [data, setData] = useState<VenueData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isCheckingIn, setIsCheckingIn] = useState(false)
-  const [checkInMessage, setCheckInMessage] = useState<string | null>(null)
+
+  const checkIn = useVenueCheckIn({
+    venueId: data?.venue.id ?? null,
+    venueLat: data?.venue.latitude ?? null,
+    venueLng: data?.venue.longitude ?? null,
+  })
 
   const fetchVenue = useCallback(async (): Promise<void> => {
     if (!venueId) return
@@ -91,37 +99,6 @@ export default function VenueDetailPage(): JSX.Element {
   useEffect(() => {
     fetchVenue()
   }, [fetchVenue])
-
-  const handleCheckIn = async (): Promise<void> => {
-    if (!latitude || !longitude) {
-      setCheckInMessage('Location required to check in')
-      return
-    }
-
-    setIsCheckingIn(true)
-    setCheckInMessage(null)
-
-    try {
-      const response = await fetch(`/api/venues/${venueId}/check-in`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ latitude, longitude }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        setCheckInMessage(result.message)
-        fetchVenue() // Refresh to show updated active players
-      } else {
-        setCheckInMessage(result.error || 'Failed to check in')
-      }
-    } catch {
-      setCheckInMessage('Failed to check in')
-    } finally {
-      setIsCheckingIn(false)
-    }
-  }
 
   const openPlayerCard = (playerId: string): void => {
     router.push(`/player/${playerId}`)
@@ -176,7 +153,6 @@ export default function VenueDetailPage(): JSX.Element {
         backgroundPosition: 'center',
       }}
     >
-      {/* Light overlay for text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
       <div className="max-w-lg mx-auto p-4 md:p-6 space-y-4 md:space-y-6 relative z-10">
@@ -199,7 +175,7 @@ export default function VenueDetailPage(): JSX.Element {
             </div>
             {venue.distanceFormatted && (
               <span className="bg-white/20 text-white text-sm md:text-base px-3 py-1 rounded-full">
-                📍 {venue.distanceFormatted}
+                {venue.distanceFormatted}
               </span>
             )}
           </div>
@@ -207,6 +183,9 @@ export default function VenueDetailPage(): JSX.Element {
             <p className="text-white/70 text-sm md:text-base mt-2">{venue.description}</p>
           )}
         </div>
+
+        {/* Check-in Section */}
+        <VenueCheckInSection checkIn={checkIn} />
 
         {/* King of the Court */}
         {king && (
@@ -242,7 +221,6 @@ export default function VenueDetailPage(): JSX.Element {
         {/* Active Players */}
         <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 p-4 md:p-6">
           <h2 className="text-white font-semibold md:text-lg mb-3 flex items-center gap-2">
-            <span>👥</span>
             Active Players ({activePlayers.length})
           </h2>
           {activePlayers.length === 0 ? (
@@ -277,7 +255,6 @@ export default function VenueDetailPage(): JSX.Element {
         {/* Challenges */}
         <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 p-4 md:p-6">
           <h2 className="text-white font-semibold md:text-lg mb-3 flex items-center gap-2">
-            <span>🏆</span>
             Challenges ({challenges.length})
           </h2>
           {challenges.length === 0 ? (
@@ -311,37 +288,84 @@ export default function VenueDetailPage(): JSX.Element {
             </div>
           )}
         </div>
-
-        {/* Check-in Button */}
-        <div className="space-y-2">
-          <button
-            onClick={handleCheckIn}
-            disabled={isCheckingIn || !latitude}
-            className="w-full py-4 md:py-5 bg-green-500/80 hover:bg-green-500 disabled:bg-white/30 text-white text-lg font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            {isCheckingIn ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-            ) : (
-              <>
-                <span>📍</span>
-                <span>Check In Here</span>
-              </>
-            )}
-          </button>
-          {checkInMessage && (
-            <p
-              className={`text-sm text-center ${
-                checkInMessage.includes('Checked in') ? 'text-green-300' : 'text-red-300'
-              }`}
-            >
-              {checkInMessage}
-            </p>
-          )}
-          {!latitude && (
-            <p className="text-yellow-300 text-xs text-center">Enable location to check in</p>
-          )}
-        </div>
       </div>
     </main>
+  )
+}
+
+function VenueCheckInSection({
+  checkIn: ci,
+}: {
+  checkIn: ReturnType<typeof useVenueCheckIn>
+}): JSX.Element {
+  // Checking in
+  if (ci.isCheckingIn) {
+    return (
+      <div className="flex items-center gap-2 bg-white/10 backdrop-blur rounded-xl border border-white/20 p-4">
+        <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-400 border-t-transparent" />
+        <span className="text-white/80 text-sm">Checking in...</span>
+      </div>
+    )
+  }
+
+  // Checked in
+  if (ci.isCheckedIn) {
+    return (
+      <div className="flex items-center justify-between bg-green-500/20 backdrop-blur border border-green-500/40 rounded-xl p-4">
+        <span className="text-green-300 font-semibold">Checked In</span>
+        <button
+          onClick={ci.checkOut}
+          disabled={ci.isCheckingOut}
+          className="bg-white/20 text-white text-sm px-4 py-2 rounded-lg active:scale-95 transition-transform disabled:opacity-50"
+        >
+          {ci.isCheckingOut ? 'Checking out...' : 'Check Out'}
+        </button>
+      </div>
+    )
+  }
+
+  // No location
+  if (ci.distanceToVenue === null) {
+    return (
+      <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 p-4">
+        <p className="text-yellow-300 text-sm text-center">
+          Enable location to check in
+        </p>
+      </div>
+    )
+  }
+
+  // Within range
+  if (ci.isWithinRange) {
+    return (
+      <div className="space-y-2">
+        <button
+          onClick={ci.checkIn}
+          className="w-full py-4 md:py-5 bg-green-500/80 text-white text-lg font-semibold rounded-xl active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+        >
+          Check In Here
+        </button>
+        {ci.checkInError && (
+          <p className="text-red-300 text-sm text-center">{ci.checkInError}</p>
+        )}
+      </div>
+    )
+  }
+
+  // Too far
+  const distText = formatDistance(ci.distanceToVenue)
+
+  return (
+    <div className="space-y-2">
+      <button
+        disabled
+        className="w-full py-4 md:py-5 bg-white/20 text-white/50 text-lg font-semibold rounded-xl cursor-not-allowed"
+      >
+        Get closer to check in ({distText} away)
+      </button>
+      {ci.checkInError && (
+        <p className="text-red-300 text-sm text-center">{ci.checkInError}</p>
+      )}
+    </div>
   )
 }

@@ -203,7 +203,7 @@ export default function ChallengePlayPage(): JSX.Element {
 
               <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Ready to Play?</h2>
               <p className="text-white/70 mb-6 text-sm md:text-base">
-                Tap +1 for made shots, -1 for misses. Hit STOP when done.
+                Tap +1 for a made shot, -1 for a miss. Your attempts and makes are tracked. Hit STOP when done.
               </p>
 
               <button
@@ -238,14 +238,14 @@ export default function ChallengePlayPage(): JSX.Element {
 
         {/* Score Display */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-          <div className="bg-white/10 backdrop-blur rounded-2xl border border-white/20 p-6 md:p-10 text-center w-full max-w-sm mb-6">
-            <p className="text-white/60 text-sm mb-2">Your Score</p>
-            <p className="text-5xl md:text-6xl font-bold text-white">
-              {scoreValue}
-              <span className="text-white/50">/{maxValue}</span>
+          <div className="bg-white/10 backdrop-blur rounded-2xl border border-white/20 p-6 md:p-10 w-full max-w-sm mb-6">
+            <p className="text-white/60 text-sm text-center mb-2">Your Score</p>
+            <p className="text-5xl md:text-6xl font-bold text-white text-center">
+              {maxValue}<span className="text-white/40">/</span>{scoreValue}
             </p>
+            <p className="text-white/40 text-xs text-center mt-1">Attempts / Made</p>
             <p
-              className={`text-2xl md:text-3xl font-semibold mt-2 ${accuracy >= 80 ? 'text-green-400' : accuracy >= 50 ? 'text-yellow-400' : 'text-red-400'}`}
+              className={`text-2xl md:text-3xl font-semibold text-center mt-2 ${accuracy >= 80 ? 'text-green-400' : accuracy >= 50 ? 'text-yellow-400' : 'text-red-400'}`}
             >
               {accuracy}%
             </p>

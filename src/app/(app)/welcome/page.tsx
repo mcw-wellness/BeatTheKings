@@ -169,6 +169,8 @@ function WelcomePageContent(): JSX.Element {
     }
   }, [hasCreatedAvatar])
 
+  const [invitationCount, setInvitationCount] = useState(0)
+
   useEffect(() => {
     if (session?.user?.id) {
       fetch('/api/users/stats')
@@ -178,6 +180,13 @@ function WelcomePageContent(): JSX.Element {
             setStats(data.stats)
             setRank(data.rank || null)
           }
+        })
+        .catch(() => {})
+
+      fetch('/api/notifications/count')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) setInvitationCount(data.pendingInvitations || 0)
         })
         .catch(() => {})
     }
@@ -210,7 +219,9 @@ function WelcomePageContent(): JSX.Element {
       </div>
     )
 
-  const totalPoints = stats?.totalXp || 0
+  const totalXp = stats?.totalXp || 0
+  const totalRp = stats?.totalRp || 0
+  const totalPoints = totalXp
   const winRate =
     stats && stats.matchesPlayed > 0
       ? Math.round((stats.matchesWon / stats.matchesPlayed) * 100)
@@ -267,6 +278,8 @@ function WelcomePageContent(): JSX.Element {
           />
           <StatsPanels
             totalPoints={totalPoints}
+            totalXp={totalXp}
+            totalRp={totalRp}
             winRate={winRate}
             rank={rank}
             level={level}
@@ -276,7 +289,7 @@ function WelcomePageContent(): JSX.Element {
             challengesCompleted={challengesCompleted}
           />
         </div>
-        <NavigationGrid hasCreatedAvatar={hasCreatedAvatar} onNavigate={router.push} highlightMap={showMapHighlight} />
+        <NavigationGrid hasCreatedAvatar={hasCreatedAvatar} onNavigate={router.push} highlightMap={showMapHighlight} matchInvitationCount={invitationCount} />
       </div>
     </main>
   )

@@ -9,6 +9,15 @@ import type { Database } from '@/db'
 import { calculateDistance } from '@/lib/utils/distance'
 import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage'
 
+// Re-export check-in functions from dedicated module
+export {
+  checkInToVenue,
+  checkOutFromVenue,
+  getUserCheckInStatus,
+  refreshCheckIn,
+  cleanupStaleCheckIns,
+} from './check-in'
+
 // ===========================================
 // TYPES
 // ===========================================
@@ -330,71 +339,6 @@ export async function getVenueChallenges(db: Database, venueId: string): Promise
     .where(and(eq(challenges.venueId, venueId), eq(challenges.isActive, true)))
 
   return challengeList
-}
-
-/**
- * Check in to a venue (mark as active player)
- */
-export async function checkInToVenue(
-  db: Database,
-  userId: string,
-  venueId: string,
-  latitude: number,
-  longitude: number
-): Promise<{ success: boolean; message: string }> {
-  try {
-    // Check if venue exists
-    const [venue] = await db
-      .select({ id: venues.id, name: venues.name })
-      .from(venues)
-      .where(eq(venues.id, venueId))
-      .limit(1)
-
-    if (!venue) {
-      return { success: false, message: 'Venue not found' }
-    }
-
-    // Upsert active player record
-    await db
-      .insert(activePlayers)
-      .values({
-        userId,
-        venueId,
-        latitude,
-        longitude,
-        lastSeenAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [activePlayers.userId, activePlayers.venueId],
-        set: {
-          latitude,
-          longitude,
-          lastSeenAt: new Date(),
-        },
-      })
-
-    return { success: true, message: `Checked in to ${venue.name}` }
-  } catch {
-    return { success: false, message: 'Failed to check in' }
-  }
-}
-
-/**
- * Check out from a venue (remove active player)
- */
-export async function checkOutFromVenue(
-  db: Database,
-  userId: string,
-  venueId: string
-): Promise<{ success: boolean }> {
-  try {
-    await db
-      .delete(activePlayers)
-      .where(and(eq(activePlayers.userId, userId), eq(activePlayers.venueId, venueId)))
-    return { success: true }
-  } catch {
-    return { success: false }
-  }
 }
 
 // ===========================================

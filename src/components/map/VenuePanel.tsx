@@ -2,11 +2,14 @@
 
 import Image from 'next/image'
 import type { VenueItem, ActivePlayer } from './types'
+import type { UseVenueCheckInReturn } from '@/lib/hooks/useVenueCheckIn'
+import { formatDistance } from '@/lib/utils/distance'
 
 interface VenuePanelProps {
   venue: VenueItem
   activePlayers: ActivePlayer[]
   isLoading: boolean
+  checkInState: UseVenueCheckInReturn
   onClose: () => void
   onPlayerClick: (playerId: string) => void
   onDirections: () => void
@@ -17,6 +20,7 @@ export function VenuePanel({
   venue,
   activePlayers,
   isLoading,
+  checkInState,
   onClose,
   onPlayerClick,
   onDirections,
@@ -25,6 +29,7 @@ export function VenuePanel({
   return (
     <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 p-4 md:p-6 space-y-4">
       <VenueHeader venue={venue} onClose={onClose} />
+      <CheckInSection checkInState={checkInState} />
       {venue.king && <KingCard king={venue.king} onClick={() => onPlayerClick(venue.king!.id)} />}
       <ActivePlayersSection
         players={activePlayers}
@@ -41,6 +46,100 @@ export function VenuePanel({
   )
 }
 
+function CheckInSection({
+  checkInState,
+}: {
+  checkInState: UseVenueCheckInReturn
+}): JSX.Element {
+  const {
+    isCheckedIn,
+    isCheckingIn,
+    isCheckingOut,
+    checkInError,
+    distanceToVenue,
+    isWithinRange,
+    checkIn,
+    checkOut,
+  } = checkInState
+
+  const hasLocation = distanceToVenue !== null
+
+  // Checking in spinner
+  if (isCheckingIn) {
+    return (
+      <div className="flex items-center gap-2 bg-white/10 rounded-lg p-3">
+        <div className="animate-spin rounded-full h-4 w-4 border-2 border-green-400 border-t-transparent" />
+        <span className="text-white/80 text-sm">Checking in...</span>
+      </div>
+    )
+  }
+
+  // Checked in state
+  if (isCheckedIn) {
+    return (
+      <div className="flex items-center justify-between bg-green-500/20 border border-green-500/40 rounded-lg p-3">
+        <span className="text-green-300 font-semibold text-sm">
+          Checked In
+        </span>
+        <button
+          onClick={checkOut}
+          disabled={isCheckingOut}
+          className="bg-white/20 text-white text-sm px-3 py-1.5 rounded-lg active:scale-95 transition-transform disabled:opacity-50"
+        >
+          {isCheckingOut ? 'Checking out...' : 'Check Out'}
+        </button>
+      </div>
+    )
+  }
+
+  // No location
+  if (!hasLocation) {
+    return (
+      <div className="bg-white/10 rounded-lg p-3">
+        <p className="text-yellow-300 text-sm text-center">
+          Enable location to check in
+        </p>
+      </div>
+    )
+  }
+
+  // Within range — manual check-in button
+  if (isWithinRange) {
+    return (
+      <div className="space-y-1">
+        <button
+          onClick={checkIn}
+          className="w-full py-3 bg-green-500/80 text-white font-semibold rounded-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+        >
+          Check In
+        </button>
+        {checkInError && (
+          <p className="text-red-300 text-xs text-center">{checkInError}</p>
+        )}
+      </div>
+    )
+  }
+
+  // Too far
+  const distanceText = distanceToVenue
+    ? formatDistance(distanceToVenue)
+    : 'unknown'
+
+  return (
+    <div className="space-y-1">
+      <button
+        disabled
+        className="w-full py-3 bg-white/20 text-white/50 font-semibold rounded-lg cursor-not-allowed text-sm"
+      >
+        Get closer to check in ({distanceText} away)
+      </button>
+      {checkInError && (
+        <p className="text-red-300 text-xs text-center">{checkInError}</p>
+      )}
+    </div>
+  )
+}
+
 function VenueHeader({ venue, onClose }: { venue: VenueItem; onClose: () => void }): JSX.Element {
   return (
     <div className="flex items-start justify-between">
@@ -48,7 +147,7 @@ function VenueHeader({ venue, onClose }: { venue: VenueItem; onClose: () => void
         <h2 className="text-lg md:text-xl font-bold text-white">{venue.name}</h2>
         {venue.district && <p className="text-sm text-white/60">{venue.district}</p>}
         {venue.distanceFormatted && (
-          <p className="text-sm text-white/80">📍 {venue.distanceFormatted}</p>
+          <p className="text-sm text-white/80">{venue.distanceFormatted}</p>
         )}
       </div>
       <button onClick={onClose} className="text-white/60 hover:text-white text-xl">
@@ -167,14 +266,14 @@ function ActionButtons({
           onClick={onDirections}
           className="flex-1 py-3 md:py-4 bg-gradient-to-r from-orange-500 to-yellow-400 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-yellow-500 transition-colors flex items-center justify-center gap-2"
         >
-          <span>🗺️</span> Get Directions
+          Get Directions
         </button>
       )}
       <button
         onClick={onChallenges}
         className="flex-1 py-3 md:py-4 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-colors border border-white/30"
       >
-        🏀 Challenges ({challengeCount})
+        Challenges ({challengeCount})
       </button>
     </div>
   )

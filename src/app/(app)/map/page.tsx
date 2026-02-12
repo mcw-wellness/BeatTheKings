@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useJsApiLoader } from '@react-google-maps/api'
 import { useLocation } from '@/context/LocationContext'
@@ -16,6 +16,7 @@ import {
   type VenueItem,
   type ActivePlayer,
 } from '@/components/map'
+import { useVenueCheckIn } from '@/lib/hooks/useVenueCheckIn'
 
 const defaultCenter = { lat: 48.2082, lng: 16.3738 }
 
@@ -119,6 +120,29 @@ function MapPageContent(): JSX.Element {
     if (venueIdFromUrl && !isLoading) fetchVenueDetails(venueIdFromUrl)
   }, [venueIdFromUrl, isLoading, fetchVenueDetails])
 
+  // Auto-select nearest venue within 200m for passive check-in
+  const hasAutoSelected = useRef(false)
+  useEffect(() => {
+    if (hasAutoSelected.current || venueIdFromUrl || isLoading) return
+    if (!latitude || !longitude || venues.length === 0) return
+
+    const AUTO_CHECKIN_RADIUS_KM = 0.2
+    let nearest: VenueItem | null = null
+    let nearestDist = Infinity
+
+    for (const v of venues) {
+      if (v.distance !== null && v.distance < nearestDist) {
+        nearest = v
+        nearestDist = v.distance
+      }
+    }
+
+    if (nearest && nearestDist <= AUTO_CHECKIN_RADIUS_KM) {
+      hasAutoSelected.current = true
+      fetchVenueDetails(nearest.id)
+    }
+  }, [latitude, longitude, venues, isLoading, venueIdFromUrl, fetchVenueDetails])
+
   const handleVenueSelect = (venue: VenueItem): void => {
     setInfoWindowVenue(null)
     setShowDirections(false)
@@ -130,6 +154,12 @@ function MapPageContent(): JSX.Element {
     setActivePlayers([])
     setShowDirections(false)
   }
+
+  const checkInState = useVenueCheckIn({
+    venueId: selectedVenue?.id ?? null,
+    venueLat: selectedVenue?.latitude ?? null,
+    venueLng: selectedVenue?.longitude ?? null,
+  })
 
   if (loadError) return <MapError />
 
@@ -192,6 +222,7 @@ function MapPageContent(): JSX.Element {
             venue={selectedVenue}
             activePlayers={activePlayers}
             isLoading={isLoadingDetails}
+            checkInState={checkInState}
             onClose={closePanel}
             onPlayerClick={(id) => router.push(`/player/${id}`)}
             onDirections={() => setShowDirections(true)}

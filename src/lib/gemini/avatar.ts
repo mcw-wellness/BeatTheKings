@@ -321,6 +321,10 @@ IDENTITY PRESERVATION (CRITICAL):
 - Preserve body type and proportions
 - Preserve glasses if worn
 - Preserve facial hair if present
+- Preserve HEAD ACCESSORIES if worn: hats, caps, beanies, headbands, headphones, bandanas, durags, sunglasses on head
+- Preserve FACE/BODY JEWELRY if worn: earrings, nose rings, lip piercings, chains, necklaces
+- Preserve visible TATTOOS (face, neck, arms)
+- These accessories are part of the person's identity, NOT clothing
 - The avatar must be RECOGNIZABLE as this specific person
 
 CUSTOMIZATIONS TO APPLY:
@@ -344,7 +348,8 @@ ${outfitDesc}
 
 CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
 CRITICAL: Output MUST be a 576x1024 tall portrait image with character filling most of the frame.
-DO NOT: copy their actual clothes, create only face/bust, use emoji style, change their facial identity.`
+DO NOT: copy their actual body clothes (shirt/pants/jacket), create only face/bust, use emoji style, change their facial identity.
+KEEP: all personal accessories (hats, headphones, earrings, piercings, chains, tattoos) - these are part of their identity!`
 }
 
 /**
@@ -385,10 +390,14 @@ BODY:
 - Build (thin, medium, broad shoulders)
 
 ACCESSORIES:
-- Glasses? (if yes, describe style)
+- Glasses? (if yes, describe style - frame shape, color)
 - Facial hair? (beard style, mustache, clean shaven)
+- Head accessories? (hat, cap, beanie, headband, headphones, bandana, durag, sunglasses on head - describe style and color)
+- Jewelry? (earrings, nose ring, lip piercing, chains, necklaces - describe style)
+- Visible tattoos? (face, neck, arms - describe location and style)
 
-IMPORTANT: Do NOT describe their clothing - we will dress them in a sports uniform.
+IMPORTANT: Do NOT describe their body clothing (shirt, pants, etc.) - we will dress them in a sports uniform.
+IMPORTANT: DO describe all accessories (head, face, jewelry, tattoos) - these will be PRESERVED in the avatar.
 
 Provide a detailed description focusing on features that make this person recognizable.`
 

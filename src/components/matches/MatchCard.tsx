@@ -5,6 +5,7 @@ import { useAvatarUrlWithLoading } from '@/lib/hooks/useAvatarUrl'
 
 type MatchStatus =
   | 'pending'
+  | 'scheduled'
   | 'accepted'
   | 'in_progress'
   | 'uploading'
@@ -64,6 +65,8 @@ function getStatusDisplay(match: Match): {
   date?: string
 } {
   switch (match.status) {
+    case 'scheduled':
+      return { label: 'Open', color: 'text-blue-400', icon: '📅' }
     case 'pending':
     case 'accepted':
     case 'in_progress':

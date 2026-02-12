@@ -162,6 +162,10 @@ CRITICAL - MATCH THESE FACIAL FEATURES EXACTLY:
 - Body type and build - MUST match
 - Glasses (if worn) - MUST include
 - Facial hair (if any) - MUST include
+- Head accessories (if any) - MUST include: hats, caps, beanies, headbands, headphones, bandanas, durags, sunglasses on head
+- Jewelry (if any) - MUST include: earrings, nose rings, lip piercings, chains, necklaces
+- Visible tattoos (if any) - MUST include: face, neck, arms
+- All personal accessories are part of the person's identity
 
 STYLE REQUIREMENTS:
 - MUST show FULL BODY from head to feet
@@ -180,17 +184,18 @@ EXACT POSE (MUST follow this exactly for ALL avatars):
 - NO action poses, NO dynamic movement, NO holding balls
 - This is a static character portrait pose
 
-OUTFIT (always use this, ignore person's actual clothes):
+OUTFIT (replace body clothing only - KEEP any head accessories like hats, caps, headphones, etc.):
 ${outfit}
 
 DO NOT generate:
 - Just a face or head shot
 - Emoji-style art
-- The person's actual clothing
+- The person's actual body clothing (shirt, pants, jacket) - replace with sports outfit
 - Only upper body
 - Generic face that doesn't match the person
 - Action poses or dynamic movement
 - Hands in pockets or crossed arms
+DO NOT REMOVE personal accessories (hats, headphones, earrings, piercings, chains, tattoos) - these must stay!
 
 The avatar MUST be recognizable as the same person from the photo, just in cartoon sports style.`
 }

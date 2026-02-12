@@ -235,7 +235,7 @@ export default function PlayerPage(): JSX.Element {
           <p className="text-purple-400 text-xs">sponsored by AVIS</p>
         </div>
 
-        {/* Challenge Button */}
+        {/* Action Buttons */}
         <div className="space-y-2">
           {challengeError && <p className="text-red-400 text-xs text-center">{challengeError}</p>}
           <button
@@ -255,6 +255,13 @@ export default function PlayerPage(): JSX.Element {
           {!userVenue && (
             <p className="text-center text-white/40 text-xs">Check in to a venue to challenge</p>
           )}
+          <button
+            onClick={() => router.push(`/player/${userId}/invite`)}
+            className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-white text-base font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+          >
+            <span>📅</span>
+            <span>Invite to Match</span>
+          </button>
         </div>
       </div>
     </main>

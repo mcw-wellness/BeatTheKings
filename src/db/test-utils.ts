@@ -63,6 +63,7 @@ export async function clearTestDb(db?: TestDatabase): Promise<void> {
   await database.delete(schema.playerStats)
   await database.delete(schema.challengeAttempts)
   await database.delete(schema.matches)
+  await database.delete(schema.matchInvitations)
   await database.delete(schema.challenges)
   await database.delete(schema.avatarEquipments)
   await database.delete(schema.userUnlockedItems)
@@ -246,6 +247,22 @@ async function createTables(db: TestDatabase): Promise<void> {
     )
   `)
 
+  // MatchInvitations
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS "MatchInvitation" (
+      "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      "senderId" UUID NOT NULL REFERENCES "User"("id"),
+      "receiverId" UUID NOT NULL REFERENCES "User"("id"),
+      "venueId" UUID NOT NULL REFERENCES "Venue"("id"),
+      "sportId" UUID NOT NULL REFERENCES "Sport"("id"),
+      "scheduledAt" TIMESTAMP NOT NULL,
+      "status" VARCHAR(20) DEFAULT 'pending' NOT NULL,
+      "message" TEXT,
+      "respondedAt" TIMESTAMP,
+      "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL
+    )
+  `)
+
   // Matches
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "Match" (
@@ -254,6 +271,7 @@ async function createTables(db: TestDatabase): Promise<void> {
       "sportId" UUID NOT NULL REFERENCES "Sport"("id"),
       "player1Id" UUID NOT NULL REFERENCES "User"("id"),
       "player2Id" UUID NOT NULL REFERENCES "User"("id"),
+      "invitationId" UUID REFERENCES "MatchInvitation"("id"),
       "player1Score" INTEGER,
       "player2Score" INTEGER,
       "winnerId" UUID REFERENCES "User"("id"),
@@ -454,6 +472,30 @@ export const testFactories = {
       })
       .returning()
     return challenge
+  },
+
+  async createMatchInvitation(
+    db: TestDatabase,
+    senderId: string,
+    receiverId: string,
+    venueId: string,
+    sportId: string,
+    data?: Partial<typeof schema.matchInvitations.$inferInsert>
+  ) {
+    const [invitation] = await db
+      .insert(schema.matchInvitations)
+      .values({
+        senderId,
+        receiverId,
+        venueId,
+        sportId,
+        scheduledAt: data?.scheduledAt ?? new Date(Date.now() + 24 * 60 * 60 * 1000),
+        status: data?.status ?? 'pending',
+        message: data?.message,
+        ...data,
+      })
+      .returning()
+    return invitation
   },
 
   async createMatch(

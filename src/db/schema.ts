@@ -105,6 +105,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   matchesAsPlayer1: many(matches, { relationName: 'player1' }),
   matchesAsPlayer2: many(matches, { relationName: 'player2' }),
   matchesWon: many(matches, { relationName: 'winner' }),
+  sentInvitations: many(matchInvitations, { relationName: 'sentInvitations' }),
+  receivedInvitations: many(matchInvitations, { relationName: 'receivedInvitations' }),
   activeSessions: many(activePlayers),
 }))
 
@@ -411,6 +413,64 @@ export const challengeAttemptsRelations = relations(challengeAttempts, ({ one })
 }))
 
 // ===========================================
+// MATCH INVITATION TABLE
+// ===========================================
+
+export const matchInvitations = pgTable(
+  'MatchInvitation',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    senderId: uuid('senderId')
+      .notNull()
+      .references(() => users.id),
+    receiverId: uuid('receiverId')
+      .notNull()
+      .references(() => users.id),
+    venueId: uuid('venueId')
+      .notNull()
+      .references(() => venues.id),
+    sportId: uuid('sportId')
+      .notNull()
+      .references(() => sports.id),
+
+    scheduledAt: timestamp('scheduledAt').notNull(),
+
+    // Status: "pending", "accepted", "declined", "cancelled", "expired"
+    status: varchar('status', { length: 20 }).default('pending').notNull(),
+    message: text('message'),
+
+    respondedAt: timestamp('respondedAt'),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  (table) => [
+    index('MatchInvitation_senderId_idx').on(table.senderId),
+    index('MatchInvitation_receiverId_idx').on(table.receiverId),
+    index('MatchInvitation_status_idx').on(table.status),
+  ]
+)
+
+export const matchInvitationsRelations = relations(matchInvitations, ({ one }) => ({
+  sender: one(users, {
+    fields: [matchInvitations.senderId],
+    references: [users.id],
+    relationName: 'sentInvitations',
+  }),
+  receiver: one(users, {
+    fields: [matchInvitations.receiverId],
+    references: [users.id],
+    relationName: 'receivedInvitations',
+  }),
+  venue: one(venues, {
+    fields: [matchInvitations.venueId],
+    references: [venues.id],
+  }),
+  sport: one(sports, {
+    fields: [matchInvitations.sportId],
+    references: [sports.id],
+  }),
+}))
+
+// ===========================================
 // MATCH TABLE (1v1)
 // ===========================================
 
@@ -433,12 +493,15 @@ export const matches = pgTable(
       .notNull()
       .references(() => users.id),
 
+    // Invitation link (nullable — only set for scheduled matches)
+    invitationId: uuid('invitationId').references(() => matchInvitations.id),
+
     // Result
     player1Score: integer('player1Score'),
     player2Score: integer('player2Score'),
     winnerId: uuid('winnerId').references(() => users.id),
 
-    // Status: "pending", "in_progress", "completed", "disputed", "cancelled"
+    // Status: "pending", "scheduled", "in_progress", "completed", "disputed", "cancelled"
     status: varchar('status', { length: 20 }).default('pending').notNull(),
 
     // Verification - both must agree for result to count
@@ -498,6 +561,10 @@ export const matchesRelations = relations(matches, ({ one }) => ({
     fields: [matches.winnerId],
     references: [users.id],
     relationName: 'winner',
+  }),
+  invitation: one(matchInvitations, {
+    fields: [matches.invitationId],
+    references: [matchInvitations.id],
   }),
 }))
 
