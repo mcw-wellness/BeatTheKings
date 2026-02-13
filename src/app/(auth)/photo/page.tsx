@@ -258,7 +258,7 @@ function PhotoPageContent(): JSX.Element {
                     src={preview}
                     alt="Profile preview"
                     fill
-                    className="object-cover"
+                    className="object-cover object-top"
                     unoptimized
                   />
                 </div>

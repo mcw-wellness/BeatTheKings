@@ -64,7 +64,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       detailedPhotoAnalysis = await analyzePhotoDetailed(image)
       logger.info({ userId: session.user.id }, 'Detailed photo analysis complete')
     } catch (error) {
-      logger.warn({ error }, 'Detailed photo analysis failed')
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      logger.warn({ error: errorMsg }, 'Detailed photo analysis failed')
     }
 
     // Step 4: Generate avatar using extracted features AND reference photo
@@ -82,7 +83,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       avatarImageUrl = await uploadAvatar(session.user.id, avatarBuffer)
       logger.info({ userId: session.user.id }, 'Avatar generated and uploaded')
     } catch (error) {
-      logger.warn({ error }, 'Avatar generation failed, will use defaults on avatar page')
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      logger.warn({ error: errorMsg }, 'Avatar generation failed, will use defaults on avatar page')
     }
 
     // Step 5: Save avatar to database with photo analysis

@@ -256,9 +256,9 @@ function AvatarPageContent(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="p-4 pt-6 relative z-10 flex items-center justify-between">
+      <div className="px-3 py-2 relative z-10 flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-xl font-bold text-white">
             {savedAvatarUrl ? 'Edit Avatar' : 'Create Avatar'}
           </h1>
           <p className="text-white/60 text-sm">Basketball</p>
@@ -266,7 +266,7 @@ function AvatarPageContent(): JSX.Element {
         <Logo size="sm" linkToHome className="w-10 h-10" />
       </div>
       {error && (
-        <div className="mx-4 bg-red-500/20 border border-red-500/30 text-red-200 px-4 py-2 rounded-lg text-sm relative z-10">
+        <div className="mx-3 bg-red-500/20 border border-red-500/30 text-red-200 px-3 py-1.5 rounded-lg text-sm relative z-10 shrink-0">
           {error}
         </div>
       )}
@@ -276,7 +276,7 @@ function AvatarPageContent(): JSX.Element {
         previewImage={previewImage}
         displayAvatarUrl={displayAvatarUrl}
       />
-      <div className="px-4 py-3 min-h-[100px] relative z-10">
+      <div className="px-3 py-2 relative z-10 shrink-0">
         {activeTab === 'skin' && <SkinToneSelector skinTone={skinTone} onSelect={setSkinTone} />}
         {activeTab === 'hair' && (
           <HairSelector
@@ -318,9 +318,6 @@ function AvatarPageContent(): JSX.Element {
         onGenerate={handleGeneratePreview}
         onSave={handleSave}
       />
-      <div className="py-3 text-center relative z-10">
-        <p className="text-xs text-white/30">BB Championship sponsored by DONK</p>
-      </div>
     </main>
   )
 }

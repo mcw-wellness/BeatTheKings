@@ -156,7 +156,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json({ imageUrl: dataUrl })
   } catch (error) {
-    logger.error({ error }, 'Failed to generate avatar preview')
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    logger.error({ error: errorMsg }, 'Failed to generate avatar preview')
     return NextResponse.json({ error: 'Failed to generate avatar preview' }, { status: 500 })
   }
 }

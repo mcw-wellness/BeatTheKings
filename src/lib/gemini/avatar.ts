@@ -5,15 +5,66 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
+import sharp from 'sharp'
 import { logger } from '@/lib/utils/logger'
 import { imageClient } from './client'
 import type { AvatarPromptInput } from './types'
+
+// Max dimensions for reference photos sent to Gemini (keeps under API size limits)
+const MAX_REFERENCE_WIDTH = 1024
+const MAX_REFERENCE_HEIGHT = 1024
+const REFERENCE_JPEG_QUALITY = 80
 
 // Gemini 3 Pro Image model for best character consistency
 const IMAGE_MODEL = 'gemini-3-pro-image-preview'
 
 // Cache images to avoid reading from disk each time
 const imageCache: Record<string, string> = {}
+
+/**
+ * Serialize error for logging (Gemini SDK errors are not standard Error objects)
+ */
+function serializeError(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    return { message: error.message, name: error.name, stack: error.stack }
+  }
+  if (typeof error === 'object' && error !== null) {
+    try {
+      return { raw: JSON.stringify(error) }
+    } catch {
+      return { raw: String(error) }
+    }
+  }
+  return { raw: String(error) }
+}
+
+/**
+ * Resize a base64 image to fit within max dimensions
+ * Returns resized base64 string (without data URL prefix)
+ */
+async function resizeBase64Image(base64Data: string): Promise<string> {
+  const inputBuffer = Buffer.from(base64Data, 'base64')
+  const metadata = await sharp(inputBuffer).metadata()
+
+  const width = metadata.width || 0
+  const height = metadata.height || 0
+
+  if (width <= MAX_REFERENCE_WIDTH && height <= MAX_REFERENCE_HEIGHT) {
+    return base64Data // Already small enough
+  }
+
+  const resizedBuffer = await sharp(inputBuffer)
+    .resize(MAX_REFERENCE_WIDTH, MAX_REFERENCE_HEIGHT, { fit: 'inside' })
+    .jpeg({ quality: REFERENCE_JPEG_QUALITY })
+    .toBuffer()
+
+  logger.info(
+    { originalSize: inputBuffer.length, resizedSize: resizedBuffer.length, originalDims: `${width}x${height}` },
+    'Resized reference photo for Gemini'
+  )
+
+  return resizedBuffer.toString('base64')
+}
 
 /**
  * Load an image from public folder as base64
@@ -108,7 +159,8 @@ export async function generateAvatarImage(input: AvatarPromptInput): Promise<Buf
 
     if (hasReferencePhoto && input.referencePhoto) {
       // With reference photo - use Gemini 3's identity preservation
-      const base64Data = input.referencePhoto.replace(/^data:image\/\w+;base64,/, '')
+      const rawBase64 = input.referencePhoto.replace(/^data:image\/\w+;base64,/, '')
+      const base64Data = await resizeBase64Image(rawBase64)
       const prompt = buildAvatarPromptWithReference(input, !!jerseyImage, !!shoesImage)
 
       logger.info(
@@ -151,7 +203,7 @@ export async function generateAvatarImage(input: AvatarPromptInput): Promise<Buf
 
     throw new Error('No image data in response')
   } catch (error) {
-    logger.error({ error, hasReferencePhoto }, 'Failed to generate avatar')
+    logger.error({ error: serializeError(error), hasReferencePhoto }, 'Failed to generate avatar')
     throw error
   }
 }
@@ -428,7 +480,7 @@ Provide a detailed description focusing on features that make this person recogn
     logger.info({ description: text.substring(0, 200) }, 'Photo analyzed for avatar')
     return text
   } catch (error) {
-    logger.error({ error }, 'Failed to analyze photo')
+    logger.error({ error: serializeError(error) }, 'Failed to analyze photo')
     // Return generic description on failure
     return 'adult athlete with medium build'
   }
@@ -606,7 +658,7 @@ The edited avatar must be the SAME CHARACTER with the changes applied. Preserve 
 
     throw new Error('No image data in edit response')
   } catch (error) {
-    logger.error({ error }, 'Failed to edit avatar')
+    logger.error({ error: serializeError(error) }, 'Failed to edit avatar')
     throw error
   }
 }

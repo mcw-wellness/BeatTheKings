@@ -16,7 +16,7 @@ export function AvatarDisplay({
   displayAvatarUrl,
 }: AvatarDisplayProps): JSX.Element {
   return (
-    <div className="flex-1 relative flex items-center justify-center px-4 z-10">
+    <div className="flex-1 min-h-0 relative flex items-center justify-center px-4 z-10">
       {isGenerating ? (
         <div className="flex flex-col items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white mb-4" />
@@ -27,7 +27,7 @@ export function AvatarDisplay({
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white" />
         </div>
       ) : displayAvatarUrl ? (
-        <div className="relative w-full max-w-sm h-[50vh] min-h-[300px]">
+        <div className="relative w-full h-full">
           <Image
             src={displayAvatarUrl}
             alt="Your Avatar"
