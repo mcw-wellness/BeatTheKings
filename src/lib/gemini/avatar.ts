@@ -173,6 +173,21 @@ export async function generateAvatarImage(input: AvatarPromptInput): Promise<Buf
         contents: [{ role: 'user', parts: buildParts(prompt, base64Data) }],
         config: { responseModalities: ['TEXT', 'IMAGE'] },
       })
+
+      // Check if we got an image back
+      const imageBuffer = extractImageFromResponse(response)
+      if (imageBuffer) return imageBuffer
+
+      // No image — Gemini likely refused due to safety filter on the photo
+      // Fallback: retry without the reference photo
+      logger.warn('No image from reference photo attempt, falling back to description-only generation')
+
+      const fallbackPrompt = buildAvatarPromptWithItems(input, !!jerseyImage, !!shoesImage)
+      response = await imageClient.models.generateContent({
+        model: IMAGE_MODEL,
+        contents: [{ role: 'user', parts: buildParts(fallbackPrompt) }],
+        config: { responseModalities: ['TEXT', 'IMAGE'] },
+      })
     } else {
       // Without reference photo - generate from description with stadium
       const prompt = buildAvatarPromptWithItems(input, !!jerseyImage, !!shoesImage)
@@ -189,23 +204,56 @@ export async function generateAvatarImage(input: AvatarPromptInput): Promise<Buf
       })
     }
 
-    const parts = response.candidates?.[0]?.content?.parts || []
-    for (const part of parts) {
-      if (part.inlineData) {
-        const imageData = part.inlineData.data
-        if (imageData) {
-          const buffer = Buffer.from(imageData, 'base64')
-          logger.info({ size: buffer.length }, 'Avatar generated successfully')
-          return buffer
-        }
-      }
-    }
+    const finalBuffer = extractImageFromResponse(response)
+    if (finalBuffer) return finalBuffer
 
     throw new Error('No image data in response')
   } catch (error) {
     logger.error({ error: serializeError(error), hasReferencePhoto }, 'Failed to generate avatar')
     throw error
   }
+}
+
+interface GeminiPart {
+  inlineData?: { data?: string }
+  text?: string
+}
+
+interface GeminiResponse {
+  candidates?: Array<{
+    content?: { parts?: GeminiPart[] }
+    finishReason?: string
+  }>
+}
+
+/**
+ * Extract image buffer from Gemini response, or null if no image found
+ */
+function extractImageFromResponse(response: unknown): Buffer | null {
+  const resp = response as GeminiResponse
+  const candidate = resp.candidates?.[0]
+  const parts = candidate?.content?.parts || []
+
+  // Log response details for debugging
+  const textParts = parts.filter((p) => p.text).map((p) => p.text?.substring(0, 200))
+  const hasImage = parts.some((p) => p.inlineData?.data)
+
+  if (!hasImage) {
+    logger.warn(
+      { finishReason: candidate?.finishReason, textParts, partCount: parts.length },
+      'Gemini response has no image'
+    )
+  }
+
+  for (const part of parts) {
+    if (part.inlineData?.data) {
+      const buffer = Buffer.from(part.inlineData.data, 'base64')
+      logger.info({ size: buffer.length }, 'Avatar generated successfully')
+      return buffer
+    }
+  }
+
+  return null
 }
 
 /**

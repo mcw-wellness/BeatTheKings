@@ -150,7 +150,7 @@ export default function MatchReadyPage(): JSX.Element {
                   alt={you.name || 'You'}
                   width={112}
                   height={112}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-top"
                 />
               </div>
               <p className="font-semibold text-white text-sm md:text-base">{you.name || 'You'}</p>
@@ -168,7 +168,7 @@ export default function MatchReadyPage(): JSX.Element {
                   alt={opponent.name || 'Opponent'}
                   width={112}
                   height={112}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-top"
                 />
               </div>
               <p className="font-semibold text-white text-sm md:text-base">

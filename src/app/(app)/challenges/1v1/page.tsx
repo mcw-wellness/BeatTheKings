@@ -192,7 +192,7 @@ function OpponentAvatar({
             alt={opponent.name || 'Opponent'}
             width={64}
             height={64}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-top"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>

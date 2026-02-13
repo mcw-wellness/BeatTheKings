@@ -45,7 +45,7 @@ export function UserAvatar({
             alt="You"
             width={dimension.w}
             height={dimension.h}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-top"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>

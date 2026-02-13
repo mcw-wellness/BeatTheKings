@@ -196,7 +196,7 @@ export default function MatchPendingPage(): JSX.Element {
                   alt={opponent.name || 'Opponent'}
                   width={144}
                   height={144}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-top"
                 />
               ) : (
                 <div className="w-full h-full bg-white/20 flex items-center justify-center">
