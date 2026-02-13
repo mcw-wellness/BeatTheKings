@@ -134,21 +134,29 @@ function MapPageContent(): JSX.Element {
   return (
     <main className="h-dvh flex flex-col overflow-hidden relative" style={{ backgroundImage: 'url(/backgrounds/stadium.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4 md:space-y-6 relative z-10 flex-1 overflow-y-auto">
-        <MapHeader />
-        <LocationStatus geoLoading={geoLoading} latitude={latitude} permission={permission} geoError={geoError} requestPermission={requestPermission} highlight={showLocationHighlight} />
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="px-3 pt-2 shrink-0">
+          <MapHeader />
+        </div>
+        <div className="px-3 py-1 shrink-0">
+          <LocationStatus geoLoading={geoLoading} latitude={latitude} permission={permission} geoError={geoError} requestPermission={requestPermission} highlight={showLocationHighlight} />
+        </div>
 
-        <MapView isLoaded={isLoaded} isLoading={isLoading} userCenter={userCenter} latitude={latitude} longitude={longitude} venues={venues} infoWindowVenue={infoWindowVenue} showDirections={showDirections} origin={origin} destination={destination} selectedVenueName={selectedVenue?.name || ''} onMarkerClick={setInfoWindowVenue} onInfoWindowClose={() => setInfoWindowVenue(null)} onVenueSelect={handleVenueSelect} onCloseDirections={() => setShowDirections(false)} />
+        <div className="flex-1 min-h-0 px-3 py-1">
+          <MapView isLoaded={isLoaded} isLoading={isLoading} userCenter={userCenter} latitude={latitude} longitude={longitude} venues={venues} infoWindowVenue={infoWindowVenue} showDirections={showDirections} origin={origin} destination={destination} selectedVenueName={selectedVenue?.name || ''} onMarkerClick={setInfoWindowVenue} onInfoWindowClose={() => setInfoWindowVenue(null)} onVenueSelect={handleVenueSelect} onCloseDirections={() => setShowDirections(false)} />
+        </div>
 
-        {showDirections && selectedVenue && (
-          <DirectionsPanel origin={origin} destination={destination} venueName={selectedVenue.name} onClose={() => setShowDirections(false)} />
-        )}
+        <div className="shrink-0 max-h-[40%] overflow-y-auto px-3 pb-2 space-y-2">
+          {showDirections && selectedVenue && (
+            <DirectionsPanel origin={origin} destination={destination} venueName={selectedVenue.name} onClose={() => setShowDirections(false)} />
+          )}
 
-        {selectedVenue && !showDirections && (
-          <VenuePanel venue={selectedVenue} activePlayers={activePlayers} isLoading={isLoadingDetails} checkInState={checkInState} onClose={closePanel} onPlayerClick={(id) => router.push(`/player/${id}`)} onDirections={() => setShowDirections(true)} onChallenges={() => router.push(`/venues/${selectedVenue.id}`)} />
-        )}
+          {selectedVenue && !showDirections && (
+            <VenuePanel venue={selectedVenue} activePlayers={activePlayers} isLoading={isLoadingDetails} checkInState={checkInState} onClose={closePanel} onPlayerClick={(id) => router.push(`/player/${id}`)} onDirections={() => setShowDirections(true)} onChallenges={() => router.push(`/venues/${selectedVenue.id}`)} />
+          )}
 
-        <VenueList venues={venues} selectedVenueId={selectedVenue?.id || null} checkedInVenueId={checkedInVenueId} isLoading={isLoading} userLatitude={latitude} userLongitude={longitude} onVenueSelect={handleVenueSelect} onCheckIn={handleVenueListCheckIn} />
+          <VenueList venues={venues} selectedVenueId={selectedVenue?.id || null} checkedInVenueId={checkedInVenueId} isLoading={isLoading} userLatitude={latitude} userLongitude={longitude} onVenueSelect={handleVenueSelect} onCheckIn={handleVenueListCheckIn} />
+        </div>
       </div>
     </main>
   )

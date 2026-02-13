@@ -97,7 +97,7 @@ export function AvatarDisplay({
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white" />
         </div>
       ) : avatarUrl ? (
-        <div className="relative flex items-center justify-center">
+        <div className="relative flex items-center justify-center h-full">
           {isKing && (
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10">
               <span className="text-5xl">👑</span>
@@ -107,7 +107,7 @@ export function AvatarDisplay({
           <img
             src={avatarUrl}
             alt="Your Avatar"
-            className="h-[380px] w-auto object-contain"
+            className="max-h-full w-auto object-contain"
           />
         </div>
       ) : (
@@ -145,7 +145,7 @@ export function StatsPanels({
   challengesCompleted,
 }: StatsPanelsProps): JSX.Element {
   return (
-    <div className="flex flex-col justify-center gap-3 pl-2">
+    <div className="flex flex-col justify-center gap-2 pl-2">
       <div className="bg-[#1e2a4a]/90 backdrop-blur rounded-xl p-3 border border-white/10">
         <h3 className="text-xs font-bold text-white/80 uppercase tracking-wider mb-3">
           Performance <span className="text-yellow-400 font-bold">{totalXp} XP</span>

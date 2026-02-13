@@ -273,7 +273,7 @@ function ActionButtons({
         onClick={onChallenges}
         className="flex-1 py-3 md:py-4 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-colors border border-white/30"
       >
-        Challenges ({challengeCount})
+        Challenges{challengeCount ? ` (${challengeCount})` : ''}
       </button>
     </div>
   )

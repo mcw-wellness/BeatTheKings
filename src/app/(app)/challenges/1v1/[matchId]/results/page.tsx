@@ -171,7 +171,7 @@ export default function MatchResultsPage(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-lg mx-auto h-full flex flex-col p-4 md:p-6 relative z-10 overflow-y-auto">
+      <div className="h-full flex flex-col px-3 py-2 relative z-10 overflow-y-auto">
         {/* Result Banner */}
         <div
           className={`rounded-xl p-6 md:p-8 text-center text-white mb-6 backdrop-blur ${

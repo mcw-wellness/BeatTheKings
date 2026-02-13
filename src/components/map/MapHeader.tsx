@@ -17,7 +17,7 @@ export function MapHeader(): JSX.Element {
 export function MapError(): JSX.Element {
   return (
     <main
-      className="min-h-screen flex items-center justify-center p-4 relative"
+      className="h-dvh flex items-center justify-center p-4 relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -45,7 +45,7 @@ interface LocationStatusProps {
 export function MapLoadingFallback(): JSX.Element {
   return (
     <main
-      className="min-h-screen flex items-center justify-center relative"
+      className="h-dvh flex items-center justify-center relative"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',

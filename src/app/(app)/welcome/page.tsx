@@ -36,7 +36,7 @@ export default function WelcomePage(): JSX.Element {
   return (
     <Suspense
       fallback={
-        <div className="h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
+        <div className="h-dvh bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
           <div className="animate-pulse text-white/60">Loading...</div>
         </div>
       }
@@ -214,7 +214,7 @@ function WelcomePageContent(): JSX.Element {
 
   if (status === 'loading')
     return (
-      <div className="h-screen bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
+      <div className="h-dvh bg-gradient-to-b from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
         <div className="animate-pulse text-white/60">Loading...</div>
       </div>
     )
@@ -235,7 +235,7 @@ function WelcomePageContent(): JSX.Element {
 
   return (
     <main
-      className="h-screen overflow-hidden flex flex-col"
+      className="h-dvh overflow-hidden flex flex-col"
       style={{
         backgroundImage: 'url(/backgrounds/stadium.png)',
         backgroundSize: 'cover',
@@ -245,7 +245,7 @@ function WelcomePageContent(): JSX.Element {
       <AvatarToast show={showToast} onHide={() => setShowToast(false)} />
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
       <div className="relative z-10 flex flex-col h-full">
-        <div className="px-4 py-3 flex items-center justify-between shrink-0">
+        <div className="px-4 py-1 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-xl font-bold text-white">{displayName}</h1>
             <p className="text-sm text-white/60">{rank ? `#${rank} Ranked` : 'Unranked'}</p>

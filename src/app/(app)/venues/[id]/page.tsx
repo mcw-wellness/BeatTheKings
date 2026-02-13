@@ -155,7 +155,7 @@ export default function VenueDetailPage(): JSX.Element {
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
-      <div className="max-w-lg mx-auto p-4 md:p-6 space-y-4 md:space-y-6 relative z-10 flex-1 overflow-y-auto">
+      <div className="px-3 py-2 space-y-3 relative z-10 flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Logo size="sm" linkToHome className="w-10 h-10" />
@@ -301,8 +301,8 @@ function VenueCheckInSection({
   // Checking in
   if (ci.isCheckingIn) {
     return (
-      <div className="flex items-center gap-2 bg-white/10 backdrop-blur rounded-xl border border-white/20 p-4">
-        <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-400 border-t-transparent" />
+      <div className="flex items-center gap-2 bg-white/10 backdrop-blur rounded-xl border border-white/20 px-3 py-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-2 border-green-400 border-t-transparent" />
         <span className="text-white/80 text-sm">Checking in...</span>
       </div>
     )
@@ -311,12 +311,12 @@ function VenueCheckInSection({
   // Checked in
   if (ci.isCheckedIn) {
     return (
-      <div className="flex items-center justify-between bg-green-500/20 backdrop-blur border border-green-500/40 rounded-xl p-4">
-        <span className="text-green-300 font-semibold">Checked In</span>
+      <div className="flex items-center justify-between bg-green-500/20 backdrop-blur border border-green-500/40 rounded-xl px-3 py-2">
+        <span className="text-green-300 font-semibold text-sm">Checked In</span>
         <button
           onClick={ci.checkOut}
           disabled={ci.isCheckingOut}
-          className="bg-white/20 text-white text-sm px-4 py-2 rounded-lg active:scale-95 transition-transform disabled:opacity-50"
+          className="bg-white/20 text-white text-xs px-3 py-1.5 rounded-lg active:scale-95 transition-transform disabled:opacity-50"
         >
           {ci.isCheckingOut ? 'Checking out...' : 'Check Out'}
         </button>
@@ -327,7 +327,7 @@ function VenueCheckInSection({
   // No location
   if (ci.distanceToVenue === null) {
     return (
-      <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 p-4">
+      <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 px-3 py-2">
         <p className="text-yellow-300 text-sm text-center">
           Enable location to check in
         </p>
@@ -338,15 +338,15 @@ function VenueCheckInSection({
   // Within range
   if (ci.isWithinRange) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-1">
         <button
           onClick={ci.checkIn}
-          className="w-full py-4 md:py-5 bg-green-500/80 text-white text-lg font-semibold rounded-xl active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+          className="w-full py-3 bg-green-500/80 text-white font-semibold rounded-xl active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
         >
           Check In Here
         </button>
         {ci.checkInError && (
-          <p className="text-red-300 text-sm text-center">{ci.checkInError}</p>
+          <p className="text-red-300 text-xs text-center">{ci.checkInError}</p>
         )}
       </div>
     )
@@ -356,16 +356,9 @@ function VenueCheckInSection({
   const distText = formatDistance(ci.distanceToVenue)
 
   return (
-    <div className="space-y-2">
-      <button
-        disabled
-        className="w-full py-4 md:py-5 bg-white/20 text-white/50 text-lg font-semibold rounded-xl cursor-not-allowed"
-      >
-        Get closer to check in ({distText} away)
-      </button>
-      {ci.checkInError && (
-        <p className="text-red-300 text-sm text-center">{ci.checkInError}</p>
-      )}
+    <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 px-3 py-2 flex items-center justify-between">
+      <span className="text-white/50 text-sm">Get closer to check in</span>
+      <span className="text-white/40 text-xs">{distText} away</span>
     </div>
   )
 }

@@ -133,7 +133,7 @@ export default function LocationPage(): JSX.Element {
 
   return (
     <main className="h-dvh bg-gradient-to-b from-blue-50 to-white p-4 sm:p-6 overflow-y-auto">
-      <div className="max-w-md mx-auto">
+      <div>
         {/* Header */}
         <div className="flex items-center justify-center mb-6">
           <div className="w-20 h-20">

@@ -147,9 +147,9 @@ export default function VenueChallengesPage(): JSX.Element {
       {/* Light overlay for text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
-      <div className="max-w-lg mx-auto p-4 space-y-4 relative z-10 flex-1 overflow-y-auto">
+      <div className="relative z-10 flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 px-3 py-2 shrink-0">
           <button onClick={() => router.back()} className="text-white/80 hover:text-white">
             ← Back
           </button>
@@ -163,6 +163,8 @@ export default function VenueChallengesPage(): JSX.Element {
             </div>
           </div>
         </div>
+
+        <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-3">
 
         {/* 1x1 Match Section */}
         {opponents.length > 0 && (
@@ -244,6 +246,7 @@ export default function VenueChallengesPage(): JSX.Element {
               </div>
             ))
           )}
+        </div>
         </div>
       </div>
     </main>

@@ -178,7 +178,7 @@ export default function MatchPendingPage(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-lg mx-auto h-full flex flex-col relative z-10">
+      <div className="h-full flex flex-col relative z-10">
         {/* Header */}
         <header className="p-4 border-b border-white/20 bg-black/20 backdrop-blur">
           <h1 className="text-xl font-bold text-white text-center">Challenge Sent</h1>

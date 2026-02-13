@@ -44,7 +44,7 @@ export function MapView(props: MapViewProps): JSX.Element {
   } = props
 
   return (
-    <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 overflow-hidden h-[350px] md:h-[450px]">
+    <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 overflow-hidden h-full">
       {isLoaded && !isLoading ? (
         <GoogleMap
           mapContainerStyle={mapContainerStyle}

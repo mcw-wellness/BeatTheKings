@@ -169,7 +169,7 @@ export default function MatchRecordPage(): JSX.Element {
 
       {/* Controls */}
       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/80 to-transparent">
-        <div className="max-w-lg mx-auto flex items-center justify-center gap-6">
+        <div className="flex items-center justify-center gap-6">
           {/* Flip Camera */}
           {!isRecording && (
             <button

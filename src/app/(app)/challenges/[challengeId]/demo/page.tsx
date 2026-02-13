@@ -40,7 +40,7 @@ export default function DemoVideoPage(): JSX.Element {
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
-      <div className="max-w-lg mx-auto p-4 space-y-6 relative z-10 flex-1 overflow-y-auto">
+      <div className="px-3 py-2 space-y-4 relative z-10 flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="text-white/80 hover:text-white">

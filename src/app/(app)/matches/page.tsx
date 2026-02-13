@@ -155,7 +155,7 @@ export default function MatchesPage() {
   return (
     <main className="h-dvh flex flex-col overflow-hidden relative" style={backgroundStyle}>
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-lg mx-auto p-4 space-y-4 relative z-10 flex-1 overflow-y-auto">
+      <div className="px-3 py-2 space-y-3 relative z-10 flex-1 overflow-y-auto">
         <Header invitationCount={pendingInvitations.length} />
         <FilterTabs
           filter={filter}

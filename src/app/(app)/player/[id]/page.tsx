@@ -143,17 +143,25 @@ export default function PlayerPage(): JSX.Element {
 
   if (loading) {
     return (
-      <main className="h-screen flex items-center justify-center bg-[#0a0a1a]">
-        <div className="animate-spin rounded-full h-10 w-10 border-3 border-yellow-400 border-t-transparent" />
+      <main
+        className="h-dvh flex items-center justify-center relative"
+        style={{ backgroundImage: 'url(/backgrounds/stadium.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <div className="animate-spin rounded-full h-10 w-10 border-3 border-yellow-400 border-t-transparent relative z-10" />
       </main>
     )
   }
 
   if (error || !data) {
     return (
-      <main className="h-screen flex flex-col items-center justify-center p-4 bg-[#0a0a1a]">
-        <p className="text-red-400 mb-4">{error || 'Player not found'}</p>
-        <button onClick={() => router.back()} className="text-yellow-400 underline">
+      <main
+        className="h-dvh flex flex-col items-center justify-center p-4 relative"
+        style={{ backgroundImage: 'url(/backgrounds/stadium.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        <p className="text-red-400 mb-4 relative z-10">{error || 'Player not found'}</p>
+        <button onClick={() => router.back()} className="text-yellow-400 underline relative z-10">
           Go Back
         </button>
       </main>
@@ -161,7 +169,7 @@ export default function PlayerPage(): JSX.Element {
   }
 
   return (
-    <main className="h-screen overflow-hidden flex flex-col bg-[#0a0a1a]">
+    <main className="h-dvh overflow-hidden flex flex-col bg-[#0a0a1a]">
       {/* Header - Floating over avatar */}
       <div className="absolute top-0 left-0 right-0 px-4 py-3 flex items-center justify-between z-20">
         <Logo size="sm" linkToHome className="w-10 h-10" />

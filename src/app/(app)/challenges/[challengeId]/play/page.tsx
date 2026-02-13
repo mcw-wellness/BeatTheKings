@@ -183,7 +183,7 @@ export default function ChallengePlayPage(): JSX.Element {
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-        <div className="max-w-lg mx-auto h-full flex flex-col relative z-10">
+        <div className="h-full flex flex-col relative z-10">
           {/* Header */}
           <div className="p-4 border-b border-white/20">
             <div className="flex items-center gap-3">
@@ -230,7 +230,7 @@ export default function ChallengePlayPage(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-      <div className="max-w-lg mx-auto h-full flex flex-col relative z-10">
+      <div className="h-full flex flex-col relative z-10">
         {/* Header */}
         <div className="p-4 border-b border-white/20">
           <h1 className="text-xl font-bold text-white text-center">{challenge.name}</h1>
@@ -241,9 +241,9 @@ export default function ChallengePlayPage(): JSX.Element {
           <div className="bg-white/10 backdrop-blur rounded-2xl border border-white/20 p-6 md:p-10 w-full max-w-sm mb-6">
             <p className="text-white/60 text-sm text-center mb-2">Your Score</p>
             <p className="text-5xl md:text-6xl font-bold text-white text-center">
-              {maxValue}<span className="text-white/40">/</span>{scoreValue}
+              {scoreValue}<span className="text-white/40">/</span>{maxValue}
             </p>
-            <p className="text-white/40 text-xs text-center mt-1">Attempts / Made</p>
+            <p className="text-white/40 text-xs text-center mt-1">Made / Attempts</p>
             <p
               className={`text-2xl md:text-3xl font-semibold text-center mt-2 ${accuracy >= 80 ? 'text-green-400' : accuracy >= 50 ? 'text-yellow-400' : 'text-red-400'}`}
             >

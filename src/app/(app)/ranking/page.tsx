@@ -85,7 +85,7 @@ export default function RankingPage(): JSX.Element {
       {/* Light overlay for text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
-      <div className="max-w-lg mx-auto p-4 space-y-4 relative z-10 flex-1 overflow-y-auto">
+      <div className="px-3 py-2 space-y-3 relative z-10 flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
