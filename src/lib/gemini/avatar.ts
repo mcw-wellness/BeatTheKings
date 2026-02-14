@@ -646,6 +646,11 @@ PRESERVE EXACTLY (do not change):
 - Standing pose (arms at sides, facing forward)
 - Art style (semi-realistic cartoon)
 - Character centered horizontally and vertically
+- HEAD ACCESSORIES: hats, caps, beanies, headbands, headphones, bandanas, durags, sunglasses on head
+- FACE/BODY JEWELRY: earrings, nose rings, lip piercings, chains, necklaces
+- Visible TATTOOS (face, neck, arms)
+- Glasses if worn, facial hair if present
+- These accessories are part of the person's identity, NOT clothing — KEEP THEM ALL
 
 BACKGROUND:
 - Use the provided STADIUM IMAGE as the EXACT background
@@ -655,7 +660,8 @@ ${outfitDetails}
 
 CRITICAL: If jersey/shoes reference images are provided, copy their EXACT design, colors, and patterns.
 CRITICAL: Output MUST be a 576x1024 tall portrait image with character filling most of the frame.
-The edited avatar must be the SAME CHARACTER with the changes applied. Preserve facial identity completely.`
+CRITICAL: KEEP all personal accessories (hats, caps, headphones, earrings, piercings, chains, tattoos, glasses) — these are part of their identity!
+The edited avatar must be the SAME CHARACTER with the changes applied. Only change hair, skin tone, and outfit.`
 
   try {
     logger.info(

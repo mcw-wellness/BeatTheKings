@@ -105,9 +105,9 @@ const AVATAR_ITEMS_CATALOG = [
 
 // Vienna venues with coordinates
 const VIENNA_VENUES = [
-  { name: 'Esterhazy Park', lat: 48.1962, lng: 16.3551, district: '6. Bezirk' },
-  { name: 'Schönborn Park', lat: 48.2108, lng: 16.3536, district: '8. Bezirk' },
-  { name: 'Weghuber Park', lat: 48.2082, lng: 16.3574, district: '1. Bezirk' },
+  { name: 'Esterhazy Park', lat: 48.1975, lng: 16.3531, district: '6. Bezirk' },
+  { name: 'Schönborn Park', lat: 48.2124, lng: 16.3506, district: '8. Bezirk' },
+  { name: 'Weghuber Park', lat: 48.2063, lng: 16.3552, district: '7. Bezirk' },
 ]
 
 // Challenge definitions
