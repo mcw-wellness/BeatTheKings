@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'beatthekingz.blob.core.windows.net',
-        pathname: '/avatar/**',
+        pathname: '/uploads/**',
       },
       {
         protocol: 'https',
