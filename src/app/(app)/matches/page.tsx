@@ -32,6 +32,7 @@ interface Match {
   player1Score: number | null
   player2Score: number | null
   winnerId: string | null
+  scheduledAt: string | null
   createdAt: string
 }
 
@@ -145,10 +146,13 @@ export default function MatchesPage() {
   const pendingSentInvitations = sentInvitations.filter((i) => i.status === 'pending')
   const filteredMatches = getFilteredMatches()
 
-  // Sort: scheduled first (soonest), then rest by createdAt
+  // Sort: scheduled first (soonest by scheduledAt), then rest by createdAt
   const sortedMatches = [...filteredMatches].sort((a, b) => {
     if (a.status === 'scheduled' && b.status !== 'scheduled') return -1
     if (b.status === 'scheduled' && a.status !== 'scheduled') return 1
+    if (a.status === 'scheduled' && b.status === 'scheduled' && a.scheduledAt && b.scheduledAt) {
+      return new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+    }
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 

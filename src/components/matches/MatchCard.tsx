@@ -28,6 +28,7 @@ interface Match {
   player1Score: number | null
   player2Score: number | null
   winnerId: string | null
+  scheduledAt: string | null
   createdAt: string
 }
 
@@ -37,7 +38,7 @@ interface MatchCardProps {
 }
 
 function UserAvatar(): JSX.Element {
-  const { url, isLoading } = useAvatarUrlWithLoading({})
+  const { url, isLoading } = useAvatarUrlWithLoading({ type: 'user', userId: 'me' })
 
   if (isLoading) {
     return (
@@ -65,8 +66,17 @@ function getStatusDisplay(match: Match): {
   date?: string
 } {
   switch (match.status) {
-    case 'scheduled':
-      return { label: 'Open', color: 'text-blue-400', icon: '📅' }
+    case 'scheduled': {
+      const scheduledDate = match.scheduledAt
+        ? new Date(match.scheduledAt).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          })
+        : undefined
+      return { label: 'Scheduled', color: 'text-blue-400', icon: '📅', date: scheduledDate }
+    }
     case 'pending':
     case 'accepted':
     case 'in_progress':

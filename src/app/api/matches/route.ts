@@ -27,6 +27,7 @@ interface MatchListItem {
   player1Score: number | null
   player2Score: number | null
   winnerId: string | null
+  scheduledAt: string | null
   createdAt: string
 }
 
@@ -53,6 +54,7 @@ function transformMatch(
     player1Score: fullMatch.player1.score,
     player2Score: fullMatch.player2.score,
     winnerId: fullMatch.winnerId,
+    scheduledAt: fullMatch.scheduledAt,
     createdAt: fullMatch.createdAt,
   }
 }

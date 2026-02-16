@@ -20,7 +20,7 @@ export function UserAvatar({
   showXp = false,
   xpAmount = 150,
 }: UserAvatarProps): JSX.Element {
-  const { url, isLoading } = useAvatarUrlWithLoading({})
+  const { url, isLoading } = useAvatarUrlWithLoading({ type: 'user', userId: 'me' })
   const sizeClass = sizeClasses[size]
   const dimension =
     size === 'lg' ? { w: 64, h: 80 } : size === 'sm' ? { w: 48, h: 48 } : { w: 64, h: 64 }

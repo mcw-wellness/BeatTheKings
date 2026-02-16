@@ -4,7 +4,7 @@
  */
 
 import { eq, and, or } from 'drizzle-orm'
-import { matches, playerStats, users, avatars, venues, sports } from '@/db/schema'
+import { matches, matchInvitations, playerStats, users, avatars, venues, sports } from '@/db/schema'
 import type { Database } from '@/db'
 import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage'
 import { checkAndUnlockEligibleItems } from '@/lib/avatar/unlock'
@@ -32,6 +32,7 @@ export interface MatchDetail {
   winnerId: string | null
   videoUrl: string | null
   recordingBy: string | null
+  scheduledAt: string | null
   createdAt: string
   startedAt: string | null
   completedAt: string | null
@@ -190,6 +191,17 @@ export async function getMatchById(db: Database, matchId: string): Promise<Match
   const player1Info = await getPlayerInfo(db, match.player1Id)
   const player2Info = await getPlayerInfo(db, match.player2Id)
 
+  // Get scheduledAt from linked invitation (if any)
+  let scheduledAt: string | null = null
+  if (match.invitationId) {
+    const [invitation] = await db
+      .select({ scheduledAt: matchInvitations.scheduledAt })
+      .from(matchInvitations)
+      .where(eq(matchInvitations.id, match.invitationId))
+      .limit(1)
+    scheduledAt = invitation?.scheduledAt?.toISOString() || null
+  }
+
   return {
     id: match.id,
     status: match.status,
@@ -216,6 +228,7 @@ export async function getMatchById(db: Database, matchId: string): Promise<Match
     winnerId: match.winnerId,
     videoUrl: match.videoUrl,
     recordingBy: match.recordingBy,
+    scheduledAt,
     createdAt: match.createdAt.toISOString(),
     startedAt: match.startedAt?.toISOString() || null,
     completedAt: match.completedAt?.toISOString() || null,
@@ -542,8 +555,8 @@ export async function startMatch(
     return { success: false, message: 'Not a participant in this match' }
   }
 
-  // Check if match is in accepted state (first to start)
-  if (match.status === 'accepted') {
+  // Check if match is in accepted or scheduled state (first to start)
+  if (match.status === 'accepted' || match.status === 'scheduled') {
     await db
       .update(matches)
       .set({
@@ -784,6 +797,7 @@ export async function canChallenge(
         ),
         or(
           eq(matches.status, 'pending'),
+          eq(matches.status, 'scheduled'),
           eq(matches.status, 'accepted'),
           eq(matches.status, 'in_progress')
         )
