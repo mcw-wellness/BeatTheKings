@@ -8,12 +8,13 @@ import {
   cityExists,
 } from '@/lib/auth'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * GET /api/users/profile
  * Get authenticated user's profile
  */
-export async function GET(): Promise<NextResponse> {
+const _GET = async (): Promise<NextResponse> => {
   try {
     const session = await getSession()
 
@@ -39,13 +40,16 @@ export async function GET(): Promise<NextResponse> {
  * PUT /api/users/profile
  * Update authenticated user's profile (partial update supported)
  */
-export async function PUT(request: Request): Promise<NextResponse> {
+const _PUT = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
 
     if (!session?.user?.id) {
+      logger.warn({ session: !!session, hasUser: !!session?.user }, 'PUT /api/users/profile - no session')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const userId = session.user.id
 
     let body: unknown
     try {
@@ -57,6 +61,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
     const validation = validateProfileInput(body)
 
     if (!validation.valid) {
+      logger.warn({ userId, errors: validation.errors }, 'Profile validation failed')
       return NextResponse.json(
         { error: 'Validation failed', details: validation.errors },
         { status: 400 }
@@ -69,6 +74,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
     if (validation.data.cityId) {
       const cityValid = await cityExists(db, validation.data.cityId)
       if (!cityValid) {
+        logger.warn({ userId, cityId: validation.data.cityId }, 'City not found during profile update')
         return NextResponse.json(
           { error: 'Validation failed', details: { cityId: 'City not found' } },
           { status: 400 }
@@ -76,13 +82,14 @@ export async function PUT(request: Request): Promise<NextResponse> {
       }
     }
 
-    const updated = await updateUserProfile(db, session.user.id, validation.data)
+    const updated = await updateUserProfile(db, userId, validation.data)
 
     if (!updated) {
+      logger.error({ userId, data: validation.data }, 'updateUserProfile returned null - user row not found')
       return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
     }
 
-    logger.info({ userId: session.user.id }, 'User profile updated')
+    logger.info({ userId }, 'User profile updated')
 
     return NextResponse.json({ success: true, user: updated })
   } catch (error) {
@@ -90,3 +97,6 @@ export async function PUT(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)
+export const PUT = withErrorLogging(_PUT)

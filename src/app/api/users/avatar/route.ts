@@ -23,6 +23,7 @@ import {
   generateAndUploadAvatar,
 } from '@/lib/avatar/api-helpers'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * Background task for avatar update - handles all non-critical operations
@@ -91,7 +92,7 @@ function runAvatarUpdateInBackground(options: BackgroundUpdateOptions): void {
   })()
 }
 
-export async function GET(): Promise<NextResponse> {
+const _GET = async (): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -105,7 +106,7 @@ export async function GET(): Promise<NextResponse> {
   }
 }
 
-export async function POST(request: Request): Promise<NextResponse> {
+const _POST = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -184,7 +185,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 }
 
-export async function PUT(request: Request): Promise<NextResponse> {
+const _PUT = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -254,3 +255,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)
+export const POST = withErrorLogging(_POST)
+export const PUT = withErrorLogging(_PUT)

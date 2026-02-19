@@ -9,8 +9,9 @@ import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { checkAndUnlockEligibleItems } from '@/lib/avatar/unlock'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function POST(request: NextRequest): Promise<Response> {
+const _POST = async (request: NextRequest): Promise<Response> => {
   try {
     const session = await getSession()
 
@@ -43,3 +44,5 @@ export async function POST(request: NextRequest): Promise<Response> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)

@@ -39,7 +39,7 @@ export default function LocationPage(): JSX.Element {
           setCountries(data.countries || [])
         }
       } catch (err) {
-        console.error('Failed to fetch countries:', err)
+        void err
       } finally {
         setIsLoading(false)
       }
@@ -63,7 +63,7 @@ export default function LocationPage(): JSX.Element {
           setCities(data.cities || [])
         }
       } catch (err) {
-        console.error('Failed to fetch cities:', err)
+        void err
       }
     }
     fetchCities()
@@ -82,7 +82,7 @@ export default function LocationPage(): JSX.Element {
           }
         }
       } catch (err) {
-        console.error('Failed to fetch profile:', err)
+        void err
       }
     }
     fetchUserProfile()

@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/db'
 import { countries } from '@/db/schema'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * GET /api/locations/states
  * Returns all countries (renamed from states for backwards compatibility)
  */
-export async function GET(): Promise<NextResponse> {
+const _GET = async (): Promise<NextResponse> => {
   try {
     const db = getDb()
     const allCountries = await db.select().from(countries).orderBy(countries.name)
@@ -25,3 +26,5 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to fetch countries' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

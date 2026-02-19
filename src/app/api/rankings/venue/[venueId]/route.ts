@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { mockTopPlayers, mockVenues } from '@/lib/mockData'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function GET(request: Request, { params }: { params: Promise<{ venueId: string }> }) {
+const _GET = async (request: Request, { params }: { params: Promise<{ venueId: string }> }) => {
   const { venueId } = await params
   const { searchParams } = new URL(request.url)
   const sport = searchParams.get('sport') || 'basketball'
@@ -42,3 +43,5 @@ export async function GET(request: Request, { params }: { params: Promise<{ venu
     players: topPlayers,
   })
 }
+
+export const GET = withErrorLogging(_GET)

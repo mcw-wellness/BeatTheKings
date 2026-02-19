@@ -8,8 +8,9 @@ import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { sendInvitation, getInvitations } from '@/lib/invitations'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function POST(request: Request): Promise<Response> {
+const _POST = async (request: Request): Promise<Response> => {
   try {
     const session = await getSession()
     if (!session?.user) {
@@ -47,7 +48,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 }
 
-export async function GET(request: NextRequest): Promise<Response> {
+const _GET = async (request: NextRequest): Promise<Response> => {
   try {
     const session = await getSession()
     if (!session?.user) {
@@ -73,3 +74,6 @@ export async function GET(request: NextRequest): Promise<Response> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)
+export const GET = withErrorLogging(_GET)

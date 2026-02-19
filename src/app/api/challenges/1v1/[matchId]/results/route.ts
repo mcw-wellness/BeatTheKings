@@ -3,6 +3,7 @@ import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { getMatchById } from '@/lib/matches'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RouteParams {
   params: Promise<{ matchId: string }>
@@ -12,7 +13,7 @@ interface RouteParams {
  * GET /api/challenges/1v1/[matchId]/results
  * Get match results after AI analysis
  */
-export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
+const _GET = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -84,3 +85,5 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

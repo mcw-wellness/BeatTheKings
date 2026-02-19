@@ -69,7 +69,7 @@ function MapPageContent(): JSX.Element {
       const response = await fetch(url)
       if (response.ok) setVenues((await response.json()).venues || [])
     } catch (err) {
-      console.error('Failed to fetch venues:', err)
+      void err
     } finally {
       setIsLoading(false)
     }
@@ -87,7 +87,7 @@ function MapPageContent(): JSX.Element {
         setActivePlayers(data.activePlayers || [])
       }
     } catch (err) {
-      console.error('Failed to fetch venue details:', err)
+      void err
     } finally {
       setIsLoadingDetails(false)
     }

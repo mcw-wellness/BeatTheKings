@@ -10,6 +10,7 @@ import { unlockItem } from '@/lib/avatar/unlock'
 import { logger } from '@/lib/utils/logger'
 import { eq } from 'drizzle-orm'
 import { playerStats } from '@/db/schema'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RouteParams {
   params: Promise<{ itemId: string }>
@@ -19,7 +20,7 @@ interface UnlockBody {
   method: 'achievement' | 'purchase'
 }
 
-export async function POST(request: Request, { params }: RouteParams): Promise<Response> {
+const _POST = async (request: Request, { params }: RouteParams): Promise<Response> => {
   try {
     const session = await getSession()
 
@@ -81,3 +82,5 @@ export async function POST(request: Request, { params }: RouteParams): Promise<R
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)

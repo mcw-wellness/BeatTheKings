@@ -3,15 +3,16 @@ import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { logger } from '@/lib/utils/logger'
 import { getChallengesByType, VALID_CHALLENGE_TYPES } from '@/lib/challenges/attempt-history'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * GET /api/challenges/by-type/[type]
  * Returns challenges of a specific type with user's attempts and history
  */
-export async function GET(
+const _GET = async (
   request: NextRequest,
   { params }: { params: Promise<{ type: string }> }
-): Promise<NextResponse> {
+): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -33,3 +34,5 @@ export async function GET(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

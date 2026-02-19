@@ -3,12 +3,13 @@ import { eq } from 'drizzle-orm'
 import { getDb } from '@/db'
 import { cities } from '@/db/schema'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * GET /api/locations/cities?countryId=xxx
  * Returns cities for a given country
  */
-export async function GET(request: Request): Promise<NextResponse> {
+const _GET = async (request: Request): Promise<NextResponse> => {
   try {
     const { searchParams } = new URL(request.url)
     const countryId = searchParams.get('countryId')
@@ -30,3 +31,5 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to fetch cities' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

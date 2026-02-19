@@ -18,8 +18,9 @@ import {
   upsertEquipment,
 } from '@/lib/avatar'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function POST(request: Request): Promise<NextResponse> {
+const _POST = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -157,3 +158,5 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)

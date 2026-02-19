@@ -3,12 +3,13 @@ import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { getTrumpCardData } from '@/lib/trump-card'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * GET /api/players/me/trump-card
  * Get current user's own Trump Card data (shorthand)
  */
-export async function GET(request: Request): Promise<NextResponse> {
+const _GET = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -36,3 +37,5 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

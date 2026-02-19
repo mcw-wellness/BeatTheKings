@@ -9,10 +9,11 @@ import { createPartFromUri, createUserContent } from '@google/genai'
 import { logger } from '@/lib/utils/logger'
 import { getGeminiClient, isGeminiConfigured } from '@/lib/gemini/client'
 import { MATCH_ANALYSIS_PROMPT } from '@/lib/gemini/prompts'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 const VIDEO_ANALYSIS_MODEL = 'gemini-2.0-flash'
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+const _POST = async (request: NextRequest): Promise<NextResponse> => {
   try {
     if (!isGeminiConfigured()) {
       return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 })
@@ -105,3 +106,5 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     )
   }
 }
+
+export const POST = withErrorLogging(_POST)

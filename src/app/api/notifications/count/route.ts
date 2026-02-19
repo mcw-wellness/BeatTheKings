@@ -7,8 +7,9 @@ import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { getPendingInvitationCount } from '@/lib/invitations'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function GET(): Promise<Response> {
+const _GET = async (): Promise<Response> => {
   try {
     const session = await getSession()
     if (!session?.user) {
@@ -24,3 +25,5 @@ export async function GET(): Promise<Response> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

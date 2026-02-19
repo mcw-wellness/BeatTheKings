@@ -120,7 +120,7 @@ function AvatarPageContent(): JSX.Element {
         )
       }
     } catch (e) {
-      console.error('fetchUserData error:', e)
+      void e
     } finally {
       setIsLoadingAvatar(false)
     }

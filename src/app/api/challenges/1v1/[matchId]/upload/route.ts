@@ -5,6 +5,7 @@ import { getMatchById, saveMatchVideo, saveMatchResults, updateMatchStatus } fro
 import { analyzeMatchVideo, calculateRewards } from '@/lib/gemini'
 import { uploadMatchVideo, saveMatchAnalysis } from '@/lib/azure-storage'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RouteParams {
   params: Promise<{ matchId: string }>
@@ -14,7 +15,7 @@ interface RouteParams {
  * POST /api/challenges/1v1/[matchId]/upload
  * Upload match video and trigger AI analysis
  */
-export async function POST(request: Request, { params }: RouteParams): Promise<NextResponse> {
+const _POST = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -100,6 +101,8 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)
 
 /**
  * Analyze video and save results (runs async)

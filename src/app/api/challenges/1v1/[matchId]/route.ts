@@ -3,6 +3,7 @@ import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { getMatchById, startMatch } from '@/lib/matches'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RouteParams {
   params: Promise<{ matchId: string }>
@@ -12,7 +13,7 @@ interface RouteParams {
  * GET /api/challenges/1v1/[matchId]
  * Get match details
  */
-export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
+const _GET = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -51,7 +52,7 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
  * POST /api/challenges/1v1/[matchId]
  * Start the match (begin recording)
  */
-export async function POST(request: Request, { params }: RouteParams): Promise<NextResponse> {
+const _POST = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -78,3 +79,6 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)
+export const POST = withErrorLogging(_POST)

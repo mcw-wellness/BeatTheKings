@@ -15,6 +15,7 @@ import { getProfilePictureBase64, getAvatarBase64 } from '@/lib/azure-storage'
 import { getAvatar } from '@/lib/avatar'
 import { logger } from '@/lib/utils/logger'
 import { JERSEY_DESIGNS, SHOE_DESIGNS } from '@/lib/gemini/prompts'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface PreviewRequest {
   gender: string
@@ -29,7 +30,7 @@ interface PreviewRequest {
   shoesItemId?: string
 }
 
-export async function POST(request: Request): Promise<NextResponse> {
+const _POST = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
 
@@ -161,3 +162,5 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to generate avatar preview' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)

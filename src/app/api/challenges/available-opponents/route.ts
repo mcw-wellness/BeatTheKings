@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { mockUsers } from '@/lib/mockData'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function GET() {
+const _GET = async () => {
   // Mock available opponents - users who are online/available for 1x1 matches
   const availableOpponents = mockUsers
     .filter((u) => u.hasCompletedOnboarding)
@@ -20,3 +21,5 @@ export async function GET() {
 
   return NextResponse.json(availableOpponents)
 }
+
+export const GET = withErrorLogging(_GET)

@@ -3,6 +3,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import AzureADProvider from 'next-auth/providers/azure-ad'
 import { getDb } from '@/db'
 import { getOrCreateUser, findUserById } from '@/lib/auth/drizzle-adapter'
+import { logger } from '@/lib/utils/logger'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -40,7 +41,7 @@ export const authOptions: NextAuthOptions = {
 
         return true
       } catch (error) {
-        console.error('Error during sign-in:', error)
+        logger.error({ error }, 'Error during sign-in')
         return false
       }
     },

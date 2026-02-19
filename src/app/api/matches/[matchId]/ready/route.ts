@@ -8,12 +8,13 @@ import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { markPlayerReady } from '@/lib/matches'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RouteParams {
   params: Promise<{ matchId: string }>
 }
 
-export async function POST(request: Request, { params }: RouteParams): Promise<Response> {
+const _POST = async (request: Request, { params }: RouteParams): Promise<Response> => {
   try {
     const session = await getSession()
 
@@ -36,3 +37,5 @@ export async function POST(request: Request, { params }: RouteParams): Promise<R
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)

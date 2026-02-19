@@ -8,12 +8,13 @@ import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { getMatchById } from '@/lib/matches'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RouteParams {
   params: Promise<{ matchId: string }>
 }
 
-export async function GET(request: Request, { params }: RouteParams): Promise<Response> {
+const _GET = async (request: Request, { params }: RouteParams): Promise<Response> => {
   try {
     const session = await getSession()
 
@@ -41,3 +42,5 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Re
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

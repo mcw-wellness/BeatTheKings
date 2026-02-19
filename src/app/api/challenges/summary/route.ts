@@ -4,6 +4,7 @@ import { getDb } from '@/db'
 import { challenges, challengeAttempts, matches } from '@/db/schema'
 import { getSession } from '@/lib/auth'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface ChallengeSummary {
   total: number
@@ -30,7 +31,7 @@ interface ChallengesSummaryResponse {
  * GET /api/challenges/summary
  * Returns user's challenge progress summary for the dashboard
  */
-export async function GET(): Promise<NextResponse> {
+const _GET = async (): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -98,3 +99,5 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

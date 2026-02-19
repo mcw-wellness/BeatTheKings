@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import { getDefaultAvatarSasUrl, getUserAvatarSasUrl } from '@/lib/azure-storage'
 import { getSession } from '@/lib/auth'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function GET(request: Request): Promise<NextResponse> {
+const _GET = async (request: Request): Promise<NextResponse> => {
   try {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') || 'default'
@@ -39,3 +40,5 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to generate avatar URL' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

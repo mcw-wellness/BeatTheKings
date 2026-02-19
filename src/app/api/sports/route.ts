@@ -7,8 +7,9 @@ import { eq } from 'drizzle-orm'
 import { getDb } from '@/db'
 import { sports } from '@/db/schema'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function GET(): Promise<Response> {
+const _GET = async (): Promise<Response> => {
   try {
     const db = getDb()
     const result = await db
@@ -26,3 +27,5 @@ export async function GET(): Promise<Response> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

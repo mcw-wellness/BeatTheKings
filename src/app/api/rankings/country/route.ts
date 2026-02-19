@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { mockTopPlayers } from '@/lib/mockData'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function GET(request: Request) {
+const _GET = async (request: Request) => {
   const { searchParams } = new URL(request.url)
   const sport = searchParams.get('sport') || 'basketball'
 
@@ -22,3 +23,5 @@ export async function GET(request: Request) {
 
   return NextResponse.json(topPlayers)
 }
+
+export const GET = withErrorLogging(_GET)

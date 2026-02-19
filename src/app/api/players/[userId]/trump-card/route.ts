@@ -3,6 +3,7 @@ import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
 import { getTrumpCardData, userExists } from '@/lib/trump-card'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RouteParams {
   params: Promise<{ userId: string }>
@@ -12,7 +13,7 @@ interface RouteParams {
  * GET /api/players/[userId]/trump-card
  * Get a player's Trump Card data
  */
-export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
+const _GET = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -53,3 +54,5 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

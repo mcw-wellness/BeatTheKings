@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { getVenueById, getActivePlayersAtVenue, getVenueChallenges } from '@/lib/venues'
 import { formatDistance } from '@/lib/utils/distance'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -13,7 +14,7 @@ interface RouteParams {
  * GET /api/venues/:id
  * Get single venue details with active players and challenges
  */
-export async function GET(request: Request, { params }: RouteParams): Promise<NextResponse> {
+const _GET = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -70,3 +71,5 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

@@ -43,7 +43,7 @@ export default function MatchRecordPage(): JSX.Element {
         setError(null)
       }
     } catch (err) {
-      console.error('Camera error:', err)
+      void err
       setError('Unable to access camera. Please grant permission.')
     }
   }, [facingMode])

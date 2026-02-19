@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Logo } from '@/components/layout/Logo'
-import { logger } from '@/lib/utils/logger'
 
 interface Country {
   id: string
@@ -209,8 +208,7 @@ function RegisterPageContent(): JSX.Element {
 
       // Success - redirect to photo upload
       router.push('/photo')
-    } catch (error) {
-      logger.error({ error }, 'Failed to submit profile')
+    } catch {
       setErrors({ _form: 'An unexpected error occurred. Please try again.' })
     } finally {
       setIsSubmitting(false)

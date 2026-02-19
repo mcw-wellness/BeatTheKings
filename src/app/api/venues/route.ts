@@ -4,12 +4,13 @@ import { getSession } from '@/lib/auth'
 import { getVenuesList } from '@/lib/venues'
 import { formatDistance } from '@/lib/utils/distance'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * GET /api/venues
  * Get list of venues sorted by distance
  */
-export async function GET(request: Request): Promise<NextResponse> {
+const _GET = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -48,3 +49,5 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

@@ -7,11 +7,12 @@ import { getSession } from '@/lib/auth'
 import { getDb } from '@/db'
 import { respondToInvitation } from '@/lib/invitations'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function POST(
+const _POST = async (
   request: Request,
   { params }: { params: Promise<{ id: string }> }
-): Promise<Response> {
+): Promise<Response> => {
   try {
     const session = await getSession()
     if (!session?.user) {
@@ -42,3 +43,5 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)

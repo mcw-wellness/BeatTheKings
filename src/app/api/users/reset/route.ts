@@ -4,12 +4,13 @@ import { users, avatars, avatarEquipments } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { getSession } from '@/lib/auth'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * POST /api/users/reset
  * Reset current user's account for testing
  */
-export async function POST(): Promise<NextResponse> {
+const _POST = async (): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -53,3 +54,5 @@ export async function POST(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)

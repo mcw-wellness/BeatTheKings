@@ -5,6 +5,7 @@ import { createMatch, canChallenge } from '@/lib/matches'
 import { logger } from '@/lib/utils/logger'
 import { eq } from 'drizzle-orm'
 import { sports } from '@/db/schema'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RequestBody {
   opponentId: string
@@ -15,7 +16,7 @@ interface RequestBody {
  * POST /api/challenges/1v1/request
  * Create a new 1v1 challenge request
  */
-export async function POST(request: Request): Promise<NextResponse> {
+const _POST = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -80,3 +81,5 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)

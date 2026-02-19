@@ -6,7 +6,7 @@ import { users, avatarItems } from '@/db/schema'
 import { generateAvatarImage } from './generator'
 import { editAvatarImage } from '@/lib/gemini'
 import { uploadAvatar, getAvatarBase64, getProfilePictureBase64 } from '@/lib/azure-storage'
-import { avatarLogger } from './avatar-logger'
+import { logger } from '@/lib/utils/logger'
 import { JERSEY_DESIGNS, SHOE_DESIGNS } from '@/lib/gemini/prompts'
 import { getAvatar, updateAvatarImageUrl } from './crud'
 import type { AvatarCreateInput, AvatarUpdateInput } from './validation'
@@ -29,7 +29,7 @@ export async function processPreviewImage(
     return url
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    avatarLogger.error('Failed to upload preview image', { userId, error: errorMessage })
+    logger.error({ userId, error: errorMessage }, 'Failed to upload preview image')
     return undefined
   }
 }
@@ -162,11 +162,7 @@ export async function generateAndUploadAvatar(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     const errorStack = error instanceof Error ? error.stack : undefined
-    avatarLogger.error('Avatar generation FAILED after retries', {
-      userId,
-      error: errorMessage,
-      stack: errorStack,
-    })
+    logger.error({ userId, error: errorMessage, stack: errorStack }, 'Avatar generation FAILED after retries')
     return undefined
   }
 }
@@ -190,11 +186,7 @@ export function generateAvatarInBackground(
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
-      avatarLogger.error('Background avatar generation FAILED', {
-        userId,
-        avatarId,
-        error: errorMessage,
-      })
+      logger.error({ userId, avatarId, error: errorMessage }, 'Background avatar generation FAILED')
     }
   })()
 }

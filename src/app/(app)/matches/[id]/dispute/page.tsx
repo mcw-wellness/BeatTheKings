@@ -55,7 +55,7 @@ export default function DisputeMatchPage() {
       // Navigate back to match details
       router.push(`/matches/${matchId}`)
     } catch (error) {
-      console.error('Failed to submit dispute:', error)
+      void error
       alert('Failed to submit dispute. Please try again.')
       setIsSubmitting(false)
     }

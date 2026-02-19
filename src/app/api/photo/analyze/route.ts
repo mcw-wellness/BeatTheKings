@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { analyzePhotoForAvatar } from '@/lib/ai/analyze-photo'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * POST /api/photo/analyze
  * Analyzes a photo and extracts avatar features using AI
  */
-export async function POST(request: Request): Promise<NextResponse> {
+const _POST = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -33,3 +34,5 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to analyze photo' }, { status: 500 })
   }
 }
+
+export const POST = withErrorLogging(_POST)

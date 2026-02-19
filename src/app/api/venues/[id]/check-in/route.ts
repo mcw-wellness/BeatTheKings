@@ -8,6 +8,7 @@ import {
   refreshCheckIn,
 } from '@/lib/venues'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -17,10 +18,10 @@ interface RouteParams {
  * GET /api/venues/:id/check-in
  * Check if user is currently checked in at this venue
  */
-export async function GET(
+const _GET = async (
   request: Request,
   { params }: RouteParams
-): Promise<NextResponse> {
+): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -46,10 +47,10 @@ export async function GET(
  * POST /api/venues/:id/check-in
  * Check in to a venue (mark as active player)
  */
-export async function POST(
+const _POST = async (
   request: Request,
   { params }: RouteParams
-): Promise<NextResponse> {
+): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -99,10 +100,10 @@ export async function POST(
  * PATCH /api/venues/:id/check-in
  * Heartbeat: refresh lastSeenAt and position
  */
-export async function PATCH(
+const _PATCH = async (
   request: Request,
   { params }: RouteParams
-): Promise<NextResponse> {
+): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -150,10 +151,10 @@ export async function PATCH(
  * DELETE /api/venues/:id/check-in
  * Check out from a venue
  */
-export async function DELETE(
+const _DELETE = async (
   request: Request,
   { params }: RouteParams
-): Promise<NextResponse> {
+): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -186,3 +187,8 @@ export async function DELETE(
     )
   }
 }
+
+export const GET = withErrorLogging(_GET)
+export const POST = withErrorLogging(_POST)
+export const PATCH = withErrorLogging(_PATCH)
+export const DELETE = withErrorLogging(_DELETE)

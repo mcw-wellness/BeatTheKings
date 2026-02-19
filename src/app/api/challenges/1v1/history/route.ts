@@ -5,6 +5,7 @@ import { matches, users, venues } from '@/db/schema'
 import { getSession } from '@/lib/auth'
 import { logger } from '@/lib/utils/logger'
 import { getUserAvatarSasUrl } from '@/lib/azure-storage'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 interface Match1v1History {
   id: string
@@ -33,7 +34,7 @@ interface HistoryResponse {
  * GET /api/challenges/1v1/history
  * Returns user's 1v1 match history
  */
-export async function GET(): Promise<NextResponse> {
+const _GET = async (): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -116,3 +117,5 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

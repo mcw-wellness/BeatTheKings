@@ -16,12 +16,13 @@ import {
   type RankedPlayer,
 } from '@/lib/rankings'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * GET /api/rankings
  * Get player rankings with filters
  */
-export async function GET(request: Request): Promise<NextResponse> {
+const _GET = async (request: Request): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -156,3 +157,5 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

@@ -4,8 +4,9 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { db } from '@/db'
 import { getVenuesWithActivePlayers } from '@/lib/venues'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+const _GET = async (request: NextRequest): Promise<NextResponse> => {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -42,3 +43,5 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)

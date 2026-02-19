@@ -10,6 +10,7 @@ import { getDb } from '@/db'
 import { createMatch, getMatchById } from '@/lib/matches'
 import { matches } from '@/db/schema'
 import { logger } from '@/lib/utils/logger'
+import { withErrorLogging } from '@/lib/utils/api-handler'
 
 /**
  * Response format for match list (per PRD_MATCHES_PAGE.md)
@@ -59,7 +60,7 @@ function transformMatch(
   }
 }
 
-export async function GET(request: NextRequest): Promise<Response> {
+const _GET = async (request: NextRequest): Promise<Response> => {
   try {
     const session = await getSession()
 
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest): Promise<Response> {
   }
 }
 
-export async function POST(request: Request): Promise<Response> {
+const _POST = async (request: Request): Promise<Response> => {
   try {
     const session = await getSession()
 
@@ -141,3 +142,6 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = withErrorLogging(_GET)
+export const POST = withErrorLogging(_POST)

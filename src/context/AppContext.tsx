@@ -57,27 +57,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const savedAvatar = localStorage.getItem('avatar_data')
       const savedUser = localStorage.getItem('user_data')
 
-      console.log('AppContext - Loading from localStorage:')
-      console.log('savedAvatar:', savedAvatar)
-      console.log('savedUser:', savedUser)
-
       if (savedAvatar) {
         try {
-          const parsedAvatar = JSON.parse(savedAvatar)
-          console.log('Parsed avatar:', parsedAvatar)
-          setAvatar(parsedAvatar)
-        } catch (e) {
-          console.error('Failed to parse avatar data', e)
+          setAvatar(JSON.parse(savedAvatar))
+        } catch {
+          // Corrupted localStorage data, ignore
         }
       }
 
       if (savedUser) {
         try {
-          const parsedUser = JSON.parse(savedUser)
-          console.log('Parsed user:', parsedUser)
-          setUser((prev) => ({ ...prev, ...parsedUser }))
-        } catch (e) {
-          console.error('Failed to parse user data', e)
+          setUser((prev) => ({ ...prev, ...JSON.parse(savedUser) }))
+        } catch {
+          // Corrupted localStorage data, ignore
         }
       }
     }
@@ -136,13 +128,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updatedAt: now,
       }
 
-      console.log('Creating avatar:', newAvatar)
       setAvatar(newAvatar)
 
       // Save to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('avatar_data', JSON.stringify(newAvatar))
-        console.log('Saved to localStorage - avatar_data')
       }
 
       // Initialize stats when avatar is created
@@ -177,7 +167,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const updatedUser = {
       hasCompletedOnboarding: true,
     }
-    console.log('Completing onboarding, setting hasCompletedOnboarding to true')
     setUser((prev) => ({
       ...prev,
       ...updatedUser,
@@ -187,9 +176,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined') {
       const currentUser = localStorage.getItem('user_data')
       const userData = currentUser ? JSON.parse(currentUser) : {}
-      const finalUserData = { ...userData, ...updatedUser }
-      localStorage.setItem('user_data', JSON.stringify(finalUserData))
-      console.log('Saved to localStorage - user_data:', finalUserData)
+      localStorage.setItem('user_data', JSON.stringify({ ...userData, ...updatedUser }))
     }
   }, [])
 
