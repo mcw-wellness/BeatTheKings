@@ -4,7 +4,7 @@ import path from 'path'
 const isDevelopment = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 
-const LOG_DIR = process.env.NODE_ENV === 'production' ? '/home/logs' : path.join(process.cwd(), 'logs')
+const LOG_DIR = process.env.NODE_ENV === 'production' ? '/home/LogFiles' : path.join(process.cwd(), 'logs')
 
 function buildTransport(): pino.TransportSingleOptions | pino.TransportMultiOptions | undefined {
   if (isTest) return undefined
