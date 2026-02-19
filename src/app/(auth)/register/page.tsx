@@ -100,8 +100,7 @@ function RegisterPageContent(): JSX.Element {
         if (!res.ok) throw new Error('Failed to fetch countries')
         const data = await res.json()
         setCountries(data.countries || [])
-      } catch (error) {
-        logger.error({ error }, 'Failed to fetch countries')
+      } catch {
         setErrors((prev) => ({ ...prev, _form: 'Failed to load countries. Please refresh.' }))
       } finally {
         setIsLoadingCountries(false)
@@ -124,8 +123,7 @@ function RegisterPageContent(): JSX.Element {
         if (!res.ok) throw new Error('Failed to fetch cities')
         const data = await res.json()
         setCities(data.cities || [])
-      } catch (error) {
-        logger.error({ error }, 'Failed to fetch cities')
+      } catch {
         setErrors((prev) => ({ ...prev, _form: 'Failed to load cities. Please try again.' }))
       } finally {
         setIsLoadingCities(false)
