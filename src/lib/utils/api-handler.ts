@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/utils/logger'
 
-type RouteHandler = (...args: unknown[]) => Promise<NextResponse | Response>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RouteHandler = (...args: any[]) => Promise<NextResponse | Response>
 
 /**
  * Wraps an API route handler with error logging.
  * Catches unhandled exceptions, logs them with context, and returns a 500 response.
  */
-export function withErrorLogging(handler: RouteHandler): RouteHandler {
-  return async (...args: unknown[]) => {
+export function withErrorLogging<T extends RouteHandler>(handler: T): T {
+  const wrapped = async (...args: Parameters<T>): Promise<NextResponse | Response> => {
     const request = args[0] instanceof Request ? args[0] : undefined
     const method = request?.method ?? 'UNKNOWN'
     const pathname = request ? new URL(request.url).pathname : 'unknown'
@@ -37,4 +38,6 @@ export function withErrorLogging(handler: RouteHandler): RouteHandler {
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
   }
+
+  return wrapped as T
 }
