@@ -6,6 +6,7 @@ import {
   updateUserProfile,
   getUserProfile,
   cityExists,
+  getOrCreateUser,
 } from '@/lib/auth'
 import { logger } from '@/lib/utils/logger'
 import { withErrorLogging } from '@/lib/utils/api-handler'
@@ -82,10 +83,23 @@ const _PUT = async (request: Request): Promise<NextResponse> => {
       }
     }
 
-    const updated = await updateUserProfile(db, userId, validation.data)
+    let updated = await updateUserProfile(db, userId, validation.data)
+
+    // If update returned null, user row doesn't exist — create it and retry
+    if (!updated) {
+      const email = session.user.email
+      if (!email) {
+        logger.error({ userId }, 'No email in session, cannot create user row')
+        return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+      }
+
+      logger.warn({ userId, email }, 'User row not found during profile update, creating user')
+      await getOrCreateUser(db, { email, name: session.user.name })
+      updated = await updateUserProfile(db, userId, validation.data)
+    }
 
     if (!updated) {
-      logger.error({ userId, data: validation.data }, 'updateUserProfile returned null - user row not found')
+      logger.error({ userId }, 'updateUserProfile failed after user creation')
       return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
     }
 
