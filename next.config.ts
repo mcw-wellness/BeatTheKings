@@ -3,7 +3,7 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
-  serverExternalPackages: ['pino', 'pino-pretty', 'pino-roll'],
+  serverExternalPackages: ['pino', 'pino-pretty'],
   images: {
     remotePatterns: [
       {

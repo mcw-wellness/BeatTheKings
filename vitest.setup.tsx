@@ -1,5 +1,8 @@
 import { vi } from 'vitest'
 
+// Mock server-only package (no-op in tests)
+vi.mock('server-only', () => ({}))
+
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
   useRouter: () => ({

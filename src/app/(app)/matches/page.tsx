@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/layout/Logo'
 import { MatchCard, FilterTabs, InvitationCard } from '@/components/matches'
 import type { Invitation } from '@/components/matches'
-import { logger } from '@/lib/utils/logger'
 
 type MatchStatus =
   | 'pending'
@@ -71,7 +70,7 @@ export default function MatchesPage() {
         setSentInvitations(data.invitations || [])
       }
     } catch (err) {
-      logger.error({ error: err }, 'Failed to fetch matches data')
+      void err
     } finally {
       setIsLoading(false)
     }
@@ -93,7 +92,7 @@ export default function MatchesPage() {
         await fetchData()
       }
     } catch (err) {
-      logger.error({ error: err }, 'Failed to respond to invitation')
+      void err
     } finally {
       setRespondingId(null)
     }
@@ -107,7 +106,7 @@ export default function MatchesPage() {
         await fetchData()
       }
     } catch (err) {
-      logger.error({ error: err }, 'Failed to cancel invitation')
+      void err
     } finally {
       setRespondingId(null)
     }

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { Logo } from '@/components/layout/Logo'
-import { logger } from '@/lib/utils/logger'
 
 export default function PhotoPage(): JSX.Element {
   return (
@@ -149,7 +148,7 @@ function PhotoPageContent(): JSX.Element {
       // Success - redirect to avatar page (avatar already created)
       router.push('/avatar')
     } catch (err) {
-      logger.error({ error: err }, 'Failed to process photo')
+      void err
       setError(err instanceof Error ? err.message : 'Failed to process photo. Please try again.')
       setProcessingStep('idle')
     }

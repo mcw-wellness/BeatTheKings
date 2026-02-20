@@ -1,47 +1,56 @@
+import 'server-only'
 import pino from 'pino'
-import path from 'path'
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 
-const LOG_DIR = process.env.NODE_ENV === 'production' ? '/home/LogFiles' : path.join(process.cwd(), 'logs')
+const LOG_DIR = '/home/LogFiles'
 
-function buildTransport(): pino.TransportSingleOptions | pino.TransportMultiOptions | undefined {
-  if (isTest) return undefined
+function createLogger(): pino.Logger {
+  const level = isTest ? 'silent' : isDevelopment ? 'debug' : 'info'
+  const base = { env: process.env.NODE_ENV }
 
-  const targets: pino.TransportTargetOptions[] = [
-    {
-      target: 'pino-pretty',
-      options: {
-        colorize: isDevelopment,
-        translateTime: 'SYS:standard',
-        ignore: 'pid,hostname',
+  if (isTest) {
+    return pino({ level, base })
+  }
+
+  // Development: pretty-print to stdout via transport (worker thread)
+  if (isDevelopment) {
+    return pino({
+      level,
+      base,
+      transport: {
+        target: 'pino-pretty',
+        options: { colorize: true, translateTime: 'SYS:standard', ignore: 'pid,hostname' },
       },
-    },
-    {
-      target: 'pino-roll',
-      options: {
-        file: path.join(LOG_DIR, 'app'),
-        frequency: 'daily',
-        mkdir: true,
-        dateFormat: 'yyyy-MM-dd',
-      },
-    },
-  ]
+    })
+  }
 
-  return { targets }
+  // Production: pretty stdout + daily log file via transport workers
+  const date = new Date().toISOString().split('T')[0]
+
+  return pino({
+    level,
+    base,
+    transport: {
+      targets: [
+        {
+          target: 'pino-pretty',
+          options: { colorize: false, translateTime: 'SYS:standard', ignore: 'pid,hostname' },
+        },
+        {
+          target: 'pino/file',
+          options: { destination: `${LOG_DIR}/app.${date}.log`, mkdir: true },
+        },
+      ],
+    },
+  })
 }
 
-export const logger = pino({
-  level: isTest ? 'silent' : isDevelopment ? 'debug' : 'info',
-  transport: buildTransport(),
-  base: {
-    env: process.env.NODE_ENV,
-  },
-})
+export const logger = createLogger()
 
 /** Create a child logger with additional context */
-export function createLogger(context: Record<string, unknown>): pino.Logger {
+export function createChildLogger(context: Record<string, unknown>): pino.Logger {
   return logger.child(context)
 }
 

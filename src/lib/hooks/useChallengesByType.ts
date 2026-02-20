@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { logger } from '@/lib/utils/logger'
 
 interface BestScore {
   scoreValue: number
@@ -49,7 +48,6 @@ export function useChallengesByType(type: string): UseChallengesByTypeResult {
         setData(json)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Something went wrong'
-        logger.error({ error: err, type }, 'Failed to fetch challenges by type')
         setError(message)
       } finally {
         setIsLoading(false)
