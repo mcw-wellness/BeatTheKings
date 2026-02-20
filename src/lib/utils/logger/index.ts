@@ -1,5 +1,6 @@
 import 'server-only'
 import pino from 'pino'
+import fs from 'fs'
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
@@ -10,11 +11,12 @@ function createLogger(): pino.Logger {
   const level = isTest ? 'silent' : isDevelopment ? 'debug' : 'info'
   const base = { env: process.env.NODE_ENV }
 
+  // Test: silent logger
   if (isTest) {
     return pino({ level, base })
   }
 
-  // Development: pretty-print to stdout via transport (worker thread)
+  // Development: pino-pretty via transport (worker threads work fine locally)
   if (isDevelopment) {
     return pino({
       level,
@@ -26,25 +28,22 @@ function createLogger(): pino.Logger {
     })
   }
 
-  // Production: pretty stdout + daily log file via transport workers
-  const date = new Date().toISOString().split('T')[0]
+  // Production: stdout + daily log file using main-thread streams (no worker threads)
+  const streams: pino.StreamEntry[] = [{ stream: process.stdout }]
 
-  return pino({
-    level,
-    base,
-    transport: {
-      targets: [
-        {
-          target: 'pino-pretty',
-          options: { colorize: false, translateTime: 'SYS:standard', ignore: 'pid,hostname' },
-        },
-        {
-          target: 'pino/file',
-          options: { destination: `${LOG_DIR}/app.${date}.log`, mkdir: true },
-        },
-      ],
-    },
-  })
+  // Add file stream if log directory exists (Azure runtime has /home/LogFiles)
+  // During next build, directory won't exist — stdout only
+  if (fs.existsSync(LOG_DIR)) {
+    const date = new Date().toISOString().split('T')[0]
+    const fileStream = pino.destination({
+      dest: `${LOG_DIR}/app.${date}.log`,
+      append: true,
+      sync: false,
+    })
+    streams.push({ stream: fileStream })
+  }
+
+  return pino({ level, base }, pino.multistream(streams))
 }
 
 export const logger = createLogger()
@@ -62,20 +61,6 @@ export function logError(error: unknown, context: Record<string, unknown>, messa
       : { error }
 
   logger.error({ ...context, error: errorDetails }, message)
-}
-
-/** Log API request/response for debugging */
-export function logApiCall(
-  method: string,
-  path: string,
-  statusCode: number,
-  durationMs: number,
-  userId?: string
-): void {
-  logger.info(
-    { method, path, statusCode, durationMs, userId },
-    `${method} ${path} ${statusCode} ${durationMs}ms`
-  )
 }
 
 export default logger
