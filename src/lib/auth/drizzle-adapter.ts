@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { users, cities, activePlayers, venues } from '@/db/schema'
 import type { Database } from '@/db'
 import { calculateAge } from '@/lib/utils/date'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Profile update input type - all fields optional for flexible updates
@@ -45,15 +46,24 @@ export async function createUserFromOAuth(
     name?: string | null
   }
 ) {
+  const id = randomUUID()
+  logger.info({ id, email: data.email }, 'createUserFromOAuth: inserting new user row')
+
   const [user] = await db
     .insert(users)
     .values({
-      id: randomUUID(),
+      id,
       email: data.email,
       name: data.name || null,
       hasCreatedAvatar: false,
     })
     .returning()
+
+  if (user) {
+    logger.info({ id: user.id, email: user.email }, 'createUserFromOAuth: user row created successfully')
+  } else {
+    logger.error({ id, email: data.email }, 'createUserFromOAuth: insert returned no row')
+  }
 
   return user
 }
@@ -73,10 +83,11 @@ export async function getOrCreateUser(
   const existingUser = await findUserByEmail(db, data.email)
 
   if (existingUser) {
+    logger.info({ userId: existingUser.id, email: data.email }, 'getOrCreateUser: existing user found')
     return { user: existingUser, isNewUser: false }
   }
 
-  // Create new user
+  logger.info({ email: data.email }, 'getOrCreateUser: no existing user, creating new')
   const newUser = await createUserFromOAuth(db, data)
   return { user: newUser, isNewUser: true }
 }

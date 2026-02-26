@@ -66,8 +66,8 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   })
 
-  // No token = not authenticated → redirect to login
-  if (!token) {
+  // No token or invalidated token (empty id = user row missing from DB) → redirect to login
+  if (!token || !token.id) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(loginUrl)

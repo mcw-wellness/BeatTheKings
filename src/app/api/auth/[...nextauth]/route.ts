@@ -25,13 +25,16 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       // Only process OAuth sign-ins
       if (!account || !user.email) {
+        logger.warn({ hasAccount: !!account, email: user.email }, 'signIn rejected: missing account or email')
         return false
       }
+
+      logger.info({ email: user.email, provider: account.provider }, 'signIn callback started')
 
       try {
         // Get or create user in database
         const db = getDb()
-        const { user: dbUser } = await getOrCreateUser(db, {
+        const { user: dbUser, isNewUser } = await getOrCreateUser(db, {
           email: user.email,
           name: user.name,
         })
@@ -39,9 +42,11 @@ export const authOptions: NextAuthOptions = {
         // Store the database user ID for use in jwt callback
         user.id = dbUser.id
 
+        logger.info({ userId: dbUser.id, email: user.email, isNewUser, provider: account.provider }, 'signIn successful')
+
         return true
       } catch (error) {
-        logger.error({ error }, 'Error during sign-in')
+        logger.error({ error, email: user.email, provider: account.provider }, 'signIn failed: DB error')
         return false
       }
     },
@@ -65,6 +70,9 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.email = user.email
         token.name = user.name
+        logger.info({ userId: user.id, email: user.email }, 'jwt callback: initial sign-in, token created')
+      } else {
+        logger.info({ tokenId: token.id, email: token.email, trigger }, 'jwt callback: session restored from existing token')
       }
 
       // Always refresh onboarding flags from database
@@ -79,8 +87,14 @@ export const authOptions: NextAuthOptions = {
             token.hasUploadedPhoto = dbUser.hasUploadedPhoto ?? false
             token.hasCreatedAvatar = dbUser.hasCreatedAvatar ?? false
             token.nickname = dbUser.nickname ?? null
+          } else if (!user) {
+            // User row missing from DB but JWT still valid (e.g. after DB migration)
+            // Skip during initial sign-in (user object exists) since row was just created
+            logger.warn({ tokenId: token.id, email: token.email }, 'jwt callback: user not found in DB — invalidating stale token')
+            token.id = ''
           }
-        } catch {
+        } catch (error) {
+          logger.error({ error, tokenId: token.id }, 'jwt callback: DB lookup failed')
           // Keep existing values on error
           if (token.hasCompletedProfile === undefined) token.hasCompletedProfile = false
           if (token.hasUploadedPhoto === undefined) token.hasUploadedPhoto = false

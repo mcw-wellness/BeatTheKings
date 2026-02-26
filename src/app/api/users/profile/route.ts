@@ -94,8 +94,9 @@ const _PUT = async (request: Request): Promise<NextResponse> => {
       }
 
       logger.warn({ userId, email }, 'User row not found during profile update, creating user')
-      await getOrCreateUser(db, { email, name: session.user.name })
-      updated = await updateUserProfile(db, userId, validation.data)
+      const { user: createdUser } = await getOrCreateUser(db, { email, name: session.user.name })
+      // Use the actual ID from the created/found row (may differ from stale session ID)
+      updated = await updateUserProfile(db, createdUser.id, validation.data)
     }
 
     if (!updated) {
