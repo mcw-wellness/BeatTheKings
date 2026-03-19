@@ -15,10 +15,6 @@ export function LocationTestControls({
 }: LocationTestControlsProps): JSX.Element | null {
   const { setMockLocation, clearMockLocation, isMockLocation, latitude, longitude } = useLocation()
 
-  if (process.env.NEXT_PUBLIC_ENABLE_TEST_LOCATION !== 'true') {
-    return null
-  }
-
   const canSetMock =
     typeof venueLatitude === 'number' &&
     Number.isFinite(venueLatitude) &&
