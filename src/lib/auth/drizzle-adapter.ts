@@ -60,7 +60,10 @@ export async function createUserFromOAuth(
     .returning()
 
   if (user) {
-    logger.info({ id: user.id, email: user.email }, 'createUserFromOAuth: user row created successfully')
+    logger.info(
+      { id: user.id, email: user.email },
+      'createUserFromOAuth: user row created successfully'
+    )
   } else {
     logger.error({ id, email: data.email }, 'createUserFromOAuth: insert returned no row')
   }
@@ -83,7 +86,10 @@ export async function getOrCreateUser(
   const existingUser = await findUserByEmail(db, data.email)
 
   if (existingUser) {
-    logger.info({ userId: existingUser.id, email: data.email }, 'getOrCreateUser: existing user found')
+    logger.info(
+      { userId: existingUser.id, email: data.email },
+      'getOrCreateUser: existing user found'
+    )
     return { user: existingUser, isNewUser: false }
   }
 

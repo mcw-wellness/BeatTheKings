@@ -50,14 +50,18 @@ export async function getMatchById(db: Database, matchId: string): Promise<Match
     player1: {
       id: match.player1Id,
       name: player1Info.name,
-      avatar: { imageUrl: getAvatarUrl(match.player1Id, player1Info.hasAvatar, player1Info.gender) },
+      avatar: {
+        imageUrl: getAvatarUrl(match.player1Id, player1Info.hasAvatar, player1Info.gender),
+      },
       score: match.player1Score,
       agreed: match.player1Agreed,
     },
     player2: {
       id: match.player2Id,
       name: player2Info.name,
-      avatar: { imageUrl: getAvatarUrl(match.player2Id, player2Info.hasAvatar, player2Info.gender) },
+      avatar: {
+        imageUrl: getAvatarUrl(match.player2Id, player2Info.hasAvatar, player2Info.gender),
+      },
       score: match.player2Score,
       agreed: match.player2Agreed,
     },

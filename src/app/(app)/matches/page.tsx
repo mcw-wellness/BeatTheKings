@@ -38,7 +38,14 @@ interface Match {
 
 type FilterType = 'all' | 'pending' | 'verified' | 'disputed'
 
-const ACTIVE_STATUSES = ['pending', 'scheduled', 'accepted', 'in_progress', 'uploading', 'analyzing']
+const ACTIVE_STATUSES = [
+  'pending',
+  'scheduled',
+  'accepted',
+  'in_progress',
+  'uploading',
+  'analyzing',
+]
 
 export default function MatchesPage() {
   const router = useRouter()
@@ -229,7 +236,12 @@ export default function MatchesPage() {
                 <MatchCard key={match.id} match={match} onClick={() => handleMatchClick(match)} />
               ))
             ) : pendingInvitations.length === 0 && pendingSentInvitations.length === 0 ? (
-              <EmptyState onFindChallenge={() => alert('Challenges are not available in Alpha. Stay tuned for Beta!')} filter={filter} />
+              <EmptyState
+                onFindChallenge={() =>
+                  alert('Challenges are not available in Alpha. Stay tuned for Beta!')
+                }
+                filter={filter}
+              />
             ) : null}
           </div>
         )}

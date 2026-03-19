@@ -52,10 +52,7 @@ export async function checkInToVenue(
 
     // Validate distance if venue has coordinates
     if (venue.latitude && venue.longitude) {
-      const distance = calculateDistance(
-        latitude, longitude,
-        venue.latitude, venue.longitude
-      )
+      const distance = calculateDistance(latitude, longitude, venue.latitude, venue.longitude)
       if (distance > MAX_CHECKIN_DISTANCE_KM) {
         return {
           success: false,
@@ -71,12 +68,7 @@ export async function checkInToVenue(
     // Remove check-ins at OTHER venues for this user
     await db
       .delete(activePlayers)
-      .where(
-        and(
-          eq(activePlayers.userId, userId),
-          ne(activePlayers.venueId, venueId)
-        )
-      )
+      .where(and(eq(activePlayers.userId, userId), ne(activePlayers.venueId, venueId)))
 
     // Upsert active player record
     await db
@@ -115,12 +107,7 @@ export async function checkOutFromVenue(
   try {
     await db
       .delete(activePlayers)
-      .where(
-        and(
-          eq(activePlayers.userId, userId),
-          eq(activePlayers.venueId, venueId)
-        )
-      )
+      .where(and(eq(activePlayers.userId, userId), eq(activePlayers.venueId, venueId)))
     return { success: true }
   } catch (error) {
     logger.error({ error, userId, venueId }, 'Failed to check out')
@@ -139,12 +126,7 @@ export async function getUserCheckInStatus(
   const [record] = await db
     .select({ lastSeenAt: activePlayers.lastSeenAt })
     .from(activePlayers)
-    .where(
-      and(
-        eq(activePlayers.userId, userId),
-        eq(activePlayers.venueId, venueId)
-      )
-    )
+    .where(and(eq(activePlayers.userId, userId), eq(activePlayers.venueId, venueId)))
     .limit(1)
 
   if (!record) {
@@ -172,12 +154,7 @@ export async function refreshCheckIn(
         longitude,
         lastSeenAt: new Date(),
       })
-      .where(
-        and(
-          eq(activePlayers.userId, userId),
-          eq(activePlayers.venueId, venueId)
-        )
-      )
+      .where(and(eq(activePlayers.userId, userId), eq(activePlayers.venueId, venueId)))
       .returning()
 
     return { success: result.length > 0 }

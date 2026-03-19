@@ -7,7 +7,6 @@ import { users, avatars, playerStats, matches } from '@/db/schema'
 import type { Database } from '@/db'
 import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage'
 import { MATCH_REWARDS } from './types'
-import { logger } from '@/lib/utils/logger'
 
 export function getAvatarUrl(userId: string, hasAvatar: boolean, gender: string | null): string {
   if (hasAvatar) {

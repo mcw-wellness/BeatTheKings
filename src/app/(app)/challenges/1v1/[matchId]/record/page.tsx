@@ -109,12 +109,7 @@ export default function MatchRecordPage(): JSX.Element {
   }
 
   const getSupportedMimeType = (): string => {
-    const types = [
-      'video/webm;codecs=vp9',
-      'video/webm;codecs=vp8',
-      'video/webm',
-      'video/mp4',
-    ]
+    const types = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4']
     return types.find((t) => MediaRecorder.isTypeSupported(t)) || 'video/webm'
   }
 

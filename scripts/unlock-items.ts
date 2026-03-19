@@ -7,11 +7,7 @@ async function unlockAllForUser() {
   const db = getDb()
 
   // Find shawaiz user
-  const user = await db
-    .select()
-    .from(users)
-    .where(like(users.email, '%shawaiz%'))
-    .limit(1)
+  const user = await db.select().from(users).where(like(users.email, '%shawaiz%')).limit(1)
 
   if (user.length === 0) {
     console.log('User not found')
@@ -34,9 +30,7 @@ async function unlockAllForUser() {
     const existing = await db
       .select()
       .from(userUnlockedItems)
-      .where(
-        and(eq(userUnlockedItems.userId, user[0].id), eq(userUnlockedItems.itemId, item.id))
-      )
+      .where(and(eq(userUnlockedItems.userId, user[0].id), eq(userUnlockedItems.itemId, item.id)))
       .limit(1)
 
     if (existing.length === 0) {

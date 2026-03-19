@@ -23,10 +23,7 @@ const _POST = async (
     const { accept } = body
 
     if (typeof accept !== 'boolean') {
-      return NextResponse.json(
-        { error: '"accept" (boolean) is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '"accept" (boolean) is required' }, { status: 400 })
     }
 
     const { id } = await params

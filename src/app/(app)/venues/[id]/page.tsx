@@ -256,7 +256,9 @@ export default function VenueDetailPage(): JSX.Element {
         <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 p-4 md:p-6">
           <h2 className="text-white font-semibold md:text-lg mb-3 flex items-center gap-2">
             Challenges ({challenges.length})
-            <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full font-medium">Beta</span>
+            <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full font-medium">
+              Beta
+            </span>
           </h2>
           {challenges.length === 0 ? (
             <p className="text-white/50 text-sm text-center py-4">
@@ -329,9 +331,7 @@ function VenueCheckInSection({
   if (ci.distanceToVenue === null) {
     return (
       <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 px-3 py-2">
-        <p className="text-yellow-300 text-sm text-center">
-          Enable location to check in
-        </p>
+        <p className="text-yellow-300 text-sm text-center">Enable location to check in</p>
       </div>
     )
   }
@@ -346,9 +346,7 @@ function VenueCheckInSection({
         >
           Check In Here
         </button>
-        {ci.checkInError && (
-          <p className="text-red-300 text-xs text-center">{ci.checkInError}</p>
-        )}
+        {ci.checkInError && <p className="text-red-300 text-xs text-center">{ci.checkInError}</p>}
       </div>
     )
   }

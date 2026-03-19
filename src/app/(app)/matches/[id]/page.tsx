@@ -35,7 +35,9 @@ export default function MatchDetailsPage() {
     fetch(`/api/matches/${matchId}`)
       .then((res) => res.json())
       .then((data) => setMatch(data))
-      .catch(() => { /* fetch error handled by empty match state */ })
+      .catch(() => {
+        /* fetch error handled by empty match state */
+      })
       .finally(() => setIsLoading(false))
   }, [matchId])
 

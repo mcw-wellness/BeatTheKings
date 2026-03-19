@@ -64,9 +64,7 @@ export function NavButton({
             <span className={`text-sm font-medium ${locked ? 'text-white/40' : 'text-white'}`}>
               {label}
             </span>
-            {subtitle && (
-              <p className="text-[10px] text-orange-400 font-medium">{subtitle}</p>
-            )}
+            {subtitle && <p className="text-[10px] text-orange-400 font-medium">{subtitle}</p>}
           </div>
         </div>
         {locked ? (
@@ -95,10 +93,7 @@ export function AvatarDisplay({
   onClick,
 }: AvatarDisplayProps): JSX.Element {
   return (
-    <div
-      className="h-full flex items-center justify-center cursor-pointer"
-      onClick={onClick}
-    >
+    <div className="h-full flex items-center justify-center cursor-pointer" onClick={onClick}>
       {isLoading ? (
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-white" />
@@ -111,11 +106,7 @@ export function AvatarDisplay({
             </div>
           )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={avatarUrl}
-            alt="Your Avatar"
-            className="max-h-full w-auto object-contain"
-          />
+          <img src={avatarUrl} alt="Your Avatar" className="max-h-full w-auto object-contain" />
         </div>
       ) : (
         <div className="text-center text-white/50 pb-20">
@@ -197,7 +188,12 @@ interface NavigationGridProps {
   matchInvitationCount?: number
 }
 
-export function NavigationGrid({ hasCreatedAvatar, onNavigate, highlightMap, matchInvitationCount }: NavigationGridProps): JSX.Element {
+export function NavigationGrid({
+  hasCreatedAvatar,
+  onNavigate,
+  highlightMap,
+  matchInvitationCount,
+}: NavigationGridProps): JSX.Element {
   return (
     <div className="px-4 pb-4 pt-2 shrink-0 space-y-2">
       <div className="grid grid-cols-2 gap-2">

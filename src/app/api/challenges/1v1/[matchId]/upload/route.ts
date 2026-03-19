@@ -43,10 +43,7 @@ const _POST = async (request: Request, { params }: RouteParams): Promise<NextRes
 
     // Check if video was already uploaded
     if (match.videoUrl) {
-      return NextResponse.json(
-        { error: 'Video already uploaded.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Video already uploaded.' }, { status: 400 })
     }
 
     // Allow upload if recordingBy is null (any participant) or matches user

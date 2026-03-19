@@ -22,7 +22,7 @@ function getCheckInStatus(
   venue: VenueItem,
   checkedInVenueId: string | null,
   userLat: number | null,
-  userLng: number | null,
+  userLng: number | null
 ): CheckInStatus {
   if (checkedInVenueId === venue.id) return 'checked-in'
   if (!userLat || !userLng) return 'no-location'
@@ -145,11 +145,7 @@ function CheckInBadge({
   }
 
   if (distance) {
-    return (
-      <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-full">
-        {distance}
-      </span>
-    )
+    return <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-full">{distance}</span>
   }
 
   return null

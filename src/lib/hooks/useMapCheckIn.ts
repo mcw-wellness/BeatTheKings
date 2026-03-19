@@ -82,11 +82,14 @@ export function useMapCheckIn({
     }
   }, [isSelectedVenueCheckedIn, selectedVenueId, checkedInVenueId])
 
-  const handleVenueListCheckIn = useCallback(async (venue: VenueItem): Promise<void> => {
-    if (!latitude || !longitude) return
-    const ok = await performCheckIn(venue.id, latitude, longitude)
-    if (ok) setCheckedInVenueId(venue.id)
-  }, [latitude, longitude])
+  const handleVenueListCheckIn = useCallback(
+    async (venue: VenueItem): Promise<void> => {
+      if (!latitude || !longitude) return
+      const ok = await performCheckIn(venue.id, latitude, longitude)
+      if (ok) setCheckedInVenueId(venue.id)
+    },
+    [latitude, longitude]
+  )
 
   return { checkedInVenueId, handleVenueListCheckIn, autoSelectVenueId }
 }

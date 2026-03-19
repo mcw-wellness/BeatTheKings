@@ -20,7 +20,10 @@ export function withErrorLogging<T extends RouteHandler>(handler: T): T {
       const durationMs = Date.now() - start
       const status = response instanceof NextResponse ? response.status : 200
 
-      logger.info({ method, path: pathname, status, durationMs }, `${method} ${pathname} ${status} ${durationMs}ms`)
+      logger.info(
+        { method, path: pathname, status, durationMs },
+        `${method} ${pathname} ${status} ${durationMs}ms`
+      )
 
       return response
     } catch (error) {

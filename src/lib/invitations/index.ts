@@ -3,7 +3,7 @@
  * Functions for managing scheduled match invitations
  */
 
-import { eq, and, or } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { matchInvitations, matches, venues, sports, users, avatars } from '@/db/schema'
 import type { Database } from '@/db'
 import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage'
@@ -268,29 +268,16 @@ export async function cancelInvitation(
 // NOTIFICATION COUNT
 // ===========================================
 
-export async function getPendingInvitationCount(
-  db: Database,
-  userId: string
-): Promise<number> {
+export async function getPendingInvitationCount(db: Database, userId: string): Promise<number> {
   const [invitationRows, pendingMatchRows] = await Promise.all([
     db
       .select({ id: matchInvitations.id })
       .from(matchInvitations)
-      .where(
-        and(
-          eq(matchInvitations.receiverId, userId),
-          eq(matchInvitations.status, 'pending')
-        )
-      ),
+      .where(and(eq(matchInvitations.receiverId, userId), eq(matchInvitations.status, 'pending'))),
     db
       .select({ id: matches.id })
       .from(matches)
-      .where(
-        and(
-          eq(matches.player2Id, userId),
-          eq(matches.status, 'pending')
-        )
-      ),
+      .where(and(eq(matches.player2Id, userId), eq(matches.status, 'pending'))),
   ])
 
   return invitationRows.length + pendingMatchRows.length

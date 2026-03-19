@@ -30,16 +30,23 @@ export async function respondToChallenge(
 
   if (!match) return { success: false, message: 'Match not found' }
   if (match.player2Id !== opponentId) return { success: false, message: 'Not authorized' }
-  if (match.status !== 'pending') return { success: false, message: 'Challenge already responded to' }
+  if (match.status !== 'pending')
+    return { success: false, message: 'Challenge already responded to' }
 
   const newStatus = accept ? 'accepted' : 'declined'
   await db.update(matches).set({ status: newStatus }).where(eq(matches.id, matchId))
 
   const opponentInfo = await getPlayerInfo(db, opponentId)
   if (accept) {
-    notifyChallengeAccepted(match.player1Id, { matchId, opponentName: opponentInfo.name || 'Opponent' })
+    notifyChallengeAccepted(match.player1Id, {
+      matchId,
+      opponentName: opponentInfo.name || 'Opponent',
+    })
   } else {
-    notifyChallengeDeclined(match.player1Id, { matchId, opponentName: opponentInfo.name || 'Opponent' })
+    notifyChallengeDeclined(match.player1Id, {
+      matchId,
+      opponentName: opponentInfo.name || 'Opponent',
+    })
   }
 
   return { success: true, message: accept ? 'Challenge accepted' : 'Challenge declined' }
@@ -63,7 +70,12 @@ export async function startMatch(
   if (match.status === 'accepted' || match.status === 'scheduled') {
     await db
       .update(matches)
-      .set({ status: 'in_progress', startedAt: new Date(), recordingBy: userId, recordingStartedAt: new Date() })
+      .set({
+        status: 'in_progress',
+        startedAt: new Date(),
+        recordingBy: userId,
+        recordingStartedAt: new Date(),
+      })
       .where(eq(matches.id, matchId))
     return { success: true, message: 'Match started. You are recording.' }
   }
@@ -100,7 +112,8 @@ export async function cancelRecording(
     return { success: false, message: 'Not a participant in this match' }
   }
   if (match.status !== 'in_progress') return { success: false, message: 'Match is not in progress' }
-  if (match.recordingBy !== userId) return { success: false, message: 'You are not the one recording' }
+  if (match.recordingBy !== userId)
+    return { success: false, message: 'You are not the one recording' }
   if (match.videoUrl) return { success: false, message: 'Video already uploaded, cannot cancel' }
 
   await db
@@ -122,13 +135,18 @@ export async function cancelChallenge(
   const [match] = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1)
 
   if (!match) return { success: false, message: 'Match not found' }
-  if (match.player1Id !== userId) return { success: false, message: 'Only the challenger can cancel' }
-  if (match.status !== 'pending') return { success: false, message: 'Can only cancel pending challenges' }
+  if (match.player1Id !== userId)
+    return { success: false, message: 'Only the challenger can cancel' }
+  if (match.status !== 'pending')
+    return { success: false, message: 'Can only cancel pending challenges' }
 
   await db.update(matches).set({ status: 'cancelled' }).where(eq(matches.id, matchId))
 
   const challengerInfo = await getPlayerInfo(db, userId)
-  notifyChallengeCancelled(match.player2Id, { matchId, challengerName: challengerInfo.name || 'Opponent' })
+  notifyChallengeCancelled(match.player2Id, {
+    matchId,
+    challengerName: challengerInfo.name || 'Opponent',
+  })
 
   return { success: true, message: 'Challenge cancelled' }
 }
@@ -141,15 +159,22 @@ export async function submitAgreement(
   matchId: string,
   userId: string,
   agree: boolean
-): Promise<{ success: boolean; bothAgreed: boolean; message: string; newlyUnlockedItems?: UnlockedItem[] }> {
+): Promise<{
+  success: boolean
+  bothAgreed: boolean
+  message: string
+  newlyUnlockedItems?: UnlockedItem[]
+}> {
   const [match] = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1)
 
   if (!match) return { success: false, bothAgreed: false, message: 'Match not found' }
 
   const isPlayer1 = match.player1Id === userId
   const isPlayer2 = match.player2Id === userId
-  if (!isPlayer1 && !isPlayer2) return { success: false, bothAgreed: false, message: 'Not a participant' }
-  if (match.status !== 'completed') return { success: false, bothAgreed: false, message: 'Match not ready for agreement' }
+  if (!isPlayer1 && !isPlayer2)
+    return { success: false, bothAgreed: false, message: 'Not a participant' }
+  if (match.status !== 'completed')
+    return { success: false, bothAgreed: false, message: 'Match not ready for agreement' }
 
   if (!agree) {
     await db.update(matches).set({ status: 'disputed' }).where(eq(matches.id, matchId))
@@ -173,11 +198,16 @@ export async function submitAgreement(
 
     const userUnlocks = userId === match.player1Id ? player1Unlocks : player2Unlocks
     const newlyUnlockedItems = userUnlocks.newlyUnlocked.map((item) => ({
-      id: item.id, name: item.name, itemType: item.itemType,
+      id: item.id,
+      name: item.name,
+      itemType: item.itemType,
     }))
 
     if (newlyUnlockedItems.length > 0) {
-      logger.info({ userId, count: newlyUnlockedItems.length }, 'Items unlocked after match agreement')
+      logger.info(
+        { userId, count: newlyUnlockedItems.length },
+        'Items unlocked after match agreement'
+      )
     }
 
     const otherPlayerId = userId === match.player1Id ? match.player2Id : match.player1Id

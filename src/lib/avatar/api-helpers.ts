@@ -162,7 +162,10 @@ export async function generateAndUploadAvatar(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     const errorStack = error instanceof Error ? error.stack : undefined
-    logger.error({ userId, error: errorMessage, stack: errorStack }, 'Avatar generation FAILED after retries')
+    logger.error(
+      { userId, error: errorMessage, stack: errorStack },
+      'Avatar generation FAILED after retries'
+    )
     return undefined
   }
 }

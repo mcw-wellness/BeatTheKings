@@ -37,7 +37,10 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     permission: 'unknown',
   })
 
-  const [mockLocation, setMockLocationState] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [mockLocation, setMockLocationState] = useState<{
+    latitude: number
+    longitude: number
+  } | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return

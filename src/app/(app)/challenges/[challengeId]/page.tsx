@@ -319,10 +319,10 @@ export default function ChallengeDetailPage(): JSX.Element {
                 <p>
                   Start with 25 shots from below the rim, then progress to 5 feet away, focusing on
                   shot line and wrist snap. Use imaginary baskets (with a partner or wall) to refine
-                  form without distraction. Practice from multiple spots around the 3-point
-                  line—top of key, wings, and corners—ensuring toes point toward the basket after
-                  each shot. Incorporate drills like dribbling into a shot, quick hops, and energy
-                  transfer exercises to build rhythm and strength.
+                  form without distraction. Practice from multiple spots around the 3-point line—top
+                  of key, wings, and corners—ensuring toes point toward the basket after each shot.
+                  Incorporate drills like dribbling into a shot, quick hops, and energy transfer
+                  exercises to build rhythm and strength.
                 </p>
               </div>
             </div>

@@ -10,8 +10,15 @@ import { logger } from '@/lib/utils/logger'
 // ===========================================
 
 export interface NotificationEvent {
-  type: 'challenge-received' | 'challenge-accepted' | 'challenge-declined' | 'challenge-cancelled'
-    | 'match-started' | 'score-submitted' | 'match-completed' | 'match-disputed'
+  type:
+    | 'challenge-received'
+    | 'challenge-accepted'
+    | 'challenge-declined'
+    | 'challenge-cancelled'
+    | 'match-started'
+    | 'score-submitted'
+    | 'match-completed'
+    | 'match-disputed'
   data: Record<string, unknown>
   timestamp: string
 }
@@ -45,9 +52,12 @@ export function addConnection(userId: string, controller: ReadableStreamDefaultC
 /**
  * Remove a specific SSE connection
  */
-export function removeConnection(userId: string, controller: ReadableStreamDefaultController): void {
+export function removeConnection(
+  userId: string,
+  controller: ReadableStreamDefaultController
+): void {
   const existing = connections.get(userId) || []
-  const filtered = existing.filter(c => c.controller !== controller)
+  const filtered = existing.filter((c) => c.controller !== controller)
 
   if (filtered.length === 0) {
     connections.delete(userId)

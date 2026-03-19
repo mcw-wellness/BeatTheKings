@@ -46,11 +46,7 @@ export function VenuePanel({
   )
 }
 
-function CheckInSection({
-  checkInState,
-}: {
-  checkInState: UseVenueCheckInReturn
-}): JSX.Element {
+function CheckInSection({ checkInState }: { checkInState: UseVenueCheckInReturn }): JSX.Element {
   const {
     isCheckedIn,
     isCheckingIn,
@@ -78,9 +74,7 @@ function CheckInSection({
   if (isCheckedIn) {
     return (
       <div className="flex items-center justify-between bg-green-500/20 border border-green-500/40 rounded-lg p-3">
-        <span className="text-green-300 font-semibold text-sm">
-          Checked In
-        </span>
+        <span className="text-green-300 font-semibold text-sm">Checked In</span>
         <button
           onClick={checkOut}
           disabled={isCheckingOut}
@@ -96,9 +90,7 @@ function CheckInSection({
   if (!hasLocation) {
     return (
       <div className="bg-white/10 rounded-lg p-3">
-        <p className="text-yellow-300 text-sm text-center">
-          Enable location to check in
-        </p>
+        <p className="text-yellow-300 text-sm text-center">Enable location to check in</p>
       </div>
     )
   }
@@ -113,17 +105,13 @@ function CheckInSection({
         >
           Check In
         </button>
-        {checkInError && (
-          <p className="text-red-300 text-xs text-center">{checkInError}</p>
-        )}
+        {checkInError && <p className="text-red-300 text-xs text-center">{checkInError}</p>}
       </div>
     )
   }
 
   // Too far
-  const distanceText = distanceToVenue
-    ? formatDistance(distanceToVenue)
-    : 'unknown'
+  const distanceText = distanceToVenue ? formatDistance(distanceToVenue) : 'unknown'
 
   return (
     <div className="space-y-1">
@@ -133,9 +121,7 @@ function CheckInSection({
       >
         Get closer to check in ({distanceText} away)
       </button>
-      {checkInError && (
-        <p className="text-red-300 text-xs text-center">{checkInError}</p>
-      )}
+      {checkInError && <p className="text-red-300 text-xs text-center">{checkInError}</p>}
     </div>
   )
 }

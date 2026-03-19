@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Logo } from '@/components/layout/Logo'
@@ -36,12 +36,7 @@ export default function InvitePage(): JSX.Element {
   tomorrow.setDate(tomorrow.getDate() + 1)
   const minDate = tomorrow.toISOString().split('T')[0]
 
-  useEffect(() => {
-    fetchPlayer()
-    fetchVenues()
-  }, [playerId])
-
-  const fetchPlayer = async (): Promise<void> => {
+  const fetchPlayer = useCallback(async (): Promise<void> => {
     try {
       const res = await fetch(`/api/players/${playerId}/trump-card`)
       if (res.ok) {
@@ -54,9 +49,9 @@ export default function InvitePage(): JSX.Element {
     } catch {
       // Silently fail — name will show as "Player"
     }
-  }
+  }, [playerId])
 
-  const fetchVenues = async (): Promise<void> => {
+  const fetchVenues = useCallback(async (): Promise<void> => {
     try {
       const res = await fetch('/api/venues?limit=50')
       if (res.ok) {
@@ -66,7 +61,12 @@ export default function InvitePage(): JSX.Element {
     } catch {
       // Silently fail
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchPlayer()
+    fetchVenues()
+  }, [fetchPlayer, fetchVenues])
 
   const handleSend = async (): Promise<void> => {
     if (!selectedVenueId || !scheduledDate || !scheduledTime) {
@@ -174,7 +174,8 @@ export default function InvitePage(): JSX.Element {
               <option value="">Select a venue</option>
               {venues.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.name}{v.district ? ` — ${v.district}` : ''}
+                  {v.name}
+                  {v.district ? ` — ${v.district}` : ''}
                 </option>
               ))}
             </select>
@@ -220,9 +221,7 @@ export default function InvitePage(): JSX.Element {
           {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
           {/* Success */}
-          {success && (
-            <p className="text-green-400 text-sm text-center">Invitation sent!</p>
-          )}
+          {success && <p className="text-green-400 text-sm text-center">Invitation sent!</p>}
 
           {/* Send Button */}
           <button

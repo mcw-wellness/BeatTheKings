@@ -133,7 +133,12 @@ export function buildAvatarPrompt(input: AvatarPromptInput): string {
     ${input.hairStyle} ${input.hairColor} hair
   `.trim()
 
-  const outfit = getOutfitDescription(sport, input.jerseyNumber, input.jerseyDesign, input.shoesDesign)
+  const outfit = getOutfitDescription(
+    sport,
+    input.jerseyNumber,
+    input.jerseyDesign,
+    input.shoesDesign
+  )
 
   return `${AVATAR_BASE_STYLE}. ${character}. ${outfit}.`
 }
@@ -144,7 +149,12 @@ export function buildAvatarPrompt(input: AvatarPromptInput): string {
  */
 export function buildAvatarPromptWithPhoto(input: AvatarPromptInput): string {
   const sport = input.sport || 'basketball'
-  const outfit = getOutfitDescription(sport, input.jerseyNumber, input.jerseyDesign, input.shoesDesign)
+  const outfit = getOutfitDescription(
+    sport,
+    input.jerseyNumber,
+    input.jerseyDesign,
+    input.shoesDesign
+  )
 
   return `Create a FULL BODY sports athlete illustration that LOOKS LIKE this specific person.
 

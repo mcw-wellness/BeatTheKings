@@ -9,7 +9,6 @@ import { getPlayerInfo, updateMatchStats } from './helpers'
 import { MATCH_REWARDS } from './types'
 import type { MatchResult } from './types'
 import { checkAndUnlockEligibleItems } from '@/lib/avatar/unlock'
-import { logger } from '@/lib/utils/logger'
 import { notifyChallengeReceived, notifyScoreSubmitted } from '@/lib/notifications/triggers'
 
 /**
@@ -86,7 +85,8 @@ export async function markPlayerReady(
   const [match] = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1)
 
   if (!match) return { success: false, message: 'Match not found' }
-  if (match.status !== 'pending') return { success: false, message: 'Match is not in pending state' }
+  if (match.status !== 'pending')
+    return { success: false, message: 'Match is not in pending state' }
   if (userId !== match.player1Id && userId !== match.player2Id) {
     return { success: false, message: 'You are not a participant in this match' }
   }
@@ -127,7 +127,9 @@ export async function submitMatchScore(
   await db
     .update(matches)
     .set({
-      player1Score, player2Score, winnerId,
+      player1Score,
+      player2Score,
+      winnerId,
       winnerXp: MATCH_REWARDS.winnerXp,
       winnerRp: MATCH_REWARDS.winnerRp,
       loserXp: MATCH_REWARDS.loserXp,
@@ -182,7 +184,9 @@ export async function agreeToMatchResult(
 
     const userUnlocks = userId === match.player1Id ? player1Unlocks : player2Unlocks
     const newlyUnlockedItems = userUnlocks.newlyUnlocked.map((item) => ({
-      id: item.id, name: item.name, itemType: item.itemType,
+      id: item.id,
+      name: item.name,
+      itemType: item.itemType,
     }))
 
     const isWinner = match.winnerId === userId
