@@ -27,6 +27,7 @@ export function NavButton({
   onClick,
   highlight,
   badge,
+  subtitle,
 }: {
   icon: string
   label: string
@@ -34,6 +35,7 @@ export function NavButton({
   onClick: () => void
   highlight?: boolean
   badge?: number
+  subtitle?: string
 }): JSX.Element {
   return (
     <div className="relative">
@@ -58,9 +60,14 @@ export function NavButton({
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">{icon}</span>
-          <span className={`text-sm font-medium ${locked ? 'text-white/40' : 'text-white'}`}>
-            {label}
-          </span>
+          <div>
+            <span className={`text-sm font-medium ${locked ? 'text-white/40' : 'text-white'}`}>
+              {label}
+            </span>
+            {subtitle && (
+              <p className="text-[10px] text-orange-400 font-medium">{subtitle}</p>
+            )}
+          </div>
         </div>
         {locked ? (
           <span className="text-white/40">🔒</span>
@@ -197,8 +204,9 @@ export function NavigationGrid({ hasCreatedAvatar, onNavigate, highlightMap, mat
         <NavButton
           icon="🏆"
           label="Challenges"
+          subtitle="Coming in Beta"
           locked={!hasCreatedAvatar}
-          onClick={() => onNavigate('/challenges')}
+          onClick={() => alert('Challenges are not available in Alpha. Stay tuned for Beta!')}
         />
         <NavButton
           icon="🗺️"

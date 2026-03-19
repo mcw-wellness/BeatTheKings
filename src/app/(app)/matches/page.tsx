@@ -229,7 +229,7 @@ export default function MatchesPage() {
                 <MatchCard key={match.id} match={match} onClick={() => handleMatchClick(match)} />
               ))
             ) : pendingInvitations.length === 0 && pendingSentInvitations.length === 0 ? (
-              <EmptyState onFindChallenge={() => router.push('/challenges')} filter={filter} />
+              <EmptyState onFindChallenge={() => alert('Challenges are not available in Alpha. Stay tuned for Beta!')} filter={filter} />
             ) : null}
           </div>
         )}
