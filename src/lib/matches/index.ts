@@ -9,6 +9,14 @@ import type { Database } from '@/db'
 import { getUserAvatarSasUrl, getDefaultAvatarSasUrl } from '@/lib/azure-storage'
 import { checkAndUnlockEligibleItems } from '@/lib/avatar/unlock'
 import { logger } from '@/lib/utils/logger'
+import {
+  notifyChallengeReceived,
+  notifyChallengeAccepted,
+  notifyChallengeDeclined,
+  notifyChallengeCancelled,
+  notifyScoreSubmitted,
+  notifyMatchCompleted,
+} from '@/lib/notifications/triggers'
 
 // ===========================================
 // TYPES
@@ -163,6 +171,20 @@ export async function createMatch(
     })
     .returning()
 
+  // Get challenger name and venue name for notification
+  const p1Info = await getPlayerInfo(db, player1Id)
+  const [venueInfo] = await db
+    .select({ name: venues.name })
+    .from(venues)
+    .where(eq(venues.id, venueId))
+    .limit(1)
+
+  notifyChallengeReceived(player2Id, {
+    matchId: match.id,
+    challengerName: p1Info.name || 'Someone',
+    venueName: venueInfo?.name || 'Unknown',
+  })
+
   return { matchId: match.id }
 }
 
@@ -313,6 +335,10 @@ export async function submitMatchScore(
       status: 'completed',
     })
     .where(eq(matches.id, matchId))
+
+  // Notify the other player that score was submitted
+  const otherPlayerId = userId === match.player1Id ? match.player2Id : match.player1Id
+  notifyScoreSubmitted(otherPlayerId, { matchId, player1Score, player2Score })
 
   return { success: true, message: 'Score submitted. Waiting for confirmation.' }
 }
@@ -534,6 +560,20 @@ export async function respondToChallenge(
 
   const newStatus = accept ? 'accepted' : 'declined'
   await db.update(matches).set({ status: newStatus }).where(eq(matches.id, matchId))
+
+  // Notify the challenger
+  const opponentInfo = await getPlayerInfo(db, opponentId)
+  if (accept) {
+    notifyChallengeAccepted(match.player1Id, {
+      matchId,
+      opponentName: opponentInfo.name || 'Opponent',
+    })
+  } else {
+    notifyChallengeDeclined(match.player1Id, {
+      matchId,
+      opponentName: opponentInfo.name || 'Opponent',
+    })
+  }
 
   return { success: true, message: accept ? 'Challenge accepted' : 'Challenge declined' }
 }
@@ -767,6 +807,15 @@ export async function submitAgreement(
       )
     }
 
+    // Notify both players that match is complete
+    const isWinner = match.winnerId === userId
+    const otherPlayerId = userId === match.player1Id ? match.player2Id : match.player1Id
+    notifyMatchCompleted(otherPlayerId, {
+      matchId,
+      winnerId: match.winnerId,
+      xpEarned: match.winnerId === otherPlayerId ? MATCH_REWARDS.winnerXp : MATCH_REWARDS.loserXp,
+    })
+
     return {
       success: true,
       bothAgreed: true,
@@ -801,6 +850,13 @@ export async function cancelChallenge(
   }
 
   await db.update(matches).set({ status: 'cancelled' }).where(eq(matches.id, matchId))
+
+  // Notify the opponent
+  const challengerInfo = await getPlayerInfo(db, userId)
+  notifyChallengeCancelled(match.player2Id, {
+    matchId,
+    challengerName: challengerInfo.name || 'Opponent',
+  })
 
   return { success: true, message: 'Challenge cancelled' }
 }

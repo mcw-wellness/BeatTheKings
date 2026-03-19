@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/layout/Logo'
 import { MatchCard, FilterTabs, InvitationCard } from '@/components/matches'
 import type { Invitation } from '@/components/matches'
+import { useNotifications } from '@/lib/hooks/useNotifications'
 
 type MatchStatus =
   | 'pending'
@@ -76,15 +77,22 @@ export default function MatchesPage() {
     }
   }, [])
 
+  // Real-time SSE notifications — instant refresh on any event
+  useNotifications({
+    onEvent: () => {
+      fetchData()
+    },
+  })
+
   useEffect(() => {
     fetchData(true)
   }, [fetchData])
 
-  // Poll for updates every 5 seconds
+  // Fallback poll every 10 seconds (in case SSE disconnects)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchData()
-    }, 5000)
+    }, 10000)
     return () => clearInterval(interval)
   }, [fetchData])
 
