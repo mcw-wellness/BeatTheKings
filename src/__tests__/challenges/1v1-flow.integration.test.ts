@@ -26,23 +26,12 @@ vi.mock('@/lib/azure-storage', () => ({
     `https://test.blob.core.windows.net/default/${gender}`,
 }))
 
-// Mock Gemini analysis
-vi.mock('@/lib/gemini', () => ({
-  analyzeMatchVideo: vi.fn().mockResolvedValue({
-    player1Score: 12,
-    player2Score: 10,
-    player1ShotsMade: 6,
-    player1ShotsAttempted: 10,
-    player2ShotsMade: 5,
-    player2ShotsAttempted: 9,
-    durationSeconds: 600,
-    confidence: 0.9,
-  }),
-  calculateRewards: vi.fn().mockReturnValue({
-    winnerXp: 150,
-    winnerRp: 30,
-    loserXp: 50,
-  }),
+// Mock SSE notifications
+vi.mock('@/lib/notifications/emitter', () => ({
+  notifyUser: vi.fn(),
+  addConnection: vi.fn(),
+  removeConnection: vi.fn(),
+  getConnectionCount: vi.fn().mockReturnValue(0),
 }))
 
 // Mock getDb
@@ -486,7 +475,7 @@ describe('1v1 Challenge Flow Integration Tests', () => {
       expect(response.status).toBe(200)
       const data = await response.json()
       expect(data.success).toBe(true)
-      expect(data.status).toBe('analyzing')
+      expect(data.status).toBe('in_progress')
       expect(data.videoUrl).toBeDefined()
     })
   })
