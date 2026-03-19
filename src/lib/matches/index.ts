@@ -310,6 +310,7 @@ export async function submitMatchScore(
       winnerXp: MATCH_REWARDS.winnerXp,
       winnerRp: MATCH_REWARDS.winnerRp,
       loserXp: MATCH_REWARDS.loserXp,
+      status: 'completed',
     })
     .where(eq(matches.id, matchId))
 
@@ -663,7 +664,7 @@ export async function saveMatchVideo(
   matchId: string,
   videoUrl: string
 ): Promise<void> {
-  await db.update(matches).set({ videoUrl, status: 'analyzing' }).where(eq(matches.id, matchId))
+  await db.update(matches).set({ videoUrl }).where(eq(matches.id, matchId))
 }
 
 /**
@@ -778,6 +779,33 @@ export async function submitAgreement(
 }
 
 /**
+ * Cancel a challenge (only the challenger/player1 can cancel)
+ */
+export async function cancelChallenge(
+  db: Database,
+  matchId: string,
+  userId: string
+): Promise<MatchResult> {
+  const [match] = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1)
+
+  if (!match) {
+    return { success: false, message: 'Match not found' }
+  }
+
+  if (match.player1Id !== userId) {
+    return { success: false, message: 'Only the challenger can cancel' }
+  }
+
+  if (match.status !== 'pending') {
+    return { success: false, message: 'Can only cancel pending challenges' }
+  }
+
+  await db.update(matches).set({ status: 'cancelled' }).where(eq(matches.id, matchId))
+
+  return { success: true, message: 'Challenge cancelled' }
+}
+
+/**
  * Check if user can challenge opponent
  */
 export async function canChallenge(
@@ -786,8 +814,8 @@ export async function canChallenge(
   opponentId: string
 ): Promise<{ canChallenge: boolean; error?: string }> {
   // Check for existing pending/active match
-  const [existingMatch] = await db
-    .select({ id: matches.id })
+  const existingMatches = await db
+    .select({ id: matches.id, status: matches.status, createdAt: matches.createdAt })
     .from(matches)
     .where(
       and(
@@ -799,13 +827,27 @@ export async function canChallenge(
           eq(matches.status, 'pending'),
           eq(matches.status, 'scheduled'),
           eq(matches.status, 'accepted'),
-          eq(matches.status, 'in_progress')
+          eq(matches.status, 'in_progress'),
+          eq(matches.status, 'uploading'),
+          eq(matches.status, 'analyzing')
         )
       )
     )
-    .limit(1)
 
-  if (existingMatch) {
+  // Auto-expire pending matches older than 30 minutes
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000)
+  const activeMatches = []
+
+  for (const m of existingMatches) {
+    if (m.status === 'pending' && m.createdAt < thirtyMinutesAgo) {
+      await db.update(matches).set({ status: 'cancelled' }).where(eq(matches.id, m.id))
+      logger.info({ matchId: m.id }, 'Auto-expired stale pending match')
+    } else {
+      activeMatches.push(m)
+    }
+  }
+
+  if (activeMatches.length > 0) {
     return { canChallenge: false, error: 'Already have an active challenge with this player' }
   }
 

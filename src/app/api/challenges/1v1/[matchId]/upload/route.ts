@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/db'
 import { getSession } from '@/lib/auth'
-import { getMatchById, saveMatchVideo, saveMatchResults, updateMatchStatus } from '@/lib/matches'
-import { analyzeMatchVideo, calculateRewards } from '@/lib/gemini'
-import { uploadMatchVideo, saveMatchAnalysis } from '@/lib/azure-storage'
+import { getMatchById, saveMatchVideo, updateMatchStatus } from '@/lib/matches'
+import { uploadMatchVideo } from '@/lib/azure-storage'
 import { logger } from '@/lib/utils/logger'
 import { withErrorLogging } from '@/lib/utils/api-handler'
 
@@ -13,7 +12,7 @@ interface RouteParams {
 
 /**
  * POST /api/challenges/1v1/[matchId]/upload
- * Upload match video and trigger AI analysis
+ * Upload match video. Scores are entered manually after upload.
  */
 const _POST = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
@@ -42,16 +41,16 @@ const _POST = async (request: Request, { params }: RouteParams): Promise<NextRes
       return NextResponse.json({ error: 'Match not in progress' }, { status: 400 })
     }
 
-    // Check if video was already uploaded (prevent duplicate analysis)
+    // Check if video was already uploaded
     if (match.videoUrl) {
       return NextResponse.json(
-        { error: 'Video already uploaded. Analysis in progress or completed.' },
+        { error: 'Video already uploaded.' },
         { status: 400 }
       )
     }
 
-    // Verify uploader is the one with recording lock
-    if (match.recordingBy && match.recordingBy !== session.user.id) {
+    // Allow upload if recordingBy is null (any participant) or matches user
+    if (match.recordingBy !== null && match.recordingBy !== session.user.id) {
       return NextResponse.json(
         { error: 'Only the recording player can upload the video' },
         { status: 403 }
@@ -83,17 +82,15 @@ const _POST = async (request: Request, { params }: RouteParams): Promise<NextRes
     const videoBuffer = Buffer.from(await video.arrayBuffer())
     const videoUrl = await uploadMatchVideo(matchId, videoBuffer)
 
-    // Save video URL and update status to analyzing
+    // Save video URL — status stays in_progress for manual score entry
     await saveMatchVideo(db, matchId, videoUrl)
+    await updateMatchStatus(db, matchId, 'in_progress')
 
-    logger.info({ matchId, videoUrl }, 'Match video uploaded, starting analysis')
-
-    // Trigger AI analysis (async - don't wait)
-    analyzeAndSaveResults(matchId, videoUrl, match.player1.id, match.player2.id)
+    logger.info({ matchId, videoUrl }, 'Match video uploaded, awaiting manual score entry')
 
     return NextResponse.json({
       success: true,
-      status: 'analyzing',
+      status: 'in_progress',
       videoUrl,
     })
   } catch (error) {
@@ -103,66 +100,3 @@ const _POST = async (request: Request, { params }: RouteParams): Promise<NextRes
 }
 
 export const POST = withErrorLogging(_POST)
-
-/**
- * Analyze video and save results (runs async)
- */
-async function analyzeAndSaveResults(
-  matchId: string,
-  videoUrl: string,
-  player1Id: string,
-  player2Id: string
-): Promise<void> {
-  const db = getDb()
-
-  try {
-    const analysis = await analyzeMatchVideo(videoUrl)
-
-    // Save raw analysis to Azure Blob for debugging/audit
-    const analysisData = {
-      matchId,
-      videoUrl,
-      player1Id,
-      player2Id,
-      analyzedAt: new Date().toISOString(),
-      rawAnalysis: analysis,
-    }
-
-    try {
-      await saveMatchAnalysis(matchId, analysisData)
-    } catch (blobError) {
-      logger.error({ blobError, matchId }, 'Failed to save analysis to blob, continuing...')
-    }
-
-    if (!analysis) {
-      logger.error({ matchId }, 'Analysis returned null')
-      await updateMatchStatus(db, matchId, 'completed')
-      return
-    }
-
-    // Determine winner
-    const player1Score = analysis.player1Score
-    const player2Score = analysis.player2Score
-    const winnerId = player1Score > player2Score ? player1Id : player2Id
-
-    // Calculate rewards
-    const winnerScore = Math.max(player1Score, player2Score)
-    const loserScore = Math.min(player1Score, player2Score)
-    const rewards = calculateRewards(winnerScore, loserScore)
-
-    // Save results
-    await saveMatchResults(db, matchId, {
-      player1Score,
-      player2Score,
-      winnerId,
-      winnerXp: rewards.winnerXp,
-      winnerRp: rewards.winnerRp,
-      loserXp: rewards.loserXp,
-    })
-
-    logger.info({ matchId, player1Score, player2Score, winnerId }, 'Match analysis complete')
-  } catch (error) {
-    logger.error({ error, matchId }, 'Failed to analyze and save match results')
-    await updateMatchStatus(db, matchId, 'completed')
-  }
-}

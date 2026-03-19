@@ -48,8 +48,8 @@ export default function MatchesPage() {
   const [filter, setFilter] = useState<FilterType>('all')
   const [respondingId, setRespondingId] = useState<string | null>(null)
 
-  const fetchData = useCallback(async () => {
-    setIsLoading(true)
+  const fetchData = useCallback(async (showLoading = false) => {
+    if (showLoading) setIsLoading(true)
     try {
       const [matchesRes, receivedRes, sentRes] = await Promise.all([
         fetch('/api/matches'),
@@ -72,12 +72,20 @@ export default function MatchesPage() {
     } catch (err) {
       void err
     } finally {
-      setIsLoading(false)
+      if (showLoading) setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    fetchData()
+    fetchData(true)
+  }, [fetchData])
+
+  // Poll for updates every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchData()
+    }, 5000)
+    return () => clearInterval(interval)
   }, [fetchData])
 
   const handleRespond = async (invitationId: string, accept: boolean): Promise<void> => {
@@ -128,7 +136,9 @@ export default function MatchesPage() {
   const handleMatchClick = (match: Match): void => {
     const routes: Record<string, string> = {
       scheduled: `/challenges/1v1/${match.id}/ready`,
-      pending: match.isChallenger ? `/challenges/1v1/${match.id}/pending` : '/challenges',
+      pending: match.isChallenger
+        ? `/challenges/1v1/${match.id}/pending`
+        : `/challenges/1v1/${match.id}/respond`,
       accepted: `/challenges/1v1/${match.id}/ready`,
       in_progress: `/challenges/1v1/${match.id}/record`,
       uploading: `/challenges/1v1/${match.id}/upload`,

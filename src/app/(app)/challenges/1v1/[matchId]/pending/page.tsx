@@ -81,14 +81,12 @@ export default function MatchPendingPage(): JSX.Element {
     setError(null)
 
     try {
-      const response = await fetch(`/api/challenges/1v1/${matchId}/respond`, {
+      const response = await fetch(`/api/challenges/1v1/${matchId}/cancel`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accept: false }),
       })
 
       if (response.ok) {
-        router.push('/challenges')
+        router.push('/matches')
       } else {
         const data = await response.json()
         setError(data.error || 'Failed to cancel challenge')
