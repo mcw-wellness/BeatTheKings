@@ -13,6 +13,7 @@ import {
   LocationStatus,
   MapLoadingFallback,
   MapView,
+  LocationTestControls,
   type VenueItem,
   type ActivePlayer,
 } from '@/components/map'
@@ -131,6 +132,8 @@ function MapPageContent(): JSX.Element {
   const destination = selectedVenue?.latitude && selectedVenue?.longitude
     ? { lat: selectedVenue.latitude, lng: selectedVenue.longitude } : null
 
+  const testVenue = selectedVenue ?? venues[0] ?? null
+
   return (
     <main className="h-dvh flex flex-col overflow-hidden relative" style={{ backgroundImage: 'url(/backgrounds/stadium.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
@@ -138,8 +141,13 @@ function MapPageContent(): JSX.Element {
         <div className="px-3 pt-2 shrink-0">
           <MapHeader />
         </div>
-        <div className="px-3 py-1 shrink-0">
+        <div className="px-3 py-1 shrink-0 space-y-2">
           <LocationStatus geoLoading={geoLoading} latitude={latitude} permission={permission} geoError={geoError} requestPermission={requestPermission} highlight={showLocationHighlight} />
+          <LocationTestControls
+            venueName={testVenue?.name ?? null}
+            venueLatitude={testVenue?.latitude ?? null}
+            venueLongitude={testVenue?.longitude ?? null}
+          />
         </div>
 
         <div className="flex-1 min-h-0 px-3 py-1">
