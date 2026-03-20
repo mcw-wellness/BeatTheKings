@@ -69,19 +69,22 @@ function MapPageContent(): JSX.Element {
 
   const userCenter = latitude && longitude ? { lat: latitude, lng: longitude } : defaultCenter
 
-  const fetchVenues = useCallback(async (): Promise<void> => {
-    setIsLoading(true)
-    try {
-      let url = '/api/venues?limit=50'
-      if (latitude && longitude) url += `&lat=${latitude}&lng=${longitude}`
-      const response = await fetch(url)
-      if (response.ok) setVenues((await response.json()).venues || [])
-    } catch (err) {
-      void err
-    } finally {
-      setIsLoading(false)
-    }
-  }, [latitude, longitude])
+  const fetchVenues = useCallback(
+    async (showLoading = true): Promise<void> => {
+      if (showLoading) setIsLoading(true)
+      try {
+        let url = '/api/venues?limit=50'
+        if (latitude && longitude) url += `&lat=${latitude}&lng=${longitude}`
+        const response = await fetch(url)
+        if (response.ok) setVenues((await response.json()).venues || [])
+      } catch (err) {
+        void err
+      } finally {
+        if (showLoading) setIsLoading(false)
+      }
+    },
+    [latitude, longitude]
+  )
 
   const fetchVenueDetails = useCallback(
     async (venueId: string): Promise<void> => {
@@ -107,6 +110,21 @@ function MapPageContent(): JSX.Element {
   useEffect(() => {
     if (!geoLoading) fetchVenues()
   }, [geoLoading, fetchVenues])
+
+  // Poll venues + selected venue details for near real-time active player updates
+  useEffect(() => {
+    if (geoLoading) return
+
+    const interval = setInterval(() => {
+      fetchVenues(false)
+      if (selectedVenue?.id) {
+        fetchVenueDetails(selectedVenue.id)
+      }
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [geoLoading, fetchVenues, fetchVenueDetails, selectedVenue?.id])
+
   useEffect(() => {
     if (venueIdFromUrl && !isLoading) fetchVenueDetails(venueIdFromUrl)
   }, [venueIdFromUrl, isLoading, fetchVenueDetails])
