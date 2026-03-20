@@ -23,6 +23,18 @@ import { useMapCheckIn } from '@/lib/hooks/useMapCheckIn'
 const defaultCenter = { lat: 48.2082, lng: 16.3738 }
 const ONBOARDING_KEY = 'hasCompletedOnboarding'
 
+function isSameActivePlayers(prev: ActivePlayer[], next: ActivePlayer[]): boolean {
+  if (prev.length !== next.length) return false
+
+  for (let i = 0; i < prev.length; i++) {
+    if (prev[i].id !== next[i].id) return false
+    if (prev[i].rank !== next[i].rank) return false
+    if (prev[i].avatar?.imageUrl !== next[i].avatar?.imageUrl) return false
+  }
+
+  return true
+}
+
 export default function MapPage(): JSX.Element {
   return (
     <Suspense fallback={<MapLoadingFallback />}>
@@ -96,7 +108,10 @@ function MapPageContent(): JSX.Element {
         if (response.ok) {
           const data = await response.json()
           setSelectedVenue(data.venue)
-          setActivePlayers(data.activePlayers || [])
+          setActivePlayers((prev) => {
+            const next = data.activePlayers || []
+            return isSameActivePlayers(prev, next) ? prev : next
+          })
         }
       } catch (err) {
         void err

@@ -22,6 +22,32 @@ interface ActiveVenuesResponse {
   totalActiveVenues: number
 }
 
+function isSameActiveVenuesPayload(
+  prev: ActiveVenuesResponse | null,
+  next: ActiveVenuesResponse
+): boolean {
+  if (!prev) return false
+  if (prev.totalActiveVenues !== next.totalActiveVenues) return false
+  if (prev.venues.length !== next.venues.length) return false
+
+  for (let i = 0; i < prev.venues.length; i++) {
+    const a = prev.venues[i]
+    const b = next.venues[i]
+
+    if (a.id !== b.id) return false
+    if (a.activePlayerCount !== b.activePlayerCount) return false
+    if (a.distanceFormatted !== b.distanceFormatted) return false
+    if (a.activePlayers.length !== b.activePlayers.length) return false
+
+    for (let j = 0; j < a.activePlayers.length; j++) {
+      if (a.activePlayers[j].id !== b.activePlayers[j].id) return false
+      if (a.activePlayers[j].avatarUrl !== b.activePlayers[j].avatarUrl) return false
+    }
+  }
+
+  return true
+}
+
 export function OneVsOneSlot(): JSX.Element {
   const router = useRouter()
   const { latitude, longitude, permission } = useLocation()
@@ -44,7 +70,8 @@ export function OneVsOneSlot(): JSX.Element {
           { cache: 'no-store' }
         )
         if (res.ok && isMounted) {
-          setData(await res.json())
+          const nextData = (await res.json()) as ActiveVenuesResponse
+          setData((prev) => (isSameActiveVenuesPayload(prev, nextData) ? prev : nextData))
         }
       } catch {
         // Silent fail - show empty state
