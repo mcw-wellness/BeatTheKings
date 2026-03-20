@@ -23,6 +23,7 @@ export default function MatchRecordPage(): JSX.Element {
   const mimeTypeRef = useRef('video/webm')
   const stopFallbackRef = useRef<NodeJS.Timeout | null>(null)
   const isFinalizingRef = useRef(false)
+  const hasRecordedOnceRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [isRecording, setIsRecording] = useState(false)
@@ -225,6 +226,7 @@ export default function MatchRecordPage(): JSX.Element {
       setIsUploading(true)
       await uploadBlob(blob)
       mediaRecorderRef.current = null
+      hasRecordedOnceRef.current = true
       router.push(`/challenges/1v1/${matchId}/score`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
@@ -236,7 +238,15 @@ export default function MatchRecordPage(): JSX.Element {
   }, [matchId, router, stopPreviewTracks, uploadBlob])
 
   const handleStartRecording = async (): Promise<void> => {
-    if (isStopping) return
+    if (isStopping || isUploading) return
+
+    setError(null)
+
+    // After one full recording cycle, force a fresh stream to avoid black preview on some mobiles.
+    if (hasRecordedOnceRef.current) {
+      stopPreviewTracks()
+      await initCamera()
+    }
 
     const currentStream = videoRef.current?.srcObject as MediaStream | null
     const hasLiveStream = !!currentStream?.getTracks().some((track) => track.readyState === 'live')
