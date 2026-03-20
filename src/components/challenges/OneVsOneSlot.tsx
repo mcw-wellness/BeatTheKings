@@ -34,21 +34,35 @@ export function OneVsOneSlot(): JSX.Element {
       return
     }
 
-    const fetchActiveVenues = async () => {
+    let isMounted = true
+
+    const fetchActiveVenues = async (showLoading = false) => {
+      if (showLoading) setIsLoading(true)
       try {
         const res = await fetch(
-          `/api/challenges/1v1/active-venues?lat=${latitude}&lng=${longitude}&limit=3`
+          `/api/challenges/1v1/active-venues?lat=${latitude}&lng=${longitude}&limit=3`,
+          { cache: 'no-store' }
         )
-        if (res.ok) {
+        if (res.ok && isMounted) {
           setData(await res.json())
         }
       } catch {
         // Silent fail - show empty state
       } finally {
-        setIsLoading(false)
+        if (showLoading && isMounted) setIsLoading(false)
       }
     }
-    fetchActiveVenues()
+
+    fetchActiveVenues(true)
+
+    const interval = setInterval(() => {
+      fetchActiveVenues(false)
+    }, 5000)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
   }, [latitude, longitude])
 
   const handleVenueClick = (venueId: string) => {

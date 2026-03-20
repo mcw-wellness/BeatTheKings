@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
+import { useNotifications } from '@/lib/hooks/useNotifications'
 
 interface Player {
   id: string
@@ -34,7 +35,7 @@ export default function MatchPendingPage(): JSX.Element {
 
   const fetchMatch = useCallback(async () => {
     try {
-      const response = await fetch(`/api/challenges/1v1/${matchId}`)
+      const response = await fetch(`/api/challenges/1v1/${matchId}`, { cache: 'no-store' })
       const data = await response.json()
 
       if (!response.ok) {
@@ -68,7 +69,26 @@ export default function MatchPendingPage(): JSX.Element {
     fetchMatch()
   }, [fetchMatch])
 
-  // Poll for updates
+  // Real-time push updates (primary)
+  useNotifications({
+    onEvent: (event) => {
+      if (!matchId) return
+
+      const eventMatchId = (event.data as { matchId?: string })?.matchId
+      if (eventMatchId !== matchId) return
+
+      if (event.type === 'challenge-accepted') {
+        router.push(`/challenges/1v1/${matchId}/ready`)
+      } else if (event.type === 'challenge-declined') {
+        setDeclined(true)
+      } else if (event.type === 'challenge-cancelled') {
+        router.push('/matches')
+      }
+    },
+    enabled: !declined && !error,
+  })
+
+  // Poll fallback (secondary)
   useEffect(() => {
     if (declined || error) return
 
