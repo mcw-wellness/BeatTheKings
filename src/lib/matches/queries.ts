@@ -83,9 +83,20 @@ export async function canChallenge(
   db: Database,
   challengerId: string,
   opponentId: string
-): Promise<{ canChallenge: boolean; error?: string }> {
+): Promise<{
+  canChallenge: boolean
+  error?: string
+  existingMatchId?: string
+  existingMatchStatus?: string
+  canCancelExisting?: boolean
+}> {
   const existingMatches = await db
-    .select({ id: matches.id, status: matches.status, createdAt: matches.createdAt })
+    .select({
+      id: matches.id,
+      status: matches.status,
+      createdAt: matches.createdAt,
+      player1Id: matches.player1Id,
+    })
     .from(matches)
     .where(
       and(
@@ -117,7 +128,14 @@ export async function canChallenge(
   }
 
   if (activeMatches.length > 0) {
-    return { canChallenge: false, error: 'Already have an active challenge with this player' }
+    const activeMatch = activeMatches[0]
+    return {
+      canChallenge: false,
+      error: 'Already have an active challenge with this player',
+      existingMatchId: activeMatch.id,
+      existingMatchStatus: activeMatch.status,
+      canCancelExisting: activeMatch.player1Id === challengerId,
+    }
   }
 
   return { canChallenge: true }
