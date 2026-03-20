@@ -99,8 +99,8 @@ function MapPageContent(): JSX.Element {
   )
 
   const fetchVenueDetails = useCallback(
-    async (venueId: string): Promise<void> => {
-      setIsLoadingDetails(true)
+    async (venueId: string, showLoading = true): Promise<void> => {
+      if (showLoading) setIsLoadingDetails(true)
       try {
         let url = `/api/venues/${venueId}`
         if (latitude && longitude) url += `?lat=${latitude}&lng=${longitude}`
@@ -116,7 +116,7 @@ function MapPageContent(): JSX.Element {
       } catch (err) {
         void err
       } finally {
-        setIsLoadingDetails(false)
+        if (showLoading) setIsLoadingDetails(false)
       }
     },
     [latitude, longitude]
@@ -133,7 +133,7 @@ function MapPageContent(): JSX.Element {
     const interval = setInterval(() => {
       fetchVenues(false)
       if (selectedVenue?.id) {
-        fetchVenueDetails(selectedVenue.id)
+        fetchVenueDetails(selectedVenue.id, false)
       }
     }, 5000)
 

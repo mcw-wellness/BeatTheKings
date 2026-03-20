@@ -147,7 +147,13 @@ export default function PlayerPage(): JSX.Element {
   }
 
   const handleCancelAndRestart = async (): Promise<void> => {
-    if (!activeChallengeConflict?.canCancelExisting) return
+    if (
+      !activeChallengeConflict?.canCancelExisting ||
+      activeChallengeConflict.status !== 'pending'
+    ) {
+      setChallengeError('Only pending challenges can be cancelled and restarted.')
+      return
+    }
 
     setIsChallengeSending(true)
     setChallengeError(null)
@@ -420,6 +426,8 @@ export default function PlayerPage(): JSX.Element {
                   : 'You can open the existing challenge from My Matches.'}
             </p>
 
+            {challengeError && <p className="text-red-300 text-xs mb-3">{challengeError}</p>}
+
             <div className="space-y-2">
               <button
                 onClick={() => {
@@ -437,15 +445,16 @@ export default function PlayerPage(): JSX.Element {
                 Proceed with Existing
               </button>
 
-              {activeChallengeConflict.canCancelExisting && (
-                <button
-                  onClick={handleCancelAndRestart}
-                  disabled={isChallengeSending}
-                  className="w-full py-3 bg-white/10 text-white border border-white/20 rounded-xl disabled:opacity-50"
-                >
-                  {isChallengeSending ? 'Restarting...' : 'Cancel & Start New'}
-                </button>
-              )}
+              {activeChallengeConflict.canCancelExisting &&
+                activeChallengeConflict.status === 'pending' && (
+                  <button
+                    onClick={handleCancelAndRestart}
+                    disabled={isChallengeSending}
+                    className="w-full py-3 bg-white/10 text-white border border-white/20 rounded-xl disabled:opacity-50"
+                  >
+                    {isChallengeSending ? 'Restarting...' : 'Cancel & Start New'}
+                  </button>
+                )}
 
               {!activeChallengeConflict.canCancelExisting &&
                 activeChallengeConflict.status === 'pending' && (
