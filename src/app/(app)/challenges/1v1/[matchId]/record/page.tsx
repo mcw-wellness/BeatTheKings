@@ -171,11 +171,22 @@ export default function MatchRecordPage(): JSX.Element {
     return types.find((t) => MediaRecorder.isTypeSupported(t)) || 'video/webm'
   }
 
+  const stopPreviewTracks = useCallback((): void => {
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
+      tracks.forEach((track) => track.stop())
+      videoRef.current.srcObject = null
+    }
+    setCameraReady(false)
+  }, [])
+
   const finalizeRecording = useCallback((): void => {
     if (stopFallbackRef.current) {
       clearTimeout(stopFallbackRef.current)
       stopFallbackRef.current = null
     }
+
+    stopPreviewTracks()
 
     const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current })
     if (blob.size === 0) {
@@ -188,14 +199,27 @@ export default function MatchRecordPage(): JSX.Element {
     reader.onloadend = () => {
       sessionStorage.setItem('matchVideo', reader.result as string)
       sessionStorage.setItem('matchDuration', duration.toString())
+      mediaRecorderRef.current = null
       setIsStopping(false)
       router.push(`/challenges/1v1/${matchId}/upload`)
     }
     reader.readAsDataURL(blob)
-  }, [duration, matchId, router])
+  }, [duration, matchId, router, stopPreviewTracks])
 
-  const handleStartRecording = (): void => {
-    if (!videoRef.current?.srcObject) return
+  const handleStartRecording = async (): Promise<void> => {
+    if (isStopping) return
+
+    const currentStream = videoRef.current?.srcObject as MediaStream | null
+    const hasLiveStream = !!currentStream?.getTracks().some((track) => track.readyState === 'live')
+
+    if (!hasLiveStream) {
+      await initCamera()
+    }
+
+    if (!videoRef.current?.srcObject) {
+      setError('Camera is not ready. Please try again.')
+      return
+    }
 
     chunksRef.current = []
     const stream = videoRef.current.srcObject as MediaStream
@@ -226,11 +250,6 @@ export default function MatchRecordPage(): JSX.Element {
 
     setIsStopping(true)
 
-    if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-      tracks.forEach((track) => track.stop())
-    }
-
     if (mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.requestData()
       mediaRecorderRef.current.stop()
@@ -239,7 +258,7 @@ export default function MatchRecordPage(): JSX.Element {
     // Fallback in case onstop is delayed/not fired on some mobile browsers
     stopFallbackRef.current = setTimeout(() => {
       finalizeRecording()
-    }, 1500)
+    }, 2500)
 
     setIsRecording(false)
   }
@@ -361,7 +380,7 @@ export default function MatchRecordPage(): JSX.Element {
           {!isRecording ? (
             <button
               onClick={handleStartRecording}
-              disabled={!cameraReady}
+              disabled={!cameraReady || isStopping}
               className="w-20 h-20 md:w-24 md:h-24 bg-red-500 active:bg-red-600 disabled:bg-gray-500 rounded-full flex items-center justify-center shadow-lg border-4 border-white"
             >
               <span className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-full" />
