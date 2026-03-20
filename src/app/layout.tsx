@@ -5,6 +5,7 @@ import { AppProvider } from '@/context/AppContext'
 import { SessionProvider } from '@/components/layout/SessionProvider'
 import { LocationProvider } from '@/context/LocationContext'
 import { AutoCheckIn } from '@/components/AutoCheckIn'
+import { ChallengeNotificationPopup } from '@/components/ChallengeNotificationPopup'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -25,6 +26,7 @@ export default function RootLayout({
           <LocationProvider>
             <AppProvider>
               <AutoCheckIn />
+              <ChallengeNotificationPopup />
               {children}
             </AppProvider>
           </LocationProvider>
