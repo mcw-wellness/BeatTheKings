@@ -22,10 +22,12 @@ export default function MatchRecordPage(): JSX.Element {
   const chunksRef = useRef<Blob[]>([])
   const mimeTypeRef = useRef('video/webm')
   const stopFallbackRef = useRef<NodeJS.Timeout | null>(null)
+  const isFinalizingRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [isRecording, setIsRecording] = useState(false)
   const [isStopping, setIsStopping] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [duration, setDuration] = useState(0)
   const [cameraReady, setCameraReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -181,7 +183,28 @@ export default function MatchRecordPage(): JSX.Element {
     setCameraReady(false)
   }, [])
 
-  const finalizeRecording = useCallback((): void => {
+  const uploadBlob = useCallback(
+    async (blob: Blob): Promise<void> => {
+      const formData = new FormData()
+      formData.append('video', blob, 'match-video.webm')
+
+      const uploadResponse = await fetch(`/api/challenges/1v1/${matchId}/upload`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!uploadResponse.ok) {
+        const data = await uploadResponse.json()
+        throw new Error(data.error || 'Upload failed')
+      }
+    },
+    [matchId]
+  )
+
+  const finalizeRecording = useCallback(async (): Promise<void> => {
+    if (isFinalizingRef.current) return
+    isFinalizingRef.current = true
+
     if (stopFallbackRef.current) {
       clearTimeout(stopFallbackRef.current)
       stopFallbackRef.current = null
@@ -193,19 +216,24 @@ export default function MatchRecordPage(): JSX.Element {
     if (blob.size === 0) {
       setError('Recording failed. Please try again.')
       setIsStopping(false)
+      setIsUploading(false)
+      isFinalizingRef.current = false
       return
     }
 
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      sessionStorage.setItem('matchVideo', reader.result as string)
-      sessionStorage.setItem('matchDuration', duration.toString())
+    try {
+      setIsUploading(true)
+      await uploadBlob(blob)
       mediaRecorderRef.current = null
+      router.push(`/challenges/1v1/${matchId}/score`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed')
+      setIsUploading(false)
+      isFinalizingRef.current = false
+    } finally {
       setIsStopping(false)
-      router.push(`/challenges/1v1/${matchId}/upload`)
     }
-    reader.readAsDataURL(blob)
-  }, [duration, matchId, router, stopPreviewTracks])
+  }, [matchId, router, stopPreviewTracks, uploadBlob])
 
   const handleStartRecording = async (): Promise<void> => {
     if (isStopping) return
@@ -236,13 +264,15 @@ export default function MatchRecordPage(): JSX.Element {
     }
 
     mediaRecorder.onstop = () => {
-      finalizeRecording()
+      void finalizeRecording()
     }
 
     mediaRecorder.start(1000)
     mediaRecorderRef.current = mediaRecorder
+    isFinalizingRef.current = false
     setIsRecording(true)
     setIsStopping(false)
+    setIsUploading(false)
     setDuration(0)
   }
 
@@ -258,13 +288,13 @@ export default function MatchRecordPage(): JSX.Element {
 
     // Fallback in case onstop is delayed/not fired on some mobile browsers
     stopFallbackRef.current = setTimeout(() => {
-      finalizeRecording()
-    }, 2500)
+      void finalizeRecording()
+    }, 8000)
 
     setIsRecording(false)
   }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -273,13 +303,15 @@ export default function MatchRecordPage(): JSX.Element {
       return
     }
 
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      sessionStorage.setItem('matchVideo', reader.result as string)
-      sessionStorage.setItem('matchDuration', '0')
-      router.push(`/challenges/1v1/${matchId}/upload`)
+    try {
+      setError(null)
+      setIsUploading(true)
+      await uploadBlob(file)
+      router.push(`/challenges/1v1/${matchId}/score`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed')
+      setIsUploading(false)
     }
-    reader.readAsDataURL(file)
   }
 
   const formatDuration = (seconds: number): string => {
@@ -374,7 +406,8 @@ export default function MatchRecordPage(): JSX.Element {
           {!isRecording && (
             <button
               onClick={handleFlipCamera}
-              className="w-12 h-12 md:w-14 md:h-14 bg-white/20 active:bg-white/30 rounded-full flex items-center justify-center text-white text-xl"
+              disabled={isUploading || isStopping}
+              className="w-12 h-12 md:w-14 md:h-14 bg-white/20 active:bg-white/30 disabled:bg-white/10 rounded-full flex items-center justify-center text-white text-xl"
             >
               ↻
             </button>
@@ -384,7 +417,7 @@ export default function MatchRecordPage(): JSX.Element {
           {!isRecording ? (
             <button
               onClick={handleStartRecording}
-              disabled={!cameraReady || isStopping}
+              disabled={!cameraReady || isStopping || isUploading}
               className="w-20 h-20 md:w-24 md:h-24 bg-red-500 active:bg-red-600 disabled:bg-gray-500 rounded-full flex items-center justify-center shadow-lg border-4 border-white"
             >
               <span className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-full" />
@@ -392,7 +425,7 @@ export default function MatchRecordPage(): JSX.Element {
           ) : (
             <button
               onClick={handleStopRecording}
-              disabled={isStopping}
+              disabled={isStopping || isUploading}
               className="w-20 h-20 md:w-24 md:h-24 bg-red-500 active:bg-red-600 disabled:bg-gray-500 rounded-full flex items-center justify-center shadow-lg border-4 border-white animate-pulse"
             >
               {isStopping ? (
@@ -407,9 +440,13 @@ export default function MatchRecordPage(): JSX.Element {
           {!isRecording && <div className="w-12 h-12 md:w-14 md:h-14" />}
         </div>
 
-        {isRecording && (
+        {(isRecording || isUploading) && (
           <p className="text-white/70 text-center text-sm mt-4">
-            {isStopping ? 'Finalizing recording...' : 'Tap the stop button when the match is over'}
+            {isUploading
+              ? 'Uploading video...'
+              : isStopping
+                ? 'Finalizing recording...'
+                : 'Tap the stop button when the match is over'}
           </p>
         )}
       </div>
