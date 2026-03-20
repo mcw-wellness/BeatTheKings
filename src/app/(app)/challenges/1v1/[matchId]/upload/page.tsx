@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { Logo } from '@/components/layout/Logo'
 
 export default function MatchUploadPage(): JSX.Element {
   const router = useRouter()
@@ -128,6 +129,9 @@ export default function MatchUploadPage(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="absolute top-3 left-3 z-20">
+        <Logo size="sm" linkToHome className="w-10 h-10" />
+      </div>
       <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 p-6 md:p-8 max-w-sm w-full relative z-10">
         {/* Video Info */}
         <div className="bg-white/10 rounded-lg p-4 mb-6 flex items-center gap-4">

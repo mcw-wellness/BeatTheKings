@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
+import { Logo } from '@/components/layout/Logo'
 import { useNotifications } from '@/lib/hooks/useNotifications'
 
 interface Player {
@@ -196,6 +197,9 @@ export default function MatchPendingPage(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="absolute top-3 left-3 z-20">
+        <Logo size="sm" linkToHome className="w-10 h-10" />
+      </div>
       <div className="h-full flex flex-col relative z-10">
         {/* Header */}
         <header className="p-4 border-b border-white/20 bg-black/20 backdrop-blur">

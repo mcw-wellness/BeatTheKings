@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { Logo } from '@/components/layout/Logo'
 import { useNotifications } from '@/lib/hooks/useNotifications'
 
 interface MatchState {
@@ -78,6 +79,9 @@ export default function MatchWaitingPage(): JSX.Element {
   return (
     <main className="h-dvh flex items-center justify-center p-4 relative" style={bgStyle}>
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="absolute top-3 left-3 z-20">
+        <Logo size="sm" linkToHome className="w-10 h-10" />
+      </div>
       <div className="relative z-10 bg-white/10 backdrop-blur rounded-xl border border-white/20 p-6 max-w-sm w-full text-center">
         <div className="w-16 h-16 bg-blue-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
           <span className="text-3xl">⏳</span>

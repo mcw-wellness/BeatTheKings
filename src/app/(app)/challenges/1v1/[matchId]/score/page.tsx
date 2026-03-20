@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { Logo } from '@/components/layout/Logo'
 
 interface MatchData {
   status: string
@@ -102,6 +103,9 @@ export default function MatchScorePage(): JSX.Element {
   return (
     <main className="h-dvh flex items-center justify-center p-4 relative" style={bgStyle}>
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="absolute top-3 left-3 z-20">
+        <Logo size="sm" linkToHome className="w-10 h-10" />
+      </div>
       <div className="relative z-10 bg-white/10 backdrop-blur rounded-xl border border-white/20 p-6 max-w-sm w-full">
         <h1 className="text-xl font-bold text-white mb-1">Enter Match Scores</h1>
         <p className="text-white/60 text-sm mb-5">Enter both players’ final scores</p>
