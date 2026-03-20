@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
+import { Logo } from '@/components/layout/Logo'
 
 interface ResultData {
   isWinner: boolean
@@ -191,6 +192,9 @@ export default function MatchResultsPage(): JSX.Element {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+      <div className="absolute top-3 left-3 z-20">
+        <Logo size="sm" linkToHome className="w-10 h-10" />
+      </div>
       <div className="h-full flex flex-col px-3 py-2 relative z-10 overflow-y-auto">
         {/* Result Banner */}
         <div

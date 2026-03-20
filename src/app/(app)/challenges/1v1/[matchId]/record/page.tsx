@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { Logo } from '@/components/layout/Logo'
 
 interface MatchResponse {
   status: string
@@ -335,6 +336,9 @@ export default function MatchRecordPage(): JSX.Element {
 
   return (
     <main className="h-dvh bg-black relative overflow-hidden">
+      <div className="absolute top-3 left-3 z-20">
+        <Logo size="sm" linkToHome className="w-10 h-10" />
+      </div>
       {/* Video Preview */}
       <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
 
