@@ -34,6 +34,8 @@ interface Match {
   winnerId: string | null
   scheduledAt: string | null
   createdAt: string
+  recordingBy: string | null
+  videoUrl: string | null
 }
 
 type FilterType = 'all' | 'pending' | 'verified' | 'disputed'
@@ -149,14 +151,19 @@ export default function MatchesPage() {
   }
 
   const handleMatchClick = (match: Match): void => {
+    const isOtherPlayerRecording =
+      !!match.recordingBy && match.recordingBy === match.opponent.id && !match.videoUrl
+
     const routes: Record<string, string> = {
       scheduled: `/challenges/1v1/${match.id}/ready`,
       pending: match.isChallenger
         ? `/challenges/1v1/${match.id}/pending`
         : `/challenges/1v1/${match.id}/respond`,
       accepted: `/challenges/1v1/${match.id}/ready`,
-      in_progress: `/challenges/1v1/${match.id}/record`,
-      uploading: `/challenges/1v1/${match.id}/upload`,
+      in_progress: isOtherPlayerRecording
+        ? `/challenges/1v1/${match.id}/waiting`
+        : `/challenges/1v1/${match.id}/record`,
+      uploading: `/challenges/1v1/${match.id}/waiting`,
       analyzing: `/challenges/1v1/${match.id}/results`,
       completed: `/challenges/1v1/${match.id}/results`,
       disputed: `/challenges/1v1/${match.id}/results`,

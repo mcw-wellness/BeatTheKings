@@ -9,43 +9,11 @@ export default function MatchUploadPage(): JSX.Element {
   const matchId = params.matchId as string
 
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [status, setStatus] = useState<
-    'preparing' | 'uploading' | 'analyzing' | 'complete' | 'error'
-  >('preparing')
+  const [status, setStatus] = useState<'preparing' | 'uploading' | 'complete' | 'error'>(
+    'preparing'
+  )
   const [error, setError] = useState<string | null>(null)
   const [duration, setDuration] = useState('0:00')
-
-  const pollForResults = useCallback(async () => {
-    const maxAttempts = 60 // 2 minutes max
-    let attempts = 0
-
-    const poll = async () => {
-      try {
-        const response = await fetch(`/api/challenges/1v1/${matchId}/results`)
-        const data = await response.json()
-
-        if (!data.analyzing) {
-          setStatus('complete')
-          router.push(`/challenges/1v1/${matchId}/results`)
-          return
-        }
-
-        attempts++
-        if (attempts < maxAttempts) {
-          setTimeout(poll, 2000)
-        } else {
-          router.push(`/challenges/1v1/${matchId}/results`)
-        }
-      } catch {
-        attempts++
-        if (attempts < maxAttempts) {
-          setTimeout(poll, 2000)
-        }
-      }
-    }
-
-    poll()
-  }, [matchId, router])
 
   const uploadVideo = useCallback(
     async (videoData: string) => {
@@ -89,16 +57,16 @@ export default function MatchUploadPage(): JSX.Element {
         sessionStorage.removeItem('matchVideo')
         sessionStorage.removeItem('matchDuration')
 
-        setStatus('analyzing')
-
-        // Poll for results
-        pollForResults()
+        setStatus('complete')
+        setTimeout(() => {
+          router.push(`/challenges/1v1/${matchId}/score`)
+        }, 600)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Upload failed')
         setStatus('error')
       }
     },
-    [matchId, pollForResults]
+    [matchId, router]
   )
 
   useEffect(() => {
@@ -202,25 +170,13 @@ export default function MatchUploadPage(): JSX.Element {
             </>
           )}
 
-          {status === 'analyzing' && (
-            <>
-              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-400 border-t-transparent" />
-              </div>
-              <h1 className="text-xl font-bold text-white">Analyzing Match...</h1>
-              <p className="text-white/70 text-sm mt-1">
-                AI is counting scores. This may take 1-2 minutes.
-              </p>
-            </>
-          )}
-
           {status === 'complete' && (
             <>
               <div className="w-16 h-16 bg-green-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">✓</span>
               </div>
-              <h1 className="text-xl font-bold text-white">Analysis Complete!</h1>
-              <p className="text-white/70 text-sm mt-1">Redirecting to results...</p>
+              <h1 className="text-xl font-bold text-white">Upload Complete!</h1>
+              <p className="text-white/70 text-sm mt-1">Redirecting to score entry...</p>
             </>
           )}
 
@@ -238,8 +194,8 @@ export default function MatchUploadPage(): JSX.Element {
         <div className="bg-blue-500/20 border border-blue-500/40 rounded-lg p-4 text-sm text-blue-300">
           <p className="font-medium mb-1 text-white">What happens next?</p>
           <ul className="space-y-1">
-            <li>• AI analyzes the video</li>
-            <li>• Scores are calculated</li>
+            <li>• Video is uploaded to secure storage</li>
+            <li>• Recorder enters both scores manually</li>
             <li>• Both players can agree or dispute</li>
           </ul>
         </div>

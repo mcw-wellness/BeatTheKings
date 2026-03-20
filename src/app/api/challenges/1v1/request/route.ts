@@ -43,10 +43,25 @@ const _POST = async (request: Request): Promise<NextResponse> => {
     const db = getDb()
 
     // Check if can challenge
-    const { canChallenge: allowed, error } = await canChallenge(db, session.user.id, opponentId)
+    const {
+      canChallenge: allowed,
+      error,
+      existingMatchId,
+      existingMatchStatus,
+      canCancelExisting,
+    } = await canChallenge(db, session.user.id, opponentId)
 
     if (!allowed) {
-      return NextResponse.json({ error: error || 'Cannot challenge this player' }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: error || 'Cannot challenge this player',
+          code: 'ACTIVE_CHALLENGE_EXISTS',
+          existingMatchId,
+          existingMatchStatus,
+          canCancelExisting: !!canCancelExisting,
+        },
+        { status: 409 }
+      )
     }
 
     // Get basketball sport ID

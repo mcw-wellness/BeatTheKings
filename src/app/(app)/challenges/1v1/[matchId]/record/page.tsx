@@ -3,6 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 
+interface MatchResponse {
+  status: string
+  recordingBy: string | null
+  videoUrl: string | null
+  player1: { id: string }
+  player2: { id: string }
+}
+
 export default function MatchRecordPage(): JSX.Element {
   const router = useRouter()
   const params = useParams()
@@ -19,6 +27,50 @@ export default function MatchRecordPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null)
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
+
+  // Ensure only recording player stays on this screen
+  useEffect(() => {
+    let isMounted = true
+
+    const validateRecorder = async () => {
+      try {
+        const res = await fetch(`/api/challenges/1v1/${matchId}`, { cache: 'no-store' })
+        const data = await res.json()
+        if (!res.ok || !isMounted) return
+
+        const match = data.match as MatchResponse
+        const currentUserId = data.isChallenger ? match.player1.id : match.player2.id
+
+        if (match.status === 'completed' || match.status === 'disputed') {
+          router.push(`/challenges/1v1/${matchId}/results`)
+          return
+        }
+
+        if (match.videoUrl) {
+          if (match.recordingBy === currentUserId) {
+            router.push(`/challenges/1v1/${matchId}/score`)
+          } else {
+            router.push(`/challenges/1v1/${matchId}/waiting`)
+          }
+          return
+        }
+
+        if (match.recordingBy && match.recordingBy !== currentUserId) {
+          router.push(`/challenges/1v1/${matchId}/waiting`)
+        }
+      } catch {
+        // ignore, camera flow has its own errors
+      }
+    }
+
+    validateRecorder()
+    const interval = setInterval(validateRecorder, 3000)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [matchId, router])
 
   // Timer
   useEffect(() => {
