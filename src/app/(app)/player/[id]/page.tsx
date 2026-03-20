@@ -147,7 +147,13 @@ export default function PlayerPage(): JSX.Element {
   }
 
   const handleCancelAndRestart = async (): Promise<void> => {
-    if (!activeChallengeConflict?.canCancelExisting) return
+    if (
+      !activeChallengeConflict?.canCancelExisting ||
+      activeChallengeConflict.status !== 'pending'
+    ) {
+      setChallengeError('Only pending challenges can be cancelled and restarted.')
+      return
+    }
 
     setIsChallengeSending(true)
     setChallengeError(null)
@@ -413,12 +419,12 @@ export default function PlayerPage(): JSX.Element {
               You already have an active challenge
             </h3>
             <p className="text-white/70 text-sm mb-4">
-              {activeChallengeConflict.canCancelExisting
+              {activeChallengeConflict.status === 'pending'
                 ? 'You can open the existing challenge, or cancel it and start a new one.'
-                : activeChallengeConflict.status === 'pending'
-                  ? 'You can open the existing challenge, or decline it and start a new one.'
-                  : 'You can open the existing challenge from My Matches.'}
+                : 'You can open the existing challenge from My Matches.'}
             </p>
+
+            {challengeError && <p className="text-red-300 text-xs mb-3">{challengeError}</p>}
 
             <div className="space-y-2">
               <button
@@ -437,15 +443,16 @@ export default function PlayerPage(): JSX.Element {
                 Proceed with Existing
               </button>
 
-              {activeChallengeConflict.canCancelExisting && (
-                <button
-                  onClick={handleCancelAndRestart}
-                  disabled={isChallengeSending}
-                  className="w-full py-3 bg-white/10 text-white border border-white/20 rounded-xl disabled:opacity-50"
-                >
-                  {isChallengeSending ? 'Restarting...' : 'Cancel & Start New'}
-                </button>
-              )}
+              {activeChallengeConflict.canCancelExisting &&
+                activeChallengeConflict.status === 'pending' && (
+                  <button
+                    onClick={handleCancelAndRestart}
+                    disabled={isChallengeSending}
+                    className="w-full py-3 bg-white/10 text-white border border-white/20 rounded-xl disabled:opacity-50"
+                  >
+                    {isChallengeSending ? 'Restarting...' : 'Cancel & Start New'}
+                  </button>
+                )}
 
               {!activeChallengeConflict.canCancelExisting &&
                 activeChallengeConflict.status === 'pending' && (
@@ -454,7 +461,7 @@ export default function PlayerPage(): JSX.Element {
                     disabled={isChallengeSending}
                     className="w-full py-3 bg-white/10 text-white border border-white/20 rounded-xl disabled:opacity-50"
                   >
-                    {isChallengeSending ? 'Restarting...' : 'Decline & Start New'}
+                    {isChallengeSending ? 'Restarting...' : 'Cancel & Start New'}
                   </button>
                 )}
 
