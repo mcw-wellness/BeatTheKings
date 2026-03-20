@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Logo } from '@/components/layout/Logo'
+import { getRecordedVideoBlob, clearRecordedVideoBlob } from '@/lib/matches/videoStore'
 
 export default function MatchUploadPage(): JSX.Element {
   const router = useRouter()
@@ -17,14 +18,10 @@ export default function MatchUploadPage(): JSX.Element {
   const [duration, setDuration] = useState('0:00')
 
   const uploadVideo = useCallback(
-    async (videoData: string) => {
+    async (blob: Blob) => {
       setStatus('uploading')
 
       try {
-        // Convert base64 to blob
-        const response = await fetch(videoData)
-        const blob = await response.blob()
-
         // Create FormData
         const formData = new FormData()
         formData.append('video', blob, 'match-video.webm')
@@ -54,8 +51,8 @@ export default function MatchUploadPage(): JSX.Element {
           throw new Error(data.error || 'Upload failed')
         }
 
-        // Clear sessionStorage
-        sessionStorage.removeItem('matchVideo')
+        // Clear temporary video blob after successful upload
+        clearRecordedVideoBlob(matchId)
         sessionStorage.removeItem('matchDuration')
 
         setStatus('complete')
@@ -71,8 +68,7 @@ export default function MatchUploadPage(): JSX.Element {
   )
 
   useEffect(() => {
-    // Get video from sessionStorage
-    const videoData = sessionStorage.getItem('matchVideo')
+    const recordedBlob = getRecordedVideoBlob(matchId)
     const matchDuration = sessionStorage.getItem('matchDuration')
 
     if (matchDuration) {
@@ -82,14 +78,14 @@ export default function MatchUploadPage(): JSX.Element {
       setDuration(`${mins}:${remainingSecs.toString().padStart(2, '0')}`)
     }
 
-    if (!videoData) {
+    if (!recordedBlob) {
       setError('No video found. Please record again.')
       setStatus('error')
       return
     }
 
-    uploadVideo(videoData)
-  }, [uploadVideo])
+    void uploadVideo(recordedBlob)
+  }, [matchId, uploadVideo])
 
   if (status === 'error') {
     return (

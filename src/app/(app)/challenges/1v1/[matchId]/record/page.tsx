@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Logo } from '@/components/layout/Logo'
+import { setRecordedVideoBlob } from '@/lib/matches/videoStore'
 
 interface MatchResponse {
   status: string
@@ -184,24 +185,6 @@ export default function MatchRecordPage(): JSX.Element {
     setCameraReady(false)
   }, [])
 
-  const uploadBlob = useCallback(
-    async (blob: Blob): Promise<void> => {
-      const formData = new FormData()
-      formData.append('video', blob, 'match-video.webm')
-
-      const uploadResponse = await fetch(`/api/challenges/1v1/${matchId}/upload`, {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!uploadResponse.ok) {
-        const data = await uploadResponse.json()
-        throw new Error(data.error || 'Upload failed')
-      }
-    },
-    [matchId]
-  )
-
   const finalizeRecording = useCallback(async (): Promise<void> => {
     if (isFinalizingRef.current) return
     isFinalizingRef.current = true
@@ -224,18 +207,19 @@ export default function MatchRecordPage(): JSX.Element {
 
     try {
       setIsUploading(true)
-      await uploadBlob(blob)
+      setRecordedVideoBlob(matchId, blob)
+      sessionStorage.setItem('matchDuration', duration.toString())
       mediaRecorderRef.current = null
       hasRecordedOnceRef.current = true
-      router.push(`/challenges/1v1/${matchId}/score`)
+      router.push(`/challenges/1v1/${matchId}/upload`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
+      setError(err instanceof Error ? err.message : 'Failed to prepare upload')
       setIsUploading(false)
       isFinalizingRef.current = false
     } finally {
       setIsStopping(false)
     }
-  }, [matchId, router, stopPreviewTracks, uploadBlob])
+  }, [duration, matchId, router, stopPreviewTracks])
 
   const handleStartRecording = async (): Promise<void> => {
     if (isStopping || isUploading) return
@@ -313,15 +297,11 @@ export default function MatchRecordPage(): JSX.Element {
       return
     }
 
-    try {
-      setError(null)
-      setIsUploading(true)
-      await uploadBlob(file)
-      router.push(`/challenges/1v1/${matchId}/score`)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
-      setIsUploading(false)
-    }
+    setError(null)
+    setIsUploading(true)
+    setRecordedVideoBlob(matchId, file)
+    sessionStorage.setItem('matchDuration', '0')
+    router.push(`/challenges/1v1/${matchId}/upload`)
   }
 
   const formatDuration = (seconds: number): string => {
@@ -453,7 +433,7 @@ export default function MatchRecordPage(): JSX.Element {
         {(isRecording || isUploading) && (
           <p className="text-white/70 text-center text-sm mt-4">
             {isUploading
-              ? 'Uploading video...'
+              ? 'Preparing upload...'
               : isStopping
                 ? 'Finalizing recording...'
                 : 'Tap the stop button when the match is over'}
