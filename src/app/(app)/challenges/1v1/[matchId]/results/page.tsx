@@ -35,8 +35,19 @@ export default function MatchResultsPage(): JSX.Element {
       const response = await fetch(`/api/challenges/1v1/${matchId}/results`)
       const data = await response.json()
 
-      if (data.analyzing) {
-        setStatus('analyzing')
+      if (data.analyzing || data.status === 'uploading') {
+        setStatus('processing')
+        setTimeout(fetchResults, 2000)
+        return
+      }
+
+      const waitingForScores =
+        data.status === 'in_progress' &&
+        (data.result?.userScore === null || data.result?.opponentScore === null)
+
+      if (waitingForScores) {
+        setStatus('waiting_scores')
+        setResult(data.result)
         setTimeout(fetchResults, 2000)
         return
       }
@@ -102,7 +113,7 @@ export default function MatchResultsPage(): JSX.Element {
     }
   }
 
-  if (status === 'loading' || status === 'analyzing') {
+  if (status === 'loading' || status === 'processing' || status === 'waiting_scores') {
     return (
       <main
         className="h-dvh flex flex-col items-center justify-center p-4 relative"
@@ -115,7 +126,11 @@ export default function MatchResultsPage(): JSX.Element {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-400 border-t-transparent mb-4 relative z-10" />
         <p className="text-white/80 relative z-10">
-          {status === 'analyzing' ? 'AI is analyzing the match...' : 'Loading results...'}
+          {status === 'processing'
+            ? 'Processing upload...'
+            : status === 'waiting_scores'
+              ? 'Waiting for score entry...'
+              : 'Loading results...'}
         </p>
       </main>
     )

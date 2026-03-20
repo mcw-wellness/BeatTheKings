@@ -42,11 +42,18 @@ export default function MatchReadyPage(): JSX.Element {
       setMatch(data.match)
       setIsChallenger(data.isChallenger)
 
-      // Redirect if not accepted yet
+      // Redirect based on current match state
       if (data.match.status === 'pending') {
         router.push(`/challenges/1v1/${matchId}/pending`)
       } else if (data.match.status === 'in_progress') {
-        router.push(`/challenges/1v1/${matchId}/record`)
+        const currentUserId = data.isChallenger ? data.match.player1.id : data.match.player2.id
+        if (data.match.recordingBy && data.match.recordingBy !== currentUserId) {
+          router.push(`/challenges/1v1/${matchId}/waiting`)
+        } else {
+          router.push(`/challenges/1v1/${matchId}/record`)
+        }
+      } else if (data.match.status === 'completed' || data.match.status === 'disputed') {
+        router.push(`/challenges/1v1/${matchId}/results`)
       }
     } catch {
       setError('Failed to load match')
@@ -196,7 +203,7 @@ export default function MatchReadyPage(): JSX.Element {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-400">✓</span>
-                AI will count scores automatically
+                Recorder enters scores manually after upload
               </li>
             </ul>
           </div>

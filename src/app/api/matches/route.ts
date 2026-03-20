@@ -30,6 +30,8 @@ interface MatchListItem {
   winnerId: string | null
   scheduledAt: string | null
   createdAt: string
+  recordingBy: string | null
+  videoUrl: string | null
 }
 
 /**
@@ -57,6 +59,8 @@ function transformMatch(
     winnerId: fullMatch.winnerId,
     scheduledAt: fullMatch.scheduledAt,
     createdAt: fullMatch.createdAt,
+    recordingBy: fullMatch.recordingBy,
+    videoUrl: fullMatch.videoUrl,
   }
 }
 

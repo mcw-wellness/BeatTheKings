@@ -55,7 +55,7 @@ export default function MatchPendingPage(): JSX.Element {
       } else if (data.match.status === 'in_progress') {
         router.push(`/challenges/1v1/${matchId}/record`)
       } else if (data.match.status === 'cancelled') {
-        router.push('/challenges')
+        router.push('/matches')
       }
     } catch {
       setError('Failed to load match')
@@ -147,10 +147,10 @@ export default function MatchPendingPage(): JSX.Element {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
         <p className="text-red-300 mb-4 relative z-10">{error || 'Match not found'}</p>
         <button
-          onClick={() => router.push('/challenges')}
+          onClick={() => router.push('/matches')}
           className="text-white/80 hover:text-white underline relative z-10"
         >
-          Back to Challenges
+          Back to Matches
         </button>
       </main>
     )
@@ -176,10 +176,10 @@ export default function MatchPendingPage(): JSX.Element {
             {opponent?.name || 'Opponent'} declined your challenge.
           </p>
           <button
-            onClick={() => router.push('/challenges')}
+            onClick={() => router.push('/matches')}
             className="w-full py-3 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-xl transition-colors border border-white/30"
           >
-            Back to Challenges
+            Back to Matches
           </button>
         </div>
       </main>
