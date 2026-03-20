@@ -19,9 +19,12 @@ export default function MatchRecordPage(): JSX.Element {
   const videoRef = useRef<HTMLVideoElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
+  const mimeTypeRef = useRef('video/webm')
+  const stopFallbackRef = useRef<NodeJS.Timeout | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [isRecording, setIsRecording] = useState(false)
+  const [isStopping, setIsStopping] = useState(false)
   const [duration, setDuration] = useState(0)
   const [cameraReady, setCameraReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -145,6 +148,9 @@ export default function MatchRecordPage(): JSX.Element {
     const video = videoRef.current
 
     return () => {
+      if (stopFallbackRef.current) {
+        clearTimeout(stopFallbackRef.current)
+      }
       if (video?.srcObject) {
         const tracks = (video.srcObject as MediaStream).getTracks()
         tracks.forEach((track) => track.stop())
@@ -165,12 +171,36 @@ export default function MatchRecordPage(): JSX.Element {
     return types.find((t) => MediaRecorder.isTypeSupported(t)) || 'video/webm'
   }
 
+  const finalizeRecording = useCallback((): void => {
+    if (stopFallbackRef.current) {
+      clearTimeout(stopFallbackRef.current)
+      stopFallbackRef.current = null
+    }
+
+    const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current })
+    if (blob.size === 0) {
+      setError('Recording failed. Please try again.')
+      setIsStopping(false)
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      sessionStorage.setItem('matchVideo', reader.result as string)
+      sessionStorage.setItem('matchDuration', duration.toString())
+      setIsStopping(false)
+      router.push(`/challenges/1v1/${matchId}/upload`)
+    }
+    reader.readAsDataURL(blob)
+  }, [duration, matchId, router])
+
   const handleStartRecording = (): void => {
     if (!videoRef.current?.srcObject) return
 
     chunksRef.current = []
     const stream = videoRef.current.srcObject as MediaStream
     const mimeType = getSupportedMimeType()
+    mimeTypeRef.current = mimeType
 
     const mediaRecorder = new MediaRecorder(stream, { mimeType })
 
@@ -181,32 +211,37 @@ export default function MatchRecordPage(): JSX.Element {
     }
 
     mediaRecorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: mimeType })
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        sessionStorage.setItem('matchVideo', reader.result as string)
-        sessionStorage.setItem('matchDuration', duration.toString())
-        router.push(`/challenges/1v1/${matchId}/upload`)
-      }
-      reader.readAsDataURL(blob)
+      finalizeRecording()
     }
 
     mediaRecorder.start(1000)
     mediaRecorderRef.current = mediaRecorder
     setIsRecording(true)
+    setIsStopping(false)
     setDuration(0)
   }
 
   const handleStopRecording = (): void => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop()
-      setIsRecording(false)
+    if (!mediaRecorderRef.current || !isRecording || isStopping) return
 
-      if (videoRef.current?.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-        tracks.forEach((track) => track.stop())
-      }
+    setIsStopping(true)
+
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
+      tracks.forEach((track) => track.stop())
     }
+
+    if (mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.requestData()
+      mediaRecorderRef.current.stop()
+    }
+
+    // Fallback in case onstop is delayed/not fired on some mobile browsers
+    stopFallbackRef.current = setTimeout(() => {
+      finalizeRecording()
+    }, 1500)
+
+    setIsRecording(false)
   }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -334,9 +369,14 @@ export default function MatchRecordPage(): JSX.Element {
           ) : (
             <button
               onClick={handleStopRecording}
-              className="w-20 h-20 md:w-24 md:h-24 bg-red-500 active:bg-red-600 rounded-full flex items-center justify-center shadow-lg border-4 border-white animate-pulse"
+              disabled={isStopping}
+              className="w-20 h-20 md:w-24 md:h-24 bg-red-500 active:bg-red-600 disabled:bg-gray-500 rounded-full flex items-center justify-center shadow-lg border-4 border-white animate-pulse"
             >
-              <span className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-sm" />
+              {isStopping ? (
+                <div className="animate-spin rounded-full h-7 w-7 border-2 border-white border-t-transparent" />
+              ) : (
+                <span className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-sm" />
+              )}
             </button>
           )}
 
@@ -346,7 +386,7 @@ export default function MatchRecordPage(): JSX.Element {
 
         {isRecording && (
           <p className="text-white/70 text-center text-sm mt-4">
-            Tap the stop button when the match is over
+            {isStopping ? 'Finalizing recording...' : 'Tap the stop button when the match is over'}
           </p>
         )}
       </div>

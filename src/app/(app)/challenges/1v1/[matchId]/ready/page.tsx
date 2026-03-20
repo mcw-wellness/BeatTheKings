@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
+import { useNotifications } from '@/lib/hooks/useNotifications'
 
 interface Player {
   id: string
@@ -31,7 +32,7 @@ export default function MatchReadyPage(): JSX.Element {
 
   const fetchMatch = useCallback(async () => {
     try {
-      const response = await fetch(`/api/challenges/1v1/${matchId}`)
+      const response = await fetch(`/api/challenges/1v1/${matchId}`, { cache: 'no-store' })
       const data = await response.json()
 
       if (!response.ok) {
@@ -65,6 +66,23 @@ export default function MatchReadyPage(): JSX.Element {
   useEffect(() => {
     fetchMatch()
   }, [fetchMatch])
+
+  // Fallback polling so both devices transition without manual refresh
+  useEffect(() => {
+    const interval = setInterval(fetchMatch, 3000)
+    return () => clearInterval(interval)
+  }, [fetchMatch])
+
+  // Instant transitions via SSE
+  useNotifications({
+    onEvent: (event) => {
+      const eventMatchId = (event.data as { matchId?: string })?.matchId
+      if (eventMatchId !== matchId) return
+      if (['challenge-accepted', 'score-submitted', 'match-completed'].includes(event.type)) {
+        fetchMatch()
+      }
+    },
+  })
 
   const handleStartRecording = async () => {
     setIsStarting(true)
