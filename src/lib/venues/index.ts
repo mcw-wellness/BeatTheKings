@@ -284,7 +284,8 @@ export async function getActivePlayersAtVenue(
   db: Database,
   venueId: string,
   userLat?: number,
-  userLng?: number
+  userLng?: number,
+  excludeUserId?: string
 ): Promise<ActivePlayer[]> {
   const activeList = await db
     .select({
@@ -300,7 +301,11 @@ export async function getActivePlayersAtVenue(
     .innerJoin(users, eq(users.id, activePlayers.userId))
     .leftJoin(playerStats, eq(playerStats.userId, users.id))
     .leftJoin(avatars, eq(avatars.userId, users.id))
-    .where(eq(activePlayers.venueId, venueId))
+    .where(
+      excludeUserId
+        ? and(eq(activePlayers.venueId, venueId), sql`${activePlayers.userId} != ${excludeUserId}`)
+        : eq(activePlayers.venueId, venueId)
+    )
     .orderBy(desc(playerStats.totalXp))
 
   // Calculate ranks and distances

@@ -37,7 +37,7 @@ const _GET = async (request: Request, { params }: RouteParams): Promise<NextResp
     }
 
     // Get active players
-    const activePlayers = await getActivePlayersAtVenue(db, venueId, lat, lng)
+    const activePlayers = await getActivePlayersAtVenue(db, venueId, lat, lng, session.user.id)
 
     // Get challenges
     const challenges = await getVenueChallenges(db, venueId)
