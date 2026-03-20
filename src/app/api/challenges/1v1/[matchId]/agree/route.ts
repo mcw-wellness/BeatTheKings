@@ -11,6 +11,7 @@ interface RouteParams {
 
 interface RequestBody {
   agree: boolean
+  comment?: string
 }
 
 /**
@@ -37,8 +38,12 @@ const _POST = async (request: Request, { params }: RouteParams): Promise<NextRes
       return NextResponse.json({ error: 'agree must be a boolean' }, { status: 400 })
     }
 
+    if (!body.agree && body.comment && body.comment.length > 1000) {
+      return NextResponse.json({ error: 'comment is too long (max 1000 chars)' }, { status: 400 })
+    }
+
     const db = getDb()
-    const result = await submitAgreement(db, matchId, session.user.id, body.agree)
+    const result = await submitAgreement(db, matchId, session.user.id, body.agree, body.comment)
 
     if (!result.success) {
       return NextResponse.json({ error: result.message }, { status: 400 })

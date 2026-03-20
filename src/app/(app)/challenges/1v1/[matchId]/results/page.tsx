@@ -18,6 +18,7 @@ interface ResultData {
   userAgreed: boolean
   opponentAgreed: boolean
   venueName: string
+  disputeComment?: string | null
 }
 
 export default function MatchResultsPage(): JSX.Element {
@@ -29,6 +30,7 @@ export default function MatchResultsPage(): JSX.Element {
   const [status, setStatus] = useState<string>('loading')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [disputeComment, setDisputeComment] = useState('')
 
   const fetchResults = useCallback(async () => {
     try {
@@ -99,7 +101,10 @@ export default function MatchResultsPage(): JSX.Element {
       const response = await fetch(`/api/challenges/1v1/${matchId}/agree`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agree: false }),
+        body: JSON.stringify({
+          agree: false,
+          comment: disputeComment.trim() || undefined,
+        }),
       })
 
       if (response.ok) {
@@ -274,10 +279,13 @@ export default function MatchResultsPage(): JSX.Element {
           </div>
 
           {status === 'disputed' && (
-            <div className="mt-4 p-3 bg-red-500/20 border border-red-500/40 rounded-lg">
+            <div className="mt-4 p-3 bg-red-500/20 border border-red-500/40 rounded-lg space-y-2">
               <p className="text-red-300 text-sm text-center">
                 Match disputed. An admin will review.
               </p>
+              {result.disputeComment && (
+                <p className="text-red-200/90 text-xs text-center">“{result.disputeComment}”</p>
+              )}
             </div>
           )}
 
@@ -295,25 +303,34 @@ export default function MatchResultsPage(): JSX.Element {
 
         {/* Action Buttons */}
         {showAgreementButtons && (
-          <div className="flex gap-4 mb-6">
-            <button
-              onClick={handleDispute}
-              disabled={isSubmitting}
-              className="flex-1 py-4 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-semibold rounded-xl transition-colors disabled:opacity-50"
-            >
-              Dispute
-            </button>
-            <button
-              onClick={handleAgree}
-              disabled={isSubmitting}
-              className="flex-1 py-4 bg-green-500/80 hover:bg-green-500 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-              ) : (
-                'Agree'
-              )}
-            </button>
+          <div className="mb-6 space-y-3">
+            <textarea
+              value={disputeComment}
+              onChange={(e) => setDisputeComment(e.target.value)}
+              maxLength={1000}
+              placeholder="Optional dispute comment (what was wrong with the score?)"
+              className="w-full min-h-[90px] px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40"
+            />
+            <div className="flex gap-4">
+              <button
+                onClick={handleDispute}
+                disabled={isSubmitting}
+                className="flex-1 py-4 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-semibold rounded-xl transition-colors disabled:opacity-50"
+              >
+                Dispute
+              </button>
+              <button
+                onClick={handleAgree}
+                disabled={isSubmitting}
+                className="flex-1 py-4 bg-green-500/80 hover:bg-green-500 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                ) : (
+                  'Agree'
+                )}
+              </button>
+            </div>
           </div>
         )}
 

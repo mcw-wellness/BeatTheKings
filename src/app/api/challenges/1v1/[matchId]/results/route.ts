@@ -78,6 +78,7 @@ const _GET = async (request: Request, { params }: RouteParams): Promise<NextResp
         venueName: match.venueName,
         startedAt: match.startedAt,
         completedAt: match.completedAt,
+        disputeComment: match.disputeComment,
       },
     })
   } catch (error) {

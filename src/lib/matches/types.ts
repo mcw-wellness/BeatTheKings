@@ -24,6 +24,7 @@ export interface MatchDetail {
   createdAt: string
   startedAt: string | null
   completedAt: string | null
+  disputeComment?: string | null
 }
 
 export interface UnlockedItem {

@@ -30,6 +30,8 @@ interface Match {
   winnerId: string | null
   scheduledAt: string | null
   createdAt: string
+  recordingBy: string | null
+  videoUrl: string | null
 }
 
 interface MatchCardProps {
@@ -85,13 +87,26 @@ function getStatusDisplay(match: Match): {
       return { label: 'Scheduled', color: 'text-blue-400', icon: '📅', date: scheduledDate }
     }
     case 'pending':
+      return { label: 'Awaiting response', color: 'text-yellow-400', icon: '⏳' }
     case 'accepted':
-    case 'in_progress':
+      return { label: 'Ready to start', color: 'text-blue-300', icon: '✅' }
+    case 'in_progress': {
+      const opponentRecording =
+        !!match.recordingBy && match.recordingBy === match.opponent.id && !match.videoUrl
+      if (opponentRecording) {
+        return { label: 'Opponent recording', color: 'text-orange-300', icon: '🎥' }
+      }
+      if (match.videoUrl) {
+        return { label: 'Score entry', color: 'text-yellow-300', icon: '📝' }
+      }
+      return { label: 'Recording', color: 'text-yellow-400', icon: '🎬' }
+    }
     case 'uploading':
+      return { label: 'Uploading video', color: 'text-yellow-300', icon: '⬆️' }
     case 'analyzing':
-      return { label: 'Pending', color: 'text-yellow-400', icon: '⚠️' }
+      return { label: 'Processing', color: 'text-yellow-300', icon: '⚙️' }
     case 'completed':
-      return { label: 'Verified', color: 'text-green-400', icon: '✓' }
+      return { label: 'Results ready', color: 'text-green-400', icon: '✓' }
     case 'disputed':
       return {
         label: 'Disputed',

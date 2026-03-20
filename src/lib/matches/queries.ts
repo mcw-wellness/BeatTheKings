@@ -72,6 +72,7 @@ export async function getMatchById(db: Database, matchId: string): Promise<Match
     createdAt: match.createdAt.toISOString(),
     startedAt: match.startedAt?.toISOString() || null,
     completedAt: match.completedAt?.toISOString() || null,
+    disputeComment: match.disputeDetails,
   }
 }
 

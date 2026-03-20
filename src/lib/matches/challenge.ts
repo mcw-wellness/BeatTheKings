@@ -158,7 +158,8 @@ export async function submitAgreement(
   db: Database,
   matchId: string,
   userId: string,
-  agree: boolean
+  agree: boolean,
+  disputeComment?: string
 ): Promise<{
   success: boolean
   bothAgreed: boolean
@@ -177,7 +178,16 @@ export async function submitAgreement(
     return { success: false, bothAgreed: false, message: 'Match not ready for agreement' }
 
   if (!agree) {
-    await db.update(matches).set({ status: 'disputed' }).where(eq(matches.id, matchId))
+    await db
+      .update(matches)
+      .set({
+        status: 'disputed',
+        disputeReason: 'score_disagreement',
+        disputeDetails: disputeComment?.trim() || null,
+        disputedBy: userId,
+        disputedAt: new Date(),
+      })
+      .where(eq(matches.id, matchId))
     return { success: true, bothAgreed: false, message: 'Match disputed' }
   }
 
