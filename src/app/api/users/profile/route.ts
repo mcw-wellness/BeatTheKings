@@ -46,7 +46,10 @@ const _PUT = async (request: Request): Promise<NextResponse> => {
     const session = await getSession()
 
     if (!session?.user?.id) {
-      logger.warn({ session: !!session, hasUser: !!session?.user }, 'PUT /api/users/profile - no session')
+      logger.warn(
+        { session: !!session, hasUser: !!session?.user },
+        'PUT /api/users/profile - no session'
+      )
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -75,7 +78,10 @@ const _PUT = async (request: Request): Promise<NextResponse> => {
     if (validation.data.cityId) {
       const cityValid = await cityExists(db, validation.data.cityId)
       if (!cityValid) {
-        logger.warn({ userId, cityId: validation.data.cityId }, 'City not found during profile update')
+        logger.warn(
+          { userId, cityId: validation.data.cityId },
+          'City not found during profile update'
+        )
         return NextResponse.json(
           { error: 'Validation failed', details: { cityId: 'City not found' } },
           { status: 400 }

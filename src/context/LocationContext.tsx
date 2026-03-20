@@ -13,6 +13,9 @@ interface LocationState {
 interface LocationContextType extends LocationState {
   requestPermission: () => void
   refresh: () => void
+  setMockLocation: (latitude: number, longitude: number) => void
+  clearMockLocation: () => void
+  isMockLocation: boolean
 }
 
 const LocationContext = createContext<LocationContextType | null>(null)
@@ -23,6 +26,8 @@ const defaultOptions = {
   maximumAge: 60000,
 }
 
+const MOCK_LOCATION_KEY = 'btk:mock-location'
+
 export function LocationProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LocationState>({
     latitude: null,
@@ -31,6 +36,27 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     loading: false,
     permission: 'unknown',
   })
+
+  const [mockLocation, setMockLocationState] = useState<{
+    latitude: number
+    longitude: number
+  } | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const raw = localStorage.getItem(MOCK_LOCATION_KEY)
+    if (!raw) return
+
+    try {
+      const parsed = JSON.parse(raw) as { latitude?: number; longitude?: number }
+      if (typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
+        setMockLocationState({ latitude: parsed.latitude, longitude: parsed.longitude })
+      }
+    } catch {
+      localStorage.removeItem(MOCK_LOCATION_KEY)
+    }
+  }, [])
 
   const getLocation = useCallback(() => {
     if (typeof window === 'undefined' || !navigator.geolocation) {
@@ -128,12 +154,40 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     getLocation()
   }, [getLocation])
 
+  const setMockLocation = useCallback((latitude: number, longitude: number) => {
+    const next = { latitude, longitude }
+    setMockLocationState(next)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(MOCK_LOCATION_KEY, JSON.stringify(next))
+    }
+  }, [])
+
+  const clearMockLocation = useCallback(() => {
+    setMockLocationState(null)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(MOCK_LOCATION_KEY)
+    }
+  }, [])
+
+  const effectiveState = mockLocation
+    ? {
+        latitude: mockLocation.latitude,
+        longitude: mockLocation.longitude,
+        error: null,
+        loading: false,
+        permission: 'granted' as const,
+      }
+    : state
+
   return (
     <LocationContext.Provider
       value={{
-        ...state,
+        ...effectiveState,
         requestPermission,
         refresh: getLocation,
+        setMockLocation,
+        clearMockLocation,
+        isMockLocation: !!mockLocation,
       }}
     >
       {children}

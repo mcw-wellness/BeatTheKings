@@ -96,6 +96,7 @@ Response: { id: string, status: "pending" }
 ```
 
 **Validations:**
+
 - Cannot invite yourself
 - Cannot send duplicate pending invitation to same player
 - Date must be in the future
@@ -131,6 +132,7 @@ Response: {
 ```
 
 On accept:
+
 - Update invitation status to "accepted"
 - Create a Match record with status "scheduled"
 - Link match to invitation via `invitationId`
@@ -151,6 +153,7 @@ Only the sender can cancel. Only pending invitations can be cancelled.
 **Route:** `/player/[id]/invite`
 
 **UI:**
+
 - Opponent's avatar + name at top
 - Venue selector (scrollable list of venues)
 - Date picker (native date input, min = tomorrow)
@@ -170,6 +173,7 @@ Only the sender can cancel. Only pending invitations can be cancelled.
 **Route:** `/matches`
 
 **Changes:**
+
 - Scheduled matches (from accepted invitations) appear at **top of list** with "Open" badge
 - New filter tab or include in "Active" filter
 - Match card shows: opponent, venue, scheduled date/time, "Open" badge
@@ -178,6 +182,7 @@ Only the sender can cancel. Only pending invitations can be cancelled.
 ### 4. Invitation Detail (on Matches page)
 
 Pending invitations (received) show in My Matches with:
+
 - "Invitation" badge (blue)
 - Sender name, venue, date, time
 - "Accept" / "Decline" buttons inline
@@ -185,6 +190,7 @@ Pending invitations (received) show in My Matches with:
 ## In-app Notifications
 
 Simple approach (no push):
+
 - Add a `notifications` table or a badge count endpoint
 - Show a red dot/badge on the "Matches" nav icon when there are pending invitations
 - The matches page itself shows received invitations at the top

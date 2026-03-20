@@ -88,7 +88,7 @@ describe('Match Invitation Integration Tests', () => {
         venueId: venue.id,
         sportId: sport.id,
         scheduledAt: tomorrow,
-        message: 'Let\'s play!',
+        message: "Let's play!",
       })
 
       expect('id' in result).toBe(true)
@@ -97,7 +97,7 @@ describe('Match Invitation Integration Tests', () => {
           .select()
           .from(matchInvitations)
           .where(eq(matchInvitations.id, result.id))
-        expect(inv.message).toBe('Let\'s play!')
+        expect(inv.message).toBe("Let's play!")
       }
     })
 
@@ -252,10 +252,7 @@ describe('Match Invitation Integration Tests', () => {
         expect(result.matchId).toBeDefined()
 
         // Verify match was created
-        const [match] = await db
-          .select()
-          .from(matches)
-          .where(eq(matches.id, result.matchId!))
+        const [match] = await db.select().from(matches).where(eq(matches.id, result.matchId!))
         expect(match.status).toBe('scheduled')
         expect(match.invitationId).toBe(inv.id)
         expect(match.player1Id).toBe(sender.id)
@@ -602,10 +599,7 @@ describe('Match Invitation Integration Tests', () => {
 
       // 5. Verify match is scheduled
       if ('matchId' in response && response.matchId) {
-        const [match] = await db
-          .select()
-          .from(matches)
-          .where(eq(matches.id, response.matchId))
+        const [match] = await db.select().from(matches).where(eq(matches.id, response.matchId))
         expect(match.status).toBe('scheduled')
         expect(match.invitationId).toBe(inv.id)
       }

@@ -289,7 +289,12 @@ function WelcomePageContent(): JSX.Element {
             challengesCompleted={challengesCompleted}
           />
         </div>
-        <NavigationGrid hasCreatedAvatar={hasCreatedAvatar} onNavigate={router.push} highlightMap={showMapHighlight} matchInvitationCount={invitationCount} />
+        <NavigationGrid
+          hasCreatedAvatar={hasCreatedAvatar}
+          onNavigate={router.push}
+          highlightMap={showMapHighlight}
+          matchInvitationCount={invitationCount}
+        />
       </div>
     </main>
   )

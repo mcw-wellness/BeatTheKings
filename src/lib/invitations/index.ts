@@ -268,19 +268,17 @@ export async function cancelInvitation(
 // NOTIFICATION COUNT
 // ===========================================
 
-export async function getPendingInvitationCount(
-  db: Database,
-  userId: string
-): Promise<number> {
-  const rows = await db
-    .select({ id: matchInvitations.id })
-    .from(matchInvitations)
-    .where(
-      and(
-        eq(matchInvitations.receiverId, userId),
-        eq(matchInvitations.status, 'pending')
-      )
-    )
+export async function getPendingInvitationCount(db: Database, userId: string): Promise<number> {
+  const [invitationRows, pendingMatchRows] = await Promise.all([
+    db
+      .select({ id: matchInvitations.id })
+      .from(matchInvitations)
+      .where(and(eq(matchInvitations.receiverId, userId), eq(matchInvitations.status, 'pending'))),
+    db
+      .select({ id: matches.id })
+      .from(matches)
+      .where(and(eq(matches.player2Id, userId), eq(matches.status, 'pending'))),
+  ])
 
-  return rows.length
+  return invitationRows.length + pendingMatchRows.length
 }

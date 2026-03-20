@@ -130,27 +130,19 @@ describe('Match Invitation Unit Tests', () => {
 
   describe('Duplicate Prevention', () => {
     it('should detect duplicate pending invitation to same player', () => {
-      const pendingInvitations = [
-        { senderId: 'user-A', receiverId: 'user-B', status: 'pending' },
-      ]
+      const pendingInvitations = [{ senderId: 'user-A', receiverId: 'user-B', status: 'pending' }]
       const hasDuplicate = pendingInvitations.some(
         (inv) =>
-          inv.senderId === 'user-A' &&
-          inv.receiverId === 'user-B' &&
-          inv.status === 'pending'
+          inv.senderId === 'user-A' && inv.receiverId === 'user-B' && inv.status === 'pending'
       )
       expect(hasDuplicate).toBe(true)
     })
 
     it('should allow new invitation if previous was declined', () => {
-      const invitations = [
-        { senderId: 'user-A', receiverId: 'user-B', status: 'declined' },
-      ]
+      const invitations = [{ senderId: 'user-A', receiverId: 'user-B', status: 'declined' }]
       const hasPendingDuplicate = invitations.some(
         (inv) =>
-          inv.senderId === 'user-A' &&
-          inv.receiverId === 'user-B' &&
-          inv.status === 'pending'
+          inv.senderId === 'user-A' && inv.receiverId === 'user-B' && inv.status === 'pending'
       )
       expect(hasPendingDuplicate).toBe(false)
     })

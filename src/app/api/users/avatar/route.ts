@@ -81,7 +81,15 @@ function runAvatarUpdateInBackground(options: BackgroundUpdateOptions): void {
       if (basketballId) {
         const defaultItems = await getDefaultItems(db)
         await unlockDefaultItems(db, userId)
-        await upsertEquipment(db, avatarId, basketballId, defaultItems, jerseyNumber, shoesItemId, jerseyItemId)
+        await upsertEquipment(
+          db,
+          avatarId,
+          basketballId,
+          defaultItems,
+          jerseyNumber,
+          shoesItemId,
+          jerseyItemId
+        )
       }
 
       // 3. Mark avatar as created

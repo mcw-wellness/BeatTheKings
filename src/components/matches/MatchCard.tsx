@@ -51,7 +51,14 @@ function UserAvatar(): JSX.Element {
   return (
     <div className="w-16 h-20 rounded-lg overflow-hidden bg-white/10">
       {url ? (
-        <Image src={url} alt="You" width={64} height={80} className="w-full h-full object-cover object-top" unoptimized />
+        <Image
+          src={url}
+          alt="You"
+          width={64}
+          height={80}
+          className="w-full h-full object-cover object-top"
+          unoptimized
+        />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>
       )}

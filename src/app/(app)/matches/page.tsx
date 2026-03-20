@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/layout/Logo'
 import { MatchCard, FilterTabs, InvitationCard } from '@/components/matches'
 import type { Invitation } from '@/components/matches'
+import { useNotifications } from '@/lib/hooks/useNotifications'
 
 type MatchStatus =
   | 'pending'
@@ -37,7 +38,14 @@ interface Match {
 
 type FilterType = 'all' | 'pending' | 'verified' | 'disputed'
 
-const ACTIVE_STATUSES = ['pending', 'scheduled', 'accepted', 'in_progress', 'uploading', 'analyzing']
+const ACTIVE_STATUSES = [
+  'pending',
+  'scheduled',
+  'accepted',
+  'in_progress',
+  'uploading',
+  'analyzing',
+]
 
 export default function MatchesPage() {
   const router = useRouter()
@@ -48,8 +56,8 @@ export default function MatchesPage() {
   const [filter, setFilter] = useState<FilterType>('all')
   const [respondingId, setRespondingId] = useState<string | null>(null)
 
-  const fetchData = useCallback(async () => {
-    setIsLoading(true)
+  const fetchData = useCallback(async (showLoading = false) => {
+    if (showLoading) setIsLoading(true)
     try {
       const [matchesRes, receivedRes, sentRes] = await Promise.all([
         fetch('/api/matches'),
@@ -72,12 +80,27 @@ export default function MatchesPage() {
     } catch (err) {
       void err
     } finally {
-      setIsLoading(false)
+      if (showLoading) setIsLoading(false)
     }
   }, [])
 
+  // Real-time SSE notifications — instant refresh on any event
+  useNotifications({
+    onEvent: () => {
+      fetchData()
+    },
+  })
+
   useEffect(() => {
-    fetchData()
+    fetchData(true)
+  }, [fetchData])
+
+  // Fallback poll every 10 seconds (in case SSE disconnects)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchData()
+    }, 10000)
+    return () => clearInterval(interval)
   }, [fetchData])
 
   const handleRespond = async (invitationId: string, accept: boolean): Promise<void> => {
@@ -128,7 +151,9 @@ export default function MatchesPage() {
   const handleMatchClick = (match: Match): void => {
     const routes: Record<string, string> = {
       scheduled: `/challenges/1v1/${match.id}/ready`,
-      pending: match.isChallenger ? `/challenges/1v1/${match.id}/pending` : '/challenges',
+      pending: match.isChallenger
+        ? `/challenges/1v1/${match.id}/pending`
+        : `/challenges/1v1/${match.id}/respond`,
       accepted: `/challenges/1v1/${match.id}/ready`,
       in_progress: `/challenges/1v1/${match.id}/record`,
       uploading: `/challenges/1v1/${match.id}/upload`,
@@ -211,7 +236,12 @@ export default function MatchesPage() {
                 <MatchCard key={match.id} match={match} onClick={() => handleMatchClick(match)} />
               ))
             ) : pendingInvitations.length === 0 && pendingSentInvitations.length === 0 ? (
-              <EmptyState onFindChallenge={() => router.push('/challenges')} filter={filter} />
+              <EmptyState
+                onFindChallenge={() =>
+                  alert('Challenges are not available in Alpha. Stay tuned for Beta!')
+                }
+                filter={filter}
+              />
             ) : null}
           </div>
         )}

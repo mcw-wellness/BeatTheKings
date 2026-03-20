@@ -50,7 +50,9 @@ export function InvitationCard({
         <span className="bg-blue-500/20 text-blue-400 text-xs font-medium px-2 py-0.5 rounded-full">
           {type === 'received' ? 'Invitation' : 'Sent'}
         </span>
-        <span className="text-white/40 text-xs">{dateStr} at {timeStr}</span>
+        <span className="text-white/40 text-xs">
+          {dateStr} at {timeStr}
+        </span>
       </div>
 
       {/* Player + Venue */}
@@ -71,15 +73,13 @@ export function InvitationCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold truncate">{opponent.name || 'Player'}</p>
-          <p className="text-white/50 text-sm truncate">
-            📍 {invitation.venue.name}
-          </p>
+          <p className="text-white/50 text-sm truncate">📍 {invitation.venue.name}</p>
         </div>
       </div>
 
       {/* Message */}
       {invitation.message && (
-        <p className="text-white/60 text-sm italic mb-3">"{invitation.message}"</p>
+        <p className="text-white/60 text-sm italic mb-3">&quot;{invitation.message}&quot;</p>
       )}
 
       {/* Actions */}

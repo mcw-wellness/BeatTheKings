@@ -37,7 +37,7 @@ const VENUE_LNG = 16.3551
 describe('Check-in Integration Tests', () => {
   describe('checkInToVenue', () => {
     it('should check in when user is within 500m', async () => {
-      const { venue, city } = await testFactories.createVenueWithLocation(db)
+      await testFactories.createVenueWithLocation(db)
       // Update venue with known coordinates
       const country = await testFactories.createCountry(db)
       const city2 = await testFactories.createCity(db, country.id)
@@ -48,9 +48,7 @@ describe('Check-in Integration Tests', () => {
       const user = await testFactories.createUser(db)
 
       // User ~100m from venue
-      const result = await checkInToVenue(
-        db, user.id, v.id, 48.1971, 16.3551
-      )
+      const result = await checkInToVenue(db, user.id, v.id, 48.1971, 16.3551)
 
       expect(result.success).toBe(true)
       expect(result.message).toContain(v.name)
@@ -66,9 +64,7 @@ describe('Check-in Integration Tests', () => {
       const user = await testFactories.createUser(db)
 
       // User ~1km away
-      const result = await checkInToVenue(
-        db, user.id, venue.id, 48.205, 16.3551
-      )
+      const result = await checkInToVenue(db, user.id, venue.id, 48.205, 16.3551)
 
       expect(result.success).toBe(false)
       expect(result.message).toBe('Too far from venue to check in')
@@ -84,9 +80,7 @@ describe('Check-in Integration Tests', () => {
       })
       const user = await testFactories.createUser(db)
 
-      const result = await checkInToVenue(
-        db, user.id, venue.id, 48.2082, 16.3738
-      )
+      const result = await checkInToVenue(db, user.id, venue.id, 48.2082, 16.3738)
 
       expect(result.success).toBe(true)
     })
@@ -129,9 +123,7 @@ describe('Check-in Integration Tests', () => {
       expect(statusA.isCheckedIn).toBe(true)
 
       // Now check in to venue B (near enough)
-      await checkInToVenue(
-        db, user.id, venueB.id, VENUE_LAT + 0.001, VENUE_LNG
-      )
+      await checkInToVenue(db, user.id, venueB.id, VENUE_LAT + 0.001, VENUE_LNG)
 
       // Venue A record should be cleaned up
       const statusAfter = await getUserCheckInStatus(db, user.id, venueA.id)
@@ -153,20 +145,13 @@ describe('Check-in Integration Tests', () => {
 
       // Check in twice
       await checkInToVenue(db, user.id, venue.id, VENUE_LAT, VENUE_LNG)
-      await checkInToVenue(
-        db, user.id, venue.id, VENUE_LAT + 0.0001, VENUE_LNG
-      )
+      await checkInToVenue(db, user.id, venue.id, VENUE_LAT + 0.0001, VENUE_LNG)
 
       // Should still only have one record
       const records = await db
         .select()
         .from(activePlayers)
-        .where(
-          and(
-            eq(activePlayers.userId, user.id),
-            eq(activePlayers.venueId, venue.id)
-          )
-        )
+        .where(and(eq(activePlayers.userId, user.id), eq(activePlayers.venueId, venue.id)))
 
       expect(records).toHaveLength(1)
     })
@@ -250,17 +235,12 @@ describe('Check-in Integration Tests', () => {
       // Small delay to ensure different timestamp
       await new Promise((r) => setTimeout(r, 50))
 
-      const result = await refreshCheckIn(
-        db, user.id, venue.id,
-        VENUE_LAT + 0.0001, VENUE_LNG
-      )
+      const result = await refreshCheckIn(db, user.id, venue.id, VENUE_LAT + 0.0001, VENUE_LNG)
 
       expect(result.success).toBe(true)
 
       const afterStatus = await getUserCheckInStatus(db, user.id, venue.id)
-      expect(afterStatus.lastSeenAt!.getTime()).toBeGreaterThanOrEqual(
-        beforeTime.getTime()
-      )
+      expect(afterStatus.lastSeenAt!.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime())
     })
 
     it('should fail when no check-in exists', async () => {
@@ -269,9 +249,7 @@ describe('Check-in Integration Tests', () => {
       const venue = await testFactories.createVenue(db, city.id)
       const user = await testFactories.createUser(db)
 
-      const result = await refreshCheckIn(
-        db, user.id, venue.id, 48.2082, 16.3738
-      )
+      const result = await refreshCheckIn(db, user.id, venue.id, 48.2082, 16.3738)
 
       expect(result.success).toBe(false)
     })
@@ -331,9 +309,7 @@ describe('Check-in Integration Tests', () => {
       const user = await testFactories.createUser(db)
 
       // 1. Check in
-      const checkInResult = await checkInToVenue(
-        db, user.id, venue.id, VENUE_LAT, VENUE_LNG
-      )
+      const checkInResult = await checkInToVenue(db, user.id, venue.id, VENUE_LAT, VENUE_LNG)
       expect(checkInResult.success).toBe(true)
 
       // 2. Verify checked in
@@ -342,15 +318,16 @@ describe('Check-in Integration Tests', () => {
 
       // 3. Heartbeat
       const refreshResult = await refreshCheckIn(
-        db, user.id, venue.id,
-        VENUE_LAT + 0.0001, VENUE_LNG
+        db,
+        user.id,
+        venue.id,
+        VENUE_LAT + 0.0001,
+        VENUE_LNG
       )
       expect(refreshResult.success).toBe(true)
 
       // 4. Check out
-      const checkOutResult = await checkOutFromVenue(
-        db, user.id, venue.id
-      )
+      const checkOutResult = await checkOutFromVenue(db, user.id, venue.id)
       expect(checkOutResult.success).toBe(true)
 
       // 5. Verify removed

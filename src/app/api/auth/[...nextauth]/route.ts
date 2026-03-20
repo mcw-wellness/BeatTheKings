@@ -25,7 +25,10 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       // Only process OAuth sign-ins
       if (!account || !user.email) {
-        logger.warn({ hasAccount: !!account, email: user.email }, 'signIn rejected: missing account or email')
+        logger.warn(
+          { hasAccount: !!account, email: user.email },
+          'signIn rejected: missing account or email'
+        )
         return false
       }
 
@@ -42,11 +45,17 @@ export const authOptions: NextAuthOptions = {
         // Store the database user ID for use in jwt callback
         user.id = dbUser.id
 
-        logger.info({ userId: dbUser.id, email: user.email, isNewUser, provider: account.provider }, 'signIn successful')
+        logger.info(
+          { userId: dbUser.id, email: user.email, isNewUser, provider: account.provider },
+          'signIn successful'
+        )
 
         return true
       } catch (error) {
-        logger.error({ error, email: user.email, provider: account.provider }, 'signIn failed: DB error')
+        logger.error(
+          { error, email: user.email, provider: account.provider },
+          'signIn failed: DB error'
+        )
         return false
       }
     },
@@ -70,9 +79,15 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.email = user.email
         token.name = user.name
-        logger.info({ userId: user.id, email: user.email }, 'jwt callback: initial sign-in, token created')
+        logger.info(
+          { userId: user.id, email: user.email },
+          'jwt callback: initial sign-in, token created'
+        )
       } else {
-        logger.info({ tokenId: token.id, email: token.email, trigger }, 'jwt callback: session restored from existing token')
+        logger.info(
+          { tokenId: token.id, email: token.email, trigger },
+          'jwt callback: session restored from existing token'
+        )
       }
 
       // Always refresh onboarding flags from database
@@ -90,7 +105,10 @@ export const authOptions: NextAuthOptions = {
           } else if (!user) {
             // User row missing from DB but JWT still valid (e.g. after DB migration)
             // Skip during initial sign-in (user object exists) since row was just created
-            logger.warn({ tokenId: token.id, email: token.email }, 'jwt callback: user not found in DB — invalidating stale token')
+            logger.warn(
+              { tokenId: token.id, email: token.email },
+              'jwt callback: user not found in DB — invalidating stale token'
+            )
             token.id = ''
           }
         } catch (error) {

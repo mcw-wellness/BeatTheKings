@@ -11,11 +11,13 @@ export default function MatchRecordPage(): JSX.Element {
   const videoRef = useRef<HTMLVideoElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [isRecording, setIsRecording] = useState(false)
   const [duration, setDuration] = useState(0)
   const [cameraReady, setCameraReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showFileUpload, setShowFileUpload] = useState(false)
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
 
   // Timer
@@ -29,8 +31,44 @@ export default function MatchRecordPage(): JSX.Element {
     return () => clearInterval(interval)
   }, [isRecording])
 
+  const getCameraErrorMessage = (err: unknown): string => {
+    if (err instanceof DOMException) {
+      switch (err.name) {
+        case 'NotAllowedError':
+          return 'Camera access denied. Please allow camera access in your browser settings.'
+        case 'NotFoundError':
+          return 'No camera found on this device.'
+        case 'NotReadableError':
+          return 'Camera is in use by another app. Close other apps and try again.'
+        case 'OverconstrainedError':
+          return 'Camera does not support the required settings.'
+        default:
+          return `Camera error: ${err.message}`
+      }
+    }
+    return 'Unable to access camera.'
+  }
+
   // Initialize camera
   const initCamera = useCallback(async () => {
+    // Check for HTTPS (Chrome blocks camera on HTTP except localhost)
+    if (
+      typeof window !== 'undefined' &&
+      window.location.protocol !== 'https:' &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1'
+    ) {
+      setError('Camera requires a secure connection (HTTPS). Please use HTTPS.')
+      setShowFileUpload(true)
+      return
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('Camera not supported in this browser. Use the file upload option below.')
+      setShowFileUpload(true)
+      return
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -41,10 +79,12 @@ export default function MatchRecordPage(): JSX.Element {
         videoRef.current.srcObject = stream
         setCameraReady(true)
         setError(null)
+        setShowFileUpload(false)
       }
     } catch (err) {
-      void err
-      setError('Unable to access camera. Please grant permission.')
+      const message = getCameraErrorMessage(err)
+      setError(message)
+      setShowFileUpload(true)
     }
   }, [facingMode])
 
@@ -53,7 +93,6 @@ export default function MatchRecordPage(): JSX.Element {
     const video = videoRef.current
 
     return () => {
-      // Cleanup camera
       if (video?.srcObject) {
         const tracks = (video.srcObject as MediaStream).getTracks()
         tracks.forEach((track) => track.stop())
@@ -61,8 +100,7 @@ export default function MatchRecordPage(): JSX.Element {
     }
   }, [initCamera])
 
-  const handleFlipCamera = async () => {
-    // Stop current stream
+  const handleFlipCamera = (): void => {
     if (videoRef.current?.srcObject) {
       const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
       tracks.forEach((track) => track.stop())
@@ -70,15 +108,19 @@ export default function MatchRecordPage(): JSX.Element {
     setFacingMode((m) => (m === 'user' ? 'environment' : 'user'))
   }
 
-  const handleStartRecording = () => {
+  const getSupportedMimeType = (): string => {
+    const types = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4']
+    return types.find((t) => MediaRecorder.isTypeSupported(t)) || 'video/webm'
+  }
+
+  const handleStartRecording = (): void => {
     if (!videoRef.current?.srcObject) return
 
     chunksRef.current = []
     const stream = videoRef.current.srcObject as MediaStream
+    const mimeType = getSupportedMimeType()
 
-    const mediaRecorder = new MediaRecorder(stream, {
-      mimeType: 'video/webm;codecs=vp9',
-    })
+    const mediaRecorder = new MediaRecorder(stream, { mimeType })
 
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
@@ -86,9 +128,8 @@ export default function MatchRecordPage(): JSX.Element {
       }
     }
 
-    mediaRecorder.onstop = async () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' })
-      // Store in sessionStorage as base64 for upload page
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: mimeType })
       const reader = new FileReader()
       reader.onloadend = () => {
         sessionStorage.setItem('matchVideo', reader.result as string)
@@ -98,23 +139,40 @@ export default function MatchRecordPage(): JSX.Element {
       reader.readAsDataURL(blob)
     }
 
-    mediaRecorder.start(1000) // Collect data every second
+    mediaRecorder.start(1000)
     mediaRecorderRef.current = mediaRecorder
     setIsRecording(true)
     setDuration(0)
   }
 
-  const handleStopRecording = () => {
+  const handleStopRecording = (): void => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
 
-      // Stop camera
       if (videoRef.current?.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
         tracks.forEach((track) => track.stop())
       }
     }
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('video/')) {
+      setError('Please select a video file.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      sessionStorage.setItem('matchVideo', reader.result as string)
+      sessionStorage.setItem('matchDuration', '0')
+      router.push(`/challenges/1v1/${matchId}/upload`)
+    }
+    reader.readAsDataURL(file)
   }
 
   const formatDuration = (seconds: number): string => {
@@ -126,11 +184,43 @@ export default function MatchRecordPage(): JSX.Element {
   if (error) {
     return (
       <main className="h-dvh bg-black flex flex-col items-center justify-center p-4">
-        <p className="text-red-500 mb-4 text-center">{error}</p>
-        <button onClick={initCamera} className="px-6 py-3 bg-[#4361EE] text-white rounded-lg">
-          Try Again
-        </button>
-        <button onClick={() => router.back()} className="mt-4 text-white underline">
+        <p className="text-red-400 mb-6 text-center max-w-sm">{error}</p>
+        {!showFileUpload && (
+          <button
+            onClick={initCamera}
+            className="px-6 py-3 bg-[#4361EE] text-white rounded-lg mb-3 min-w-[200px]"
+          >
+            Try Again
+          </button>
+        )}
+        {showFileUpload && (
+          <>
+            <p className="text-white/60 text-sm mb-4 text-center max-w-xs">
+              Record with your camera app, then upload the video here.
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="video/*"
+              capture="environment"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white font-semibold rounded-lg mb-3 min-w-[200px]"
+            >
+              Upload Video File
+            </button>
+            <button
+              onClick={initCamera}
+              className="px-6 py-3 bg-white/10 text-white rounded-lg mb-3 min-w-[200px] border border-white/20"
+            >
+              Retry Camera
+            </button>
+          </>
+        )}
+        <button onClick={() => router.back()} className="mt-2 text-white/60 underline text-sm">
           Go Back
         </button>
       </main>
@@ -174,7 +264,7 @@ export default function MatchRecordPage(): JSX.Element {
           {!isRecording && (
             <button
               onClick={handleFlipCamera}
-              className="w-12 h-12 md:w-14 md:h-14 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white text-xl"
+              className="w-12 h-12 md:w-14 md:h-14 bg-white/20 active:bg-white/30 rounded-full flex items-center justify-center text-white text-xl"
             >
               ↻
             </button>
@@ -185,14 +275,14 @@ export default function MatchRecordPage(): JSX.Element {
             <button
               onClick={handleStartRecording}
               disabled={!cameraReady}
-              className="w-20 h-20 md:w-24 md:h-24 bg-red-500 hover:bg-red-600 disabled:bg-gray-500 rounded-full flex items-center justify-center shadow-lg border-4 border-white"
+              className="w-20 h-20 md:w-24 md:h-24 bg-red-500 active:bg-red-600 disabled:bg-gray-500 rounded-full flex items-center justify-center shadow-lg border-4 border-white"
             >
               <span className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-full" />
             </button>
           ) : (
             <button
               onClick={handleStopRecording}
-              className="w-20 h-20 md:w-24 md:h-24 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg border-4 border-white animate-pulse"
+              className="w-20 h-20 md:w-24 md:h-24 bg-red-500 active:bg-red-600 rounded-full flex items-center justify-center shadow-lg border-4 border-white animate-pulse"
             >
               <span className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-sm" />
             </button>

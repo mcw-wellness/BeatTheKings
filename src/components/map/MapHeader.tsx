@@ -85,7 +85,8 @@ export function LocationStatus({
       <div className="text-sm text-center space-y-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
         <p className="text-yellow-300">📍 Location disabled</p>
         <p className="text-xs text-white/60">
-          You can manually check in at venues below. To enable auto check-in, allow location in your browser settings.
+          You can manually check in at venues below. To enable auto check-in, allow location in your
+          browser settings.
         </p>
       </div>
     )

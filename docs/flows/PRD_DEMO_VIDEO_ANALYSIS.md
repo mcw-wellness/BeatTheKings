@@ -1,9 +1,11 @@
 # PRD: Demo Video Analysis Flow
 
 ## Overview
+
 Demo video integration with mock AI analysis for the Tuesday presentation. This is a **demo-only** feature to showcase the video analysis capability without requiring a real LLM connection.
 
 ## Scope
+
 - **Challenge**: 3-Point Shot only
 - **Venue**: Esterhazy Park only
 - **Purpose**: Presentation demo (not production)
@@ -37,6 +39,7 @@ Demo Results Page (new)
 **Route**: `/challenges/[challengeId]`
 
 **Changes**:
+
 1. Add camera positioning instructions to the Instructions section:
    - "Position camera at a 45° angle (wing) to avoiding backlighting."
    - "Record in landscape at eye level using tripod or steady hand."
@@ -47,6 +50,7 @@ Demo Results Page (new)
    - Yellow button: "Start Challenge & use demo video" → goes to `/challenges/[id]/demo`
 
 **Condition**: Demo button only shows when:
+
 - Challenge type is "3-Point Shot" (slug: `three-point`)
 - Venue is "Esterhazy Park"
 
@@ -57,7 +61,8 @@ Demo Results Page (new)
 **Route**: `/challenges/[challengeId]/demo`
 
 **UI Elements**:
-- Header: "← Back  3-Point Shot"
+
+- Header: "← Back 3-Point Shot"
 - Video player (centered, rounded corners)
   - Demo video from `/videos/demo-3point.mp4`
   - "Demo Video" label overlay
@@ -68,6 +73,7 @@ Demo Results Page (new)
   - Yellow: "Upload and analyze video" (with upload icon) - navigates to results
 
 **Behavior**:
+
 - Video is playable/pausable with audio
 - Clicking "Upload and analyze video" → navigate to `/challenges/[id]/demo/result`
 
@@ -78,7 +84,8 @@ Demo Results Page (new)
 **Route**: `/challenges/[challengeId]/demo/result`
 
 **UI Elements**:
-- Header: "← Back  3-Point Shot"
+
+- Header: "← Back 3-Point Shot"
 - White/light card with green border containing:
   - "Result" title
   - Large accuracy text: "Accuracy: 80%" (green)
@@ -90,6 +97,7 @@ Demo Results Page (new)
   - Green button: "Claim 10 RP & 50 XP"
 
 **Behavior**:
+
 1. On page load, show "Analyzing video with AI..." for 2-3 seconds
 2. Then reveal the hardcoded results:
    - Accuracy: 80% (4 out of 5)
@@ -98,6 +106,7 @@ Demo Results Page (new)
 3. "Claim" button returns to challenges page (no actual XP/RP awarded for demo)
 
 **Hardcoded Values** (no API call):
+
 - Made shots: 4
 - Missed shots: 1
 - Accuracy: 80%

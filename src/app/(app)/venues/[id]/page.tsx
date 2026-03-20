@@ -256,6 +256,9 @@ export default function VenueDetailPage(): JSX.Element {
         <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl border border-white/20 p-4 md:p-6">
           <h2 className="text-white font-semibold md:text-lg mb-3 flex items-center gap-2">
             Challenges ({challenges.length})
+            <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full font-medium">
+              Beta
+            </span>
           </h2>
           {challenges.length === 0 ? (
             <p className="text-white/50 text-sm text-center py-4">
@@ -275,13 +278,13 @@ export default function VenueDetailPage(): JSX.Element {
                     </p>
                   </div>
                   <button
-                    className="bg-white/20 hover:bg-white/30 text-white px-4 md:px-5 py-2 md:py-3 rounded-lg text-sm md:text-base font-medium transition-colors border border-white/30"
+                    className="bg-white/10 text-white/50 px-4 md:px-5 py-2 md:py-3 rounded-lg text-sm md:text-base font-medium border border-white/10 cursor-not-allowed"
                     onClick={(e) => {
                       e.stopPropagation()
-                      router.push(`/challenges/${challenge.id}`)
+                      alert('Challenges are not available in Alpha. Stay tuned for Beta!')
                     }}
                   >
-                    Start
+                    Beta
                   </button>
                 </div>
               ))}
@@ -328,9 +331,7 @@ function VenueCheckInSection({
   if (ci.distanceToVenue === null) {
     return (
       <div className="bg-white/10 backdrop-blur rounded-xl border border-white/20 px-3 py-2">
-        <p className="text-yellow-300 text-sm text-center">
-          Enable location to check in
-        </p>
+        <p className="text-yellow-300 text-sm text-center">Enable location to check in</p>
       </div>
     )
   }
@@ -345,9 +346,7 @@ function VenueCheckInSection({
         >
           Check In Here
         </button>
-        {ci.checkInError && (
-          <p className="text-red-300 text-xs text-center">{ci.checkInError}</p>
-        )}
+        {ci.checkInError && <p className="text-red-300 text-xs text-center">{ci.checkInError}</p>}
       </div>
     )
   }

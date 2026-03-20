@@ -59,7 +59,11 @@ async function resizeBase64Image(base64Data: string): Promise<string> {
     .toBuffer()
 
   logger.info(
-    { originalSize: inputBuffer.length, resizedSize: resizedBuffer.length, originalDims: `${width}x${height}` },
+    {
+      originalSize: inputBuffer.length,
+      resizedSize: resizedBuffer.length,
+      originalDims: `${width}x${height}`,
+    },
     'Resized reference photo for Gemini'
   )
 
@@ -180,7 +184,9 @@ export async function generateAvatarImage(input: AvatarPromptInput): Promise<Buf
 
       // No image — Gemini likely refused due to safety filter on the photo
       // Fallback: retry without the reference photo
-      logger.warn('No image from reference photo attempt, falling back to description-only generation')
+      logger.warn(
+        'No image from reference photo attempt, falling back to description-only generation'
+      )
 
       const fallbackPrompt = buildAvatarPromptWithItems(input, !!jerseyImage, !!shoesImage)
       response = await imageClient.models.generateContent({
@@ -585,7 +591,8 @@ export async function editAvatarImage(
     const jerseyDesc = changes.jerseyDesign
       ? changes.jerseyDesign.replace('number 00', `number ${jerseyNumber}`)
       : `${hexToColorName(changes.jerseyColor)} ${sport} jersey with gold trim and number ${jerseyNumber}`
-    const shoesDesc = changes.shoesDesign || `${hexToColorName(changes.jerseyColor)} high-top basketball sneakers`
+    const shoesDesc =
+      changes.shoesDesign || `${hexToColorName(changes.jerseyColor)} high-top basketball sneakers`
     outfitDetails = `- Jersey: ${jerseyDesc}\n- Matching shorts\n- Shoes: ${shoesDesc}\n- Black athletic socks`
   } else {
     outfitDetails = buildOutfitDescription(sport, jerseyNumber, changes.jerseyColor)

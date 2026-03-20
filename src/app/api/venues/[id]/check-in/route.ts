@@ -18,10 +18,7 @@ interface RouteParams {
  * GET /api/venues/:id/check-in
  * Check if user is currently checked in at this venue
  */
-const _GET = async (
-  request: Request,
-  { params }: RouteParams
-): Promise<NextResponse> => {
+const _GET = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -36,10 +33,7 @@ const _GET = async (
     return NextResponse.json(status)
   } catch (error) {
     logger.error({ error }, 'Failed to get check-in status')
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -47,10 +41,7 @@ const _GET = async (
  * POST /api/venues/:id/check-in
  * Check in to a venue (mark as active player)
  */
-const _POST = async (
-  request: Request,
-  { params }: RouteParams
-): Promise<NextResponse> => {
+const _POST = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -62,20 +53,11 @@ const _POST = async (
     const { latitude, longitude } = body
 
     if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-      return NextResponse.json(
-        { error: 'Latitude and longitude are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Latitude and longitude are required' }, { status: 400 })
     }
 
     const db = getDb()
-    const result = await checkInToVenue(
-      db,
-      session.user.id,
-      venueId,
-      latitude,
-      longitude
-    )
+    const result = await checkInToVenue(db, session.user.id, venueId, latitude, longitude)
 
     if (!result.success) {
       return NextResponse.json(
@@ -89,10 +71,7 @@ const _POST = async (
     return NextResponse.json(result)
   } catch (error) {
     logger.error({ error }, 'Failed to check in to venue')
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -100,10 +79,7 @@ const _POST = async (
  * PATCH /api/venues/:id/check-in
  * Heartbeat: refresh lastSeenAt and position
  */
-const _PATCH = async (
-  request: Request,
-  { params }: RouteParams
-): Promise<NextResponse> => {
+const _PATCH = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -115,35 +91,20 @@ const _PATCH = async (
     const { latitude, longitude } = body
 
     if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-      return NextResponse.json(
-        { error: 'Latitude and longitude are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Latitude and longitude are required' }, { status: 400 })
     }
 
     const db = getDb()
-    const result = await refreshCheckIn(
-      db,
-      session.user.id,
-      venueId,
-      latitude,
-      longitude
-    )
+    const result = await refreshCheckIn(db, session.user.id, venueId, latitude, longitude)
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: 'No active check-in found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'No active check-in found' }, { status: 404 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
     logger.error({ error }, 'Failed to refresh check-in')
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -151,10 +112,7 @@ const _PATCH = async (
  * DELETE /api/venues/:id/check-in
  * Check out from a venue
  */
-const _DELETE = async (
-  request: Request,
-  { params }: RouteParams
-): Promise<NextResponse> => {
+const _DELETE = async (request: Request, { params }: RouteParams): Promise<NextResponse> => {
   try {
     const session = await getSession()
     if (!session?.user?.id) {
@@ -167,10 +125,7 @@ const _DELETE = async (
     const result = await checkOutFromVenue(db, session.user.id, venueId)
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: 'Failed to check out' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Failed to check out' }, { status: 400 })
     }
 
     logger.info({ userId: session.user.id, venueId }, 'User checked out')
@@ -181,10 +136,7 @@ const _DELETE = async (
     })
   } catch (error) {
     logger.error({ error }, 'Failed to check out from venue')
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

@@ -145,7 +145,11 @@ export default function PlayerPage(): JSX.Element {
     return (
       <main
         className="h-dvh flex items-center justify-center relative"
-        style={{ backgroundImage: 'url(/backgrounds/stadium.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
         <div className="animate-spin rounded-full h-10 w-10 border-3 border-yellow-400 border-t-transparent relative z-10" />
@@ -157,7 +161,11 @@ export default function PlayerPage(): JSX.Element {
     return (
       <main
         className="h-dvh flex flex-col items-center justify-center p-4 relative"
-        style={{ backgroundImage: 'url(/backgrounds/stadium.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+        style={{
+          backgroundImage: 'url(/backgrounds/stadium.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
         <p className="text-red-400 mb-4 relative z-10">{error || 'Player not found'}</p>
