@@ -24,6 +24,7 @@ export default function MatchRecordPage(): JSX.Element {
   const mimeTypeRef = useRef('video/webm')
   const stopFallbackRef = useRef<NodeJS.Timeout | null>(null)
   const isFinalizingRef = useRef(false)
+  const finalizeRetryRef = useRef(0)
   const hasRecordedOnceRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -198,7 +199,17 @@ export default function MatchRecordPage(): JSX.Element {
 
     const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current })
     if (blob.size === 0) {
+      if (finalizeRetryRef.current < 2) {
+        finalizeRetryRef.current += 1
+        isFinalizingRef.current = false
+        setTimeout(() => {
+          void finalizeRecording()
+        }, 600)
+        return
+      }
+
       setError('Recording failed. Please try again.')
+      setShowFileUpload(true)
       setIsStopping(false)
       setIsUploading(false)
       isFinalizingRef.current = false
@@ -210,6 +221,7 @@ export default function MatchRecordPage(): JSX.Element {
       setRecordedVideoBlob(matchId, blob)
       sessionStorage.setItem('matchDuration', duration.toString())
       mediaRecorderRef.current = null
+      finalizeRetryRef.current = 0
       hasRecordedOnceRef.current = true
       router.push(`/challenges/1v1/${matchId}/upload`)
     } catch (err) {
@@ -245,11 +257,19 @@ export default function MatchRecordPage(): JSX.Element {
     }
 
     chunksRef.current = []
+    finalizeRetryRef.current = 0
+
     const stream = videoRef.current.srcObject as MediaStream
     const mimeType = getSupportedMimeType()
-    mimeTypeRef.current = mimeType
 
-    const mediaRecorder = new MediaRecorder(stream, { mimeType })
+    let mediaRecorder: MediaRecorder
+    try {
+      mediaRecorder = new MediaRecorder(stream, { mimeType })
+    } catch {
+      mediaRecorder = new MediaRecorder(stream)
+    }
+
+    mimeTypeRef.current = mediaRecorder.mimeType || mimeType
 
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
@@ -261,7 +281,14 @@ export default function MatchRecordPage(): JSX.Element {
       void finalizeRecording()
     }
 
-    mediaRecorder.start(1000)
+    const isSafari =
+      typeof navigator !== 'undefined' && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+
+    if (isSafari) {
+      mediaRecorder.start()
+    } else {
+      mediaRecorder.start(1000)
+    }
     mediaRecorderRef.current = mediaRecorder
     isFinalizingRef.current = false
     setIsRecording(true)
@@ -276,7 +303,11 @@ export default function MatchRecordPage(): JSX.Element {
     setIsStopping(true)
 
     if (mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.requestData()
+      try {
+        mediaRecorderRef.current.requestData()
+      } catch {
+        // some mobile browsers may throw here, stop still works
+      }
       mediaRecorderRef.current.stop()
     }
 
